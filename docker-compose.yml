@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  usuarios.api:
+    build: ./Servicios/Usuarios.API
+    ports:
+      - "5001:80"
+
+  productos.api:
+    build: ./Servicios/Productos.API
+    ports:
+      - "5002:80"
+
+  clientes.api:
+    build: ./Servicios/Clientes.API
+    ports:
+      - "5003:80"
+
+  gateway:
+    build: ./Gateway/ApiGateway
+    ports:
+      - "5000:80"
+    depends_on:
+      - usuarios.api
+      - productos.api
+      - clientes.api
+
+  frontend:
+    build: ./FrontEnd/portal-angular
+    ports:
+      - "4200:80"
