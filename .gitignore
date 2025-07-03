@@ -14,9 +14,7 @@ Generated_Code/
 *.pdb
 *.nupkg
 .nuget/
-FrontEnd/portal-angular/node_modules/
-FrontEnd/portal-angular/dist/
-FrontEnd/portal-angular/.angular/cache/
+
 *.log
 **/Dockerfile
 docker-compose.override.yml
