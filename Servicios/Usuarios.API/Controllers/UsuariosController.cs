@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Compartido;
+using Compartido.Contextos;
+using Compartido.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -25,59 +29,54 @@ namespace Usuarios.API.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            var usuario = ContextUsu.Usuarios.FirstOrDefault(u => u.Login == request.Email && u.Password == request.Password);
+            string nombreBase = string.Empty;
 
-            if (usuario == null)
+            try
             {
-                return Ok(new
+                var usuario = ContextUsu.Usuarios
+                            .Include(u => u.EmpresaUsuarios)
+                            .ThenInclude(eu => eu.IdEmpresaNavigation)
+                            .FirstOrDefault(u => u.Login == request.Login && u.Password == request.Password);
+
+                if (usuario == null)
                 {
-                    mensaje = "Credenciales inválidas",
+                    return Ok(new
+                    {
+                        mensaje = "Credenciales inválidas",
+                        exito = false
+                    });
+                }
+
+                var empresa = usuario.EmpresaUsuarios.FirstOrDefault();
+
+                if (empresa != null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "El usuario no tiene empresa asignada",
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.IdEmpresaNavigation.ConexionBd;
+
+                string claveSecreta = configuracion["Jwt:Key"];
+                int expiracion = int.Parse(configuracion["Jwt:ExpiracionMinutos"]);
+
+                var token = Token.GenerarToken(usuario.Login, nombreBase, claveSecreta, expiracion);
+
+                return Ok(new LoginResponse { Token = token });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
                     exito = false
                 });
             }
-            else
-            {
-                var token = GenerarToken(usuario);
-
-                return Ok(new
-                {
-                    mensaje = "Login exitoso",
-                    token,
-                    exito = true
-                });
-            }
         }
-
-        [HttpGet("protegido")]
-        [Authorize]
-        public IActionResult Protegido() => Ok("Acceso autorizado");
-
-        private string GenerarToken(Usuario usuario)
-        {
-            var key = Encoding.ASCII.GetBytes(configuracion["JwtSettings:SecretKey"]);
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-                new Claim(ClaimTypes.Name, usuario.Nombre),
-                new Claim(ClaimTypes.Email, usuario.Email)
-            };
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                //Subject = new ClaimsIdentity(claims),
-                Expires = System.DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-    }
-
-    public class LoginRequest
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
     }
 }

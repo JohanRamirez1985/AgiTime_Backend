@@ -5,17 +5,22 @@ namespace Usuarios.API.Models
 {
     public partial class Usuario
     {
+        public Usuario()
+        {
+            EmpresaUsuarios = new HashSet<EmpresaUsuario>();
+            UsuarioRols = new HashSet<UsuarioRol>();
+        }
+
         public int Id { get; set; }
-        public int Sede { get; set; }
-        public string? Nombre { get; set; }
-        public string? Identificacion { get; set; }
-        public string? Email { get; set; }
-        public string? Telefono { get; set; }
-        public string? Login { get; set; }
-        public string? Password { get; set; }
-        public string? Estado { get; set; }
-        public string? Bd { get; set; }
-        public string? Celular { get; set; }
-        public DateTime Fecharegistro { get; set; }
+        public string Nombre { get; set; } = null!;
+        public string Correo { get; set; } = null!;
+        public string Login { get; set; } = null!;
+        public string Password { get; set; } = null!;
+        public string Telefono { get; set; } = null!;
+        public DateTime? FechaNacimiento { get; set; }
+        public string Estado { get; set; } = null!;
+
+        public virtual ICollection<EmpresaUsuario> EmpresaUsuarios { get; set; }
+        public virtual ICollection<UsuarioRol> UsuarioRols { get; set; }
     }
 }

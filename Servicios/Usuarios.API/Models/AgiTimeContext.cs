@@ -16,79 +16,168 @@ namespace Usuarios.API.Models
         {
         }
 
-        public virtual DbSet<Role> Roles { get; set; } = null!;
+        public virtual DbSet<Empresa> Empresas { get; set; } = null!;
+        public virtual DbSet<EmpresaUsuario> EmpresaUsuarios { get; set; } = null!;
+        public virtual DbSet<Sede> Sedes { get; set; } = null!;
         public virtual DbSet<Usuario> Usuarios { get; set; } = null!;
+        public virtual DbSet<UsuarioRol> UsuarioRols { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Role>(entity =>
+            modelBuilder.Entity<Empresa>(entity =>
             {
-                entity.ToTable("ROLES");
+                entity.ToTable("Empresa");
 
-                entity.Property(e => e.Id).HasColumnName("ID");
+                entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Nombre)
+                entity.Property(e => e.ConexionBd)
                     .HasMaxLength(100)
                     .IsUnicode(false)
-                    .HasColumnName("NOMBRE");
-            });
-
-            modelBuilder.Entity<Usuario>(entity =>
-            {
-                entity.ToTable("USUARIOS");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Bd)
-                    .HasMaxLength(200)
-                    .IsUnicode(false)
-                    .HasColumnName("BD");
-
-                entity.Property(e => e.Celular)
-                    .HasMaxLength(50)
-                    .IsUnicode(false)
-                    .HasColumnName("CELULAR");
-
-                entity.Property(e => e.Email)
-                    .HasMaxLength(100)
-                    .IsUnicode(false)
-                    .HasColumnName("EMAIL");
+                    .HasColumnName("conexionBD");
 
                 entity.Property(e => e.Estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false)
+                    .HasColumnName("estado");
+
+                entity.Property(e => e.Logo)
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("logo");
+
+                entity.Property(e => e.Nit)
                     .HasMaxLength(50)
                     .IsUnicode(false)
-                    .HasColumnName("ESTADO");
-
-                entity.Property(e => e.Fecharegistro)
-                    .HasColumnType("datetime")
-                    .HasColumnName("FECHAREGISTRO");
-
-                entity.Property(e => e.Identificacion)
-                    .HasMaxLength(100)
-                    .IsUnicode(false)
-                    .HasColumnName("IDENTIFICACION");
-
-                entity.Property(e => e.Login)
-                    .HasMaxLength(100)
-                    .IsUnicode(false)
-                    .HasColumnName("LOGIN");
+                    .HasColumnName("nit");
 
                 entity.Property(e => e.Nombre)
                     .HasMaxLength(100)
                     .IsUnicode(false)
-                    .HasColumnName("NOMBRE");
+                    .HasColumnName("nombre");
+            });
 
-                entity.Property(e => e.Password)
-                    .HasMaxLength(100)
+            modelBuilder.Entity<EmpresaUsuario>(entity =>
+            {
+                entity.ToTable("EmpresaUsuario");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.FechaRegistro)
+                    .HasColumnType("datetime")
+                    .HasColumnName("fechaRegistro");
+
+                entity.Property(e => e.IdEmpresa).HasColumnName("idEmpresa");
+
+                entity.Property(e => e.Idusuario).HasColumnName("idusuario");
+
+                entity.HasOne(d => d.IdEmpresaNavigation)
+                    .WithMany(p => p.EmpresaUsuarios)
+                    .HasForeignKey(d => d.IdEmpresa)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_EmpresaUsuario_Empresa");
+
+                entity.HasOne(d => d.IdusuarioNavigation)
+                    .WithMany(p => p.EmpresaUsuarios)
+                    .HasForeignKey(d => d.Idusuario)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_EmpresaUsuario_Usuarios");
+            });
+
+            modelBuilder.Entity<Sede>(entity =>
+            {
+                entity.ToTable("Sede");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.Barrio)
+                    .HasMaxLength(50)
                     .IsUnicode(false)
-                    .HasColumnName("PASSWORD");
+                    .HasColumnName("barrio");
 
-                entity.Property(e => e.Sede).HasColumnName("SEDE");
+                entity.Property(e => e.Direccion)
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("direccion");
+
+                entity.Property(e => e.Estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false)
+                    .HasColumnName("estado");
+
+                entity.Property(e => e.IdCiudad).HasColumnName("idCiudad");
+
+                entity.Property(e => e.IdEmpresa).HasColumnName("idEmpresa");
 
                 entity.Property(e => e.Telefono)
                     .HasMaxLength(50)
                     .IsUnicode(false)
-                    .HasColumnName("TELEFONO");
+                    .HasColumnName("telefono");
+
+                entity.HasOne(d => d.IdEmpresaNavigation)
+                    .WithMany(p => p.Sedes)
+                    .HasForeignKey(d => d.IdEmpresa)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Sede_Empresa");
+            });
+
+            modelBuilder.Entity<Usuario>(entity =>
+            {
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.Correo)
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("correo");
+
+                entity.Property(e => e.Estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false)
+                    .HasColumnName("estado");
+
+                entity.Property(e => e.FechaNacimiento)
+                    .HasColumnType("datetime")
+                    .HasColumnName("fechaNacimiento");
+
+                entity.Property(e => e.Login)
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("login");
+
+                entity.Property(e => e.Nombre)
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("nombre");
+
+                entity.Property(e => e.Password)
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("password");
+
+                entity.Property(e => e.Telefono)
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("telefono");
+            });
+
+            modelBuilder.Entity<UsuarioRol>(entity =>
+            {
+                entity.ToTable("UsuarioRol");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.FechaRegistro)
+                    .HasColumnType("datetime")
+                    .HasColumnName("fechaRegistro");
+
+                entity.Property(e => e.IdRol).HasColumnName("idRol");
+
+                entity.Property(e => e.Idusuario).HasColumnName("idusuario");
+
+                entity.HasOne(d => d.IdusuarioNavigation)
+                    .WithMany(p => p.UsuarioRols)
+                    .HasForeignKey(d => d.Idusuario)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_UsuarioRol_Usuarios");
             });
 
             OnModelCreatingPartial(modelBuilder);

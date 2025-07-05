@@ -10,7 +10,7 @@ builder.Services.AddSwaggerGen();
 
 // 🔧 Configuración de tu DbContext (ajusta la cadena de conexión)
 builder.Services.AddDbContext<UsuariosContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionGeneral")));
 
 // 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
 

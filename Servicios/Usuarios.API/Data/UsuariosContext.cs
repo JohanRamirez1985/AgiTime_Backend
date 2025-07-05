@@ -8,5 +8,7 @@ namespace Usuarios.API.Data
         public UsuariosContext(DbContextOptions<UsuariosContext> options) : base(options) { }
 
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<EmpresaUsuario> EmpresaUsuarios { get; set; }
+        public DbSet<Empresa> Empresas { get; set; }
     }
 }
