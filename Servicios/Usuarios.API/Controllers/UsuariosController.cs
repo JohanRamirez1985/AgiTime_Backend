@@ -1,5 +1,5 @@
 ﻿using Compartido;
-using Compartido.Contextos;
+using Compartido.Metodos;
 using Compartido.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +27,7 @@ namespace Usuarios.API.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public IActionResult LoginUsuario([FromBody] LoginRequest request)
         {
             string nombreBase = string.Empty;
 
@@ -65,7 +65,11 @@ namespace Usuarios.API.Controllers
 
                 var token = Token.GenerarToken(usuario.Login, nombreBase, claveSecreta, expiracion);
 
-                return Ok(new LoginResponse { Token = token });
+                return Ok(new LoginResponse 
+                { 
+                    Token = token,
+                    Datos = ArregloLogin.ConstruirData(usuario, empresa,"Usuario")
+                });
             }
             catch (Exception ex)
             {

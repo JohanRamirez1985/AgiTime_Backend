@@ -11,7 +11,6 @@ namespace Clientes.API
             Configuration = configuration;
         }
 
-        // Configuración de servicios
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
@@ -28,7 +27,6 @@ namespace Clientes.API
             });
         }
 
-        // Configuración del pipeline HTTP
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment() || env.IsProduction())
@@ -37,16 +35,12 @@ namespace Clientes.API
                 app.UseSwaggerUI(c =>
                 {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Clientes API V1");
-                    c.RoutePrefix = string.Empty; // Para que Swagger salga en la raíz
+                    c.RoutePrefix = string.Empty; 
                 });
             }
 
             app.UseRouting();
             app.UseAuthorization();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
         }
     }
 }
