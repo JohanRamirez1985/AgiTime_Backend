@@ -8,13 +8,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 🔧 Configuración de tu DbContext (ajusta la cadena de conexión)
+// 🔧 Configuración de tu DbContext
 builder.Services.AddDbContext<UsuariosContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionGeneral")));
 
-// 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
+// ✅ Agrega configuración CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Cambia este al origen de tu frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
-// Carga de configuración desde appsettings.json
 var app = builder.Build();
 
 // 🔧 Middleware
@@ -25,6 +33,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ✅ Habilita CORS antes de Authorization
+app.UseCors("PermitirFrontend");
 
 app.UseAuthorization();
 
