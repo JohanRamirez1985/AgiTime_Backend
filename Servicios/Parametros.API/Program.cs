@@ -15,6 +15,15 @@ builder.Services.AddDbContext<GeneralContext>(options =>
 builder.Services.AddScoped<FactoryContext>();
 
 // 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Cambia este al origen de tu frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Carga de configuración desde appsettings.json
 var app = builder.Build();
