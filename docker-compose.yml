@@ -8,7 +8,7 @@ services:
     depends_on:
       - frontend
       - usuarios
-      - productos
+      - paramatros
 
   frontend:
     build: ./frontend
@@ -20,7 +20,7 @@ services:
     expose:
       - "5000"
 
-  productos:
-    build: ./servicios/productos
+  parametros:
+    build: ./servicios/Parametros.API
     expose:
       - "5001"

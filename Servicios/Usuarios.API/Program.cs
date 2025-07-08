@@ -9,8 +9,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 🔧 Configuración de tu DbContext (ajusta la cadena de conexión)
-builder.Services.AddDbContext<UsuariosContext>(options =>
+builder.Services.AddDbContext<GeneralContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionGeneral")));
+
+builder.Services.AddScoped<FactoryContext>();
 
 // 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
 
