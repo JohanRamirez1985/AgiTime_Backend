@@ -16,7 +16,16 @@ builder.Services.AddScoped<FactoryContext>();
 
 // 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
 
-// Carga de configuración desde appsettings.json
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Cambia este al origen de tu frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // 🔧 Middleware
@@ -27,6 +36,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ✅ Habilita CORS antes de Authorization
+app.UseCors("PermitirFrontend");
 
 app.UseAuthorization();
 
