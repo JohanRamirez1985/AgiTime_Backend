@@ -14,18 +14,17 @@ builder.Services.AddDbContext<GeneralContext>(options =>
 
 builder.Services.AddScoped<FactoryContext>();
 
-// 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
+// 🔧 Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // Cambia este al origen de tu frontend
+        policy.WithOrigins("http://localhost:4200") // Frontend Angular
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
-// Carga de configuración desde appsettings.json
 var app = builder.Build();
 
 // 🔧 Middleware
@@ -36,6 +35,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ✅ Aplicar CORS antes de Authorization
+app.UseCors("PermitirFrontend");
 
 app.UseAuthorization();
 
