@@ -3,6 +3,7 @@ using Compartido.Constantes;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
 using Parametros.API.Data;
+using Parametros.API.Data.Modelos;
 
 namespace Parametros.API.Controllers
 {
@@ -44,7 +45,7 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.TipoDocumentos.ToList();
+                var lista = ContextBD.TipoDocumentos.OrderBy(o => o.nombre).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -96,7 +97,7 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Ciudads.ToList();
+                var lista = ContextBD.Ciudads.OrderBy(o => o.nombre).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -148,7 +149,7 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Generos.ToList();
+                var lista = ContextBD.Generos.OrderBy(o => o.nombre).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -200,7 +201,7 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Rols.ToList();
+                var lista = ContextBD.Rols.OrderBy(o => o.nombre).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -252,7 +253,7 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Sedes.Where(e => e.estado == Estados.Activo).ToList();
+                var lista = ContextBD.Sedes.Where(e => e.estado == Estados.Activo).OrderBy(o => o.Nombre).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -304,7 +305,7 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Usuarios.Where(e => e.estado == Estados.Activo).ToList();
+                var lista = ContextBD.Usuarios.Where(e => e.estado == Estados.Activo).OrderBy(o => o.nombre).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -339,7 +340,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var lista = ContextGene.Empresas.Where(e => e.estado == Estados.Activo).ToList();
+                var lista = ContextGene.Empresas.Where(e => e.estado == Estados.Activo).OrderBy(o => o.nombre).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
