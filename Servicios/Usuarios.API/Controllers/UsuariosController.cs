@@ -52,9 +52,9 @@ namespace Usuarios.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var usuario = ContextBD.Usuarios.FirstOrDefault(u => u.login == request.Login && u.password == request.Password);
+                var usuario = ContextBD.Usuarios.FirstOrDefault(u => u.login == request.Login);
 
-                if (usuario == null)
+                if (usuario == null || !EncripPassword.VerificarPassword(request.Password, usuario.password))
                 {
                     return Ok(new
                     {

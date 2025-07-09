@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Clientes.API.Models
+namespace Clientes.API.Data.Modelos
 {
-    public partial class TipoDocumento
+    public partial class Genero
     {
-        public TipoDocumento()
+        public Genero()
         {
             Clientes = new HashSet<Cliente>();
         }
 
-        public int Id { get; set; }
-        public string Nombre { get; set; } = null!;
+        public int id { get; set; }
+        public string nombre { get; set; } = null!;
 
         public virtual ICollection<Cliente> Clientes { get; set; }
     }
