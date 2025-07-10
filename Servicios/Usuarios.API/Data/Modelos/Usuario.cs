@@ -24,7 +24,9 @@ namespace Usuarios.API.Data.Modelos
         public DateTime fechaCreacion { get; set; }
         public int sede { get; set; }
 
+        public virtual Genero generoNavigation { get; set; } = null!;
         public virtual Sede sedeNavigation { get; set; } = null!;
+        public virtual TipoDocumento tipoDocumentoNavigation { get; set; } = null!;
 
         public virtual ICollection<Rol> idRols { get; set; }
     }

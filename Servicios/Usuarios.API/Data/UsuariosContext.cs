@@ -17,12 +17,33 @@ namespace Usuarios.API.Data
         {
         }
 
+        public virtual DbSet<Ciudad> Ciudads { get; set; } = null!;
+        public virtual DbSet<Genero> Generos { get; set; } = null!;
         public virtual DbSet<Rol> Rols { get; set; } = null!;
         public virtual DbSet<Sede> Sedes { get; set; } = null!;
+        public virtual DbSet<TipoDocumento> TipoDocumentos { get; set; } = null!;
         public virtual DbSet<Usuario> Usuarios { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Ciudad>(entity =>
+            {
+                entity.ToTable("Ciudad");
+
+                entity.Property(e => e.nombre)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Genero>(entity =>
+            {
+                entity.ToTable("Genero");
+
+                entity.Property(e => e.nombre)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+            });
+
             modelBuilder.Entity<Rol>(entity =>
             {
                 entity.ToTable("Rol");
@@ -53,6 +74,15 @@ namespace Usuarios.API.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.telefono)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<TipoDocumento>(entity =>
+            {
+                entity.ToTable("TipoDocumento");
+
+                entity.Property(e => e.nombre)
                     .HasMaxLength(50)
                     .IsUnicode(false);
             });
@@ -91,11 +121,23 @@ namespace Usuarios.API.Data
                     .HasMaxLength(100)
                     .IsUnicode(false);
 
+                entity.HasOne(d => d.generoNavigation)
+                    .WithMany(p => p.Usuarios)
+                    .HasForeignKey(d => d.genero)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Usuarios_Genero");
+
                 entity.HasOne(d => d.sedeNavigation)
                     .WithMany(p => p.Usuarios)
                     .HasForeignKey(d => d.sede)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Usuarios_Sede");
+
+                entity.HasOne(d => d.tipoDocumentoNavigation)
+                    .WithMany(p => p.Usuarios)
+                    .HasForeignKey(d => d.tipoDocumento)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Usuarios_TipoDocumento");
 
                 entity.HasMany(d => d.idRols)
                     .WithMany(p => p.idUsuarios)

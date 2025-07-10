@@ -1,4 +1,5 @@
 ﻿using Compartido;
+using Compartido.Constantes;
 using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Authorization;
@@ -73,6 +74,75 @@ namespace Usuarios.API.Controllers
                     Token = token,
                     Datos = ArregloLogin.ConstruirData(usuario, usuario,"Usuario")
                 });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("registrarUsuario")]
+        public IActionResult CrearUsuario([FromBody] UsuarioDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var rol = ContextBD.Rols.FirstOrDefault(r => r.id == dto.rol);
+                if (rol == null)
+                {
+                    return BadRequest(new { mensaje = "Rol no válido" });
+                }
+
+                var nuevoUsuario = new Usuario
+                {
+                    nombre = dto.Nombre,
+                    correo = dto.Correo,
+                    login = dto.Correo,
+                    password = EncripPassword.EncriptarPassword(dto.Password),
+                    telefono = dto.Telefono,
+                    fechaNacimiento = dto.FechaNacimiento,
+                    genero = dto.Genero,
+                    tipoDocumento = dto.TipoDocumento,
+                    sede = dto.Sede,
+                    documento = dto.Documento,
+                    estado = Estados.Activo,
+                    fechaCreacion = DateTime.Now,
+                    idRols = new List<Rol> { rol }
+                };
+
+                ContextBD.Usuarios.Add(nuevoUsuario);
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Cliente registrado exitosamente",
+                    exito = true,
+                    clienteId = nuevoUsuario.id
+                });
+
             }
             catch (Exception ex)
             {
