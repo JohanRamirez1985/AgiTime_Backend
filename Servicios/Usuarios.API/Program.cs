@@ -1,7 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Serilog;
 using Usuarios.API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+builder.Host.UseSerilog(); // Usa Serilog como proveedor de logs
 
 // 🔧 Inyección de servicios
 builder.Services.AddControllers();

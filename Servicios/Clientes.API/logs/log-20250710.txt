@@ -1,0 +1,13 @@
+2025-07-10 08:05:07.068 -05:00 [INF] Now listening on: https://localhost:44384
+2025-07-10 08:05:07.137 -05:00 [INF] Now listening on: http://localhost:5059
+2025-07-10 08:05:07.213 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-10 08:05:07.214 -05:00 [INF] Hosting environment: Development
+2025-07-10 08:05:07.215 -05:00 [INF] Content root path: C:\Johan\Proyectos\Propios\AgiTime\Servicios\Clientes.API\
+2025-07-10 08:05:08.119 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/index.html - -
+2025-07-10 08:05:08.543 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/index.html - - - 200 - text/html;charset=utf-8 427.9012ms
+2025-07-10 08:05:08.565 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - -
+2025-07-10 08:05:08.565 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_vs/browserLink - -
+2025-07-10 08:05:08.572 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - - - 200 12356 application/javascript;+charset=utf-8 7.0777ms
+2025-07-10 08:05:08.661 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 95.5787ms
+2025-07-10 08:05:08.706 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - -
+2025-07-10 08:05:08.712 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 6.5600ms
