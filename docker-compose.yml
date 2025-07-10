@@ -1,26 +1,56 @@
 version: "3.8"
 
 services:
-  gateway:
-    build: ./gateway
-    ports:
-      - "80:80"
-    depends_on:
-      - frontend
-      - usuarios
-      - paramatros
-
-  frontend:
-    build: ./frontend
-    expose:
-      - "3000"
+  parametros:
+    build:
+      context: .
+      dockerfile: servicios/Parametros.API/Dockerfile
+    container_name: parametros
+    networks:
+      - app_net
 
   usuarios:
-    build: ./servicios/Usuarios.API
-    expose:
-      - "5000"
+    build:
+      context: .
+      dockerfile: servicios/Usuarios.API/Dockerfile
+    container_name: usuarios
+    networks:
+      - app_net
 
-  parametros:
-    build: ./servicios/Parametros.API
-    expose:
-      - "5001"
+  clientes:
+    build:
+      context: .
+      dockerfile: servicios/Clientes.API/Dockerfile
+    container_name: clientes
+    networks:
+      - app_net
+
+  gateway:
+    image: nginx:alpine
+    container_name: gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./gateway/swagger-config.json:/usr/share/nginx/html/swagger-config.json
+    depends_on:
+      - parametros
+      - usuarios
+      - clientes
+    networks:
+      - app_net
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger-ui
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./gateway/swagger-initializer.js:/usr/share/nginx/html/swagger-initializer.js
+      - ./gateway/index.html:/usr/share/nginx/html/index.html
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge
