@@ -1,0 +1,371 @@
+2025-07-11 11:17:36.156 -05:00 [INF] Now listening on: https://localhost:44384
+2025-07-11 11:17:36.233 -05:00 [INF] Now listening on: http://localhost:5059
+2025-07-11 11:17:36.309 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-11 11:17:36.311 -05:00 [INF] Hosting environment: Development
+2025-07-11 11:17:36.313 -05:00 [INF] Content root path: F:\apps\agiTimev3\AgiTime\Servicios\Parametros.API\
+2025-07-11 11:17:38.044 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/index.html - -
+2025-07-11 11:17:38.421 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/index.html - - - 200 - text/html;charset=utf-8 382.7788ms
+2025-07-11 11:17:38.425 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - -
+2025-07-11 11:17:38.446 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - - - 200 12360 application/javascript;+charset=utf-8 21.2898ms
+2025-07-11 11:17:38.457 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_vs/browserLink - -
+2025-07-11 11:17:38.560 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 103.5159ms
+2025-07-11 11:17:38.636 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - -
+2025-07-11 11:17:38.647 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 11.5599ms
+2025-07-11 11:18:20.008 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios - -
+2025-07-11 11:18:20.025 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:18:20.062 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:18:22.484 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:18:24.937 -05:00 [INF] Executed DbCommand (89ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:18:43.489 -05:00 [ERR] Error en el sistema: Object reference not set to an instance of an object.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Parametros.API.Controllers.ParametrosController.ObtenerUsuarios(Int32 emp) in F:\apps\agiTimev3\AgiTime\Servicios\Parametros.API\Controllers\ParametrosController.cs:line 292
+2025-07-11 11:18:43.596 -05:00 [INF] Executing ObjectResult, writing value of type '<>f__AnonymousType0`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:18:43.623 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 23536.8779ms
+2025-07-11 11:18:43.628 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:18:43.649 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios - - - 500 - application/json;+charset=utf-8 23640.9078ms
+2025-07-11 11:19:01.046 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:19:01.051 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:19:01.056 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:19:01.095 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:19:01.117 -05:00 [INF] Executed DbCommand (6ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:19:01.843 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:19:01.862 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 802.0721ms
+2025-07-11 11:19:01.865 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:19:01.867 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 821.3278ms
+2025-07-11 11:27:07.839 -05:00 [INF] Request starting HTTP/2 OPTIONS https://localhost:44384/api/Usuarios/Login - -
+2025-07-11 11:27:07.848 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:27:07.852 -05:00 [INF] Request finished HTTP/2 OPTIONS https://localhost:44384/api/Usuarios/Login - - - 204 - - 14.0259ms
+2025-07-11 11:27:07.858 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Usuarios/Login application/json 62
+2025-07-11 11:27:07.862 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:27:07.867 -05:00 [INF] Request finished HTTP/2 POST https://localhost:44384/api/Usuarios/Login application/json 62 - 404 0 - 8.7838ms
+2025-07-11 11:50:19.834 -05:00 [INF] Now listening on: https://localhost:44384
+2025-07-11 11:50:19.953 -05:00 [INF] Now listening on: http://localhost:5059
+2025-07-11 11:50:20.024 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-11 11:50:20.025 -05:00 [INF] Hosting environment: Development
+2025-07-11 11:50:20.027 -05:00 [INF] Content root path: F:\apps\agiTimev3\AgiTime\Servicios\Parametros.API\
+2025-07-11 11:50:21.048 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/index.html - -
+2025-07-11 11:50:21.380 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/index.html - - - 200 - text/html;charset=utf-8 335.3016ms
+2025-07-11 11:50:21.390 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - -
+2025-07-11 11:50:21.405 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - - - 200 12360 application/javascript;+charset=utf-8 15.0409ms
+2025-07-11 11:50:21.411 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_vs/browserLink - -
+2025-07-11 11:50:21.509 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 97.8626ms
+2025-07-11 11:50:21.590 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - -
+2025-07-11 11:50:21.601 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 11.0347ms
+2025-07-11 11:50:34.217 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:50:34.230 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:50:34.244 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:50:34.291 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:50:35.671 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:50:36.979 -05:00 [INF] Executed DbCommand (93ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:50:37.546 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:50:37.571 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 3268.274ms
+2025-07-11 11:50:37.575 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:50:37.585 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 3368.2855ms
+2025-07-11 11:51:46.995 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:51:47.040 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:51:47.135 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:51:47.139 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:51:47.260 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:51:47.298 -05:00 [INF] Executed DbCommand (6ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:51:47.312 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:51:47.328 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 92.1333ms
+2025-07-11 11:51:47.365 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:51:47.368 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 378.4626ms
+2025-07-11 11:51:55.708 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:51:55.711 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:51:55.714 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:51:55.717 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:51:55.974 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:51:55.985 -05:00 [INF] Executed DbCommand (7ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:51:56.094 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:51:56.098 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 371.1303ms
+2025-07-11 11:51:56.101 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:51:56.102 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 395.2347ms
+2025-07-11 11:54:51.392 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:54:51.437 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:54:51.442 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:54:51.447 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:54:51.460 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:54:51.470 -05:00 [INF] Executed DbCommand (4ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:54:51.484 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:54:51.487 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 28.5364ms
+2025-07-11 11:54:51.490 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:54:51.494 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 162.8853ms
+2025-07-11 11:54:54.823 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:54:54.829 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:54:54.831 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:54:54.834 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:54:54.839 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:54:54.847 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:54:54.863 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:54:54.867 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 29.5276ms
+2025-07-11 11:54:54.870 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:54:54.872 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 49.3493ms
+2025-07-11 11:54:56.379 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:54:56.382 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:54:56.383 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:54:56.385 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:54:56.391 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:54:56.401 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:54:56.416 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:54:56.420 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 29.7952ms
+2025-07-11 11:54:56.423 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:54:56.427 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 47.9416ms
+2025-07-11 11:55:14.451 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:55:14.454 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:55:14.456 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:55:14.458 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:55:14.463 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:55:14.470 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:55:14.481 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:55:14.484 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 21.3185ms
+2025-07-11 11:55:14.486 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:55:14.489 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 38.2056ms
+2025-07-11 11:55:32.811 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 11:55:32.818 -05:00 [INF] CORS policy execution successful.
+2025-07-11 11:55:32.823 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:55:32.826 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 11:55:32.832 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 11:55:32.855 -05:00 [INF] Executed DbCommand (18ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 11:55:32.871 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 11:55:32.874 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 43.6292ms
+2025-07-11 11:55:32.877 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 11:55:32.879 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 68.5439ms
+2025-07-11 14:47:04.231 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 14:47:04.234 -05:00 [INF] CORS policy execution successful.
+2025-07-11 14:47:04.239 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:47:04.242 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 14:47:04.251 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 14:47:04.367 -05:00 [INF] Executed DbCommand (91ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 14:47:04.390 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 14:47:04.394 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 144.2623ms
+2025-07-11 14:47:04.396 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:47:04.399 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 167.7499ms
+2025-07-11 14:53:11.574 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 14:53:11.586 -05:00 [INF] CORS policy execution successful.
+2025-07-11 14:53:11.588 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:53:11.590 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 14:53:11.596 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 14:53:11.731 -05:00 [INF] Executed DbCommand (110ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 14:53:11.761 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 14:53:11.765 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 170.243ms
+2025-07-11 14:53:11.767 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:53:11.769 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 194.7766ms
+2025-07-11 14:53:20.566 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 14:53:20.664 -05:00 [INF] CORS policy execution successful.
+2025-07-11 14:53:20.666 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:53:20.673 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 14:53:20.679 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 14:53:20.711 -05:00 [INF] Executed DbCommand (20ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 14:53:20.728 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 14:53:20.731 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 53.7527ms
+2025-07-11 14:53:20.734 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:53:20.736 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 170.8162ms
+2025-07-11 14:53:53.305 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 14:53:53.310 -05:00 [INF] CORS policy execution successful.
+2025-07-11 14:53:53.311 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:53:53.313 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 14:53:53.316 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 14:53:53.321 -05:00 [INF] Executed DbCommand (2ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 14:53:53.328 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 14:53:53.332 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 15.9751ms
+2025-07-11 14:53:53.334 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:53:53.336 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 31.5049ms
+2025-07-11 14:54:01.726 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 14:54:01.727 -05:00 [INF] CORS policy execution successful.
+2025-07-11 14:54:01.729 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:54:01.731 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 14:54:01.735 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 14:54:01.743 -05:00 [INF] Executed DbCommand (4ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 14:54:01.752 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 14:54:01.755 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 20.2631ms
+2025-07-11 14:54:01.758 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:54:01.760 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 34.6340ms
+2025-07-11 14:55:20.726 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 14:55:20.731 -05:00 [INF] CORS policy execution successful.
+2025-07-11 14:55:20.732 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:55:20.735 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 14:55:20.740 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 14:55:20.748 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 14:55:20.761 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 14:55:20.764 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 24.756ms
+2025-07-11 14:55:20.767 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:55:20.769 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 43.6429ms
+2025-07-11 14:58:55.441 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 14:58:55.465 -05:00 [INF] CORS policy execution successful.
+2025-07-11 14:58:55.469 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:58:55.472 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 14:58:55.477 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 14:58:55.484 -05:00 [INF] Executed DbCommand (2ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 14:58:55.493 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 14:58:55.497 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 20.8557ms
+2025-07-11 14:58:55.500 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 14:58:55.502 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 61.7406ms
+2025-07-11 15:01:37.818 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:01:37.868 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:01:37.895 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:01:38.621 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:01:38.632 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:01:38.645 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:01:38.657 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:01:38.683 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 55.9313ms
+2025-07-11 15:01:38.686 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:01:38.689 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 870.3198ms
+2025-07-11 15:05:59.033 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:05:59.057 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:05:59.061 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:05:59.063 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:05:59.068 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:05:59.078 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:05:59.111 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:05:59.116 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 48.5953ms
+2025-07-11 15:05:59.119 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:05:59.122 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 89.4526ms
+2025-07-11 15:06:23.407 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:06:23.412 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:06:23.413 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:06:23.415 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:06:23.419 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:06:23.427 -05:00 [INF] Executed DbCommand (2ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:06:23.434 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:06:23.437 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 18.2046ms
+2025-07-11 15:06:23.440 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:06:23.443 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 35.9429ms
+2025-07-11 15:06:43.066 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:06:43.072 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:06:43.076 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:06:43.078 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:06:43.082 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:06:43.089 -05:00 [INF] Executed DbCommand (4ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:06:43.097 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:06:43.101 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 19.7258ms
+2025-07-11 15:06:43.104 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:06:43.107 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 42.2908ms
+2025-07-11 15:06:48.014 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:06:48.016 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:06:48.017 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:06:48.024 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:06:48.032 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:06:48.040 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:06:48.048 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:06:48.051 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 19.3772ms
+2025-07-11 15:06:48.059 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:06:48.062 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 47.7684ms
+2025-07-11 15:07:27.060 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:07:27.066 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:07:27.069 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:07:27.072 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:07:27.077 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:07:27.081 -05:00 [INF] Executed DbCommand (2ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:07:27.089 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:07:27.092 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 16.0283ms
+2025-07-11 15:07:27.095 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:07:27.097 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 37.0318ms
+2025-07-11 15:12:52.681 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:12:52.738 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:12:52.744 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:12:52.762 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:12:52.768 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:12:52.812 -05:00 [INF] Executed DbCommand (13ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:12:52.839 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:12:52.849 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 82.0763ms
+2025-07-11 15:12:52.852 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:12:52.854 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 173.2137ms
+2025-07-11 15:17:46.132 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:17:46.147 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:17:46.149 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:17:46.153 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:17:46.158 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:17:46.166 -05:00 [INF] Executed DbCommand (3ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:17:46.176 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:17:46.179 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 21.6055ms
+2025-07-11 15:17:46.182 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:17:46.185 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 52.7094ms
+2025-07-11 15:17:49.378 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - -
+2025-07-11 15:17:49.380 -05:00 [INF] CORS policy execution successful.
+2025-07-11 15:17:49.381 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:17:49.385 -05:00 [INF] Route matched with {action = "ObtenerUsuarios", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerUsuarios(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 15:17:49.389 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 15:17:49.395 -05:00 [INF] Executed DbCommand (2ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 15:17:49.405 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Usuario, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 15:17:49.409 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API) in 20.3427ms
+2025-07-11 15:17:49.411 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerUsuarios (Parametros.API)'
+2025-07-11 15:17:49.414 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/usuarios?emp=1 - - - 200 - application/json;+charset=utf-8 36.1425ms
