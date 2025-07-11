@@ -29,7 +29,9 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Rol ^
 --table Sede ^
 --table UsuarioRol ^
---table Ciudad
+--table Ciudad ^
+--table Funcionalidades ^
+--table FuncionalidadesSet
 
 echo ==============================================
 echo ✅ Generación completada correctamente

@@ -18,7 +18,10 @@ namespace Clientes.API.Data
         }
 
         public virtual DbSet<Cliente> Clientes { get; set; } = null!;
+        public virtual DbSet<Funcionalidade> Funcionalidades { get; set; } = null!;
+        public virtual DbSet<FuncionalidadesSet> FuncionalidadesSets { get; set; } = null!;
         public virtual DbSet<Genero> Generos { get; set; } = null!;
+        public virtual DbSet<Rol> Rols { get; set; } = null!;
         public virtual DbSet<TipoDocumento> TipoDocumentos { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -70,9 +73,48 @@ namespace Clientes.API.Data
                     .HasConstraintName("FK_Clientes_TipoDocumento");
             });
 
+            modelBuilder.Entity<Funcionalidade>(entity =>
+            {
+                entity.Property(e => e.codigo)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.funcionalidad).IsUnicode(false);
+            });
+
+            modelBuilder.Entity<FuncionalidadesSet>(entity =>
+            {
+                entity.ToTable("FuncionalidadesSet");
+
+                entity.Property(e => e.estado)
+                    .HasMaxLength(10)
+                    .IsUnicode(false);
+
+                entity.HasOne(d => d.funcionalidadNavigation)
+                    .WithMany(p => p.FuncionalidadesSets)
+                    .HasForeignKey(d => d.funcionalidad)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FuncionalidadesSet_Funcionalidades");
+
+                entity.HasOne(d => d.rolNavigation)
+                    .WithMany(p => p.FuncionalidadesSets)
+                    .HasForeignKey(d => d.rol)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FuncionalidadesSet_Rol");
+            });
+
             modelBuilder.Entity<Genero>(entity =>
             {
                 entity.ToTable("Genero");
+
+                entity.Property(e => e.nombre)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Rol>(entity =>
+            {
+                entity.ToTable("Rol");
 
                 entity.Property(e => e.nombre)
                     .HasMaxLength(50)

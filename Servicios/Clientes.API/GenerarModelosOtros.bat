@@ -25,7 +25,10 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --force ^
 --table TipoDocumento ^
 --table Genero ^
---table Clientes
+--table Clientes ^
+--table Funcionalidades ^
+--table FuncionalidadesSet ^
+--table Rol
 
 echo ==============================================
 echo ✅ Generación completada correctamente

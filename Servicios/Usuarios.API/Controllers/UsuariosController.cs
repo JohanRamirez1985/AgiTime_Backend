@@ -12,6 +12,7 @@ using System.Security.Claims;
 using System.Text;
 using Usuarios.API.Data;
 using Usuarios.API.Data.Modelos;
+using Usuarios.API.Servicios;
 
 namespace Usuarios.API.Controllers
 {
@@ -22,12 +23,14 @@ namespace Usuarios.API.Controllers
         private readonly GeneralContext ContextGene;
         private readonly FactoryContext ContextFact;
         private readonly IConfiguration configuracion;
+        private readonly UsuarioService UsuarioService;
 
-        public UsuariosController(GeneralContext gen, FactoryContext fac, IConfiguration config)
+        public UsuariosController(GeneralContext gen, FactoryContext fac, IConfiguration config, UsuarioService ususer)
         {
             ContextGene = gen;
             ContextFact = fac;
             configuracion = config;
+            UsuarioService = ususer;
         }
 
         [HttpPost("login")]
@@ -74,35 +77,14 @@ namespace Usuarios.API.Controllers
 
                 var token = Token.GenerarToken(usuario.login, empresa.conexionBD, claveSecreta, expiracion);
 
-                var primerRol = usuario.idRols.FirstOrDefault();
+                var usuarioDto = UsuarioService.ProcesarUsuario(usuario);
 
-                var usuarioDto = new UsuarioDTO
+                var funcionalidad = UsuarioService.ProcesarFuncionabilidad(usuario, nombreBase);
+
+                return Ok(new LoginResponse
                 {
-                    Id = usuario.id,
-                    Nombre = usuario.nombre,
-                    Correo = usuario.correo,
-                    Password = usuario.password,
-                    Telefono = usuario.telefono,
-                    FechaNacimiento = usuario.fechaNacimiento,
-                    Genero = usuario.genero,
-                    TipoDocumento = usuario.tipoDocumento,
-                    Sede = usuario.sede,
-                    Documento = usuario.documento,
-                    Estado = usuario.estado,
-                    FechaCreacion = usuario.fechaCreacion,
-
-                    NombreGenero = usuario.generoNavigation?.nombre,
-                    NombreTipoDocumento = usuario.tipoDocumentoNavigation?.nombre,
-                    NombreSede = usuario.sedeNavigation?.Nombre,
-
-                    rol = primerRol?.id ?? 0,
-                    NombreRol = primerRol?.nombre
-                };
-
-                return Ok(new LoginResponse 
-                { 
                     Token = token,
-                    Datos = ArregloLogin.ConstruirData(usuarioDto, empresa,"Usuario"),
+                    Datos = ArregloLogin.ConstruirData(usuarioDto, empresa, funcionalidad,"Usuario"),
                     Exito = true
                 });
             }
