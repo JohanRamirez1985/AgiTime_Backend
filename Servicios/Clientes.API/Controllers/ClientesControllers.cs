@@ -66,7 +66,8 @@ namespace Clientes.API.Controllers
                 return Ok(new LoginResponse
                 {
                     Token = token,
-                    Datos = ArregloLogin.ConstruirData(usuario, usuario, "Usuario")
+                    Datos = ArregloLogin.ConstruirData(usuario, usuario, "Usuario"),
+                    Exito = true
                 });
             }
             catch (Exception ex)
