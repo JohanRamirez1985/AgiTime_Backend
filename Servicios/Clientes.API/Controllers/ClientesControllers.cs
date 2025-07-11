@@ -63,10 +63,28 @@ namespace Clientes.API.Controllers
 
                 var token = Token.GenerarToken(usuario.login, empresa.conexionBD, claveSecreta, expiracion);
 
+                var clienteDto = new ClienteDTO
+                {
+                    Id = usuario.id,
+                    Nombre = usuario.nombre,
+                    Correo = usuario.correo,
+                    Password = usuario.password,
+                    Telefono = usuario.telefono,
+                    FechaNacimiento = usuario.fechaNacimiento,
+                    Genero = usuario.genero,
+                    TipoDocumento = usuario.tipoDocumento,
+                    Documento = usuario.documento,
+                    Estado = usuario.estado,
+                    FechaCreacion = usuario.fechaCreacion,
+                    NombreGenero = usuario.generoNavigation?.nombre,
+                    NombreTipoDocumento = usuario.tipoDocumentoNavigation?.nombre,
+                    NombreRol = "Cliente"
+                };
+
                 return Ok(new LoginResponse
                 {
                     Token = token,
-                    Datos = ArregloLogin.ConstruirData(usuario, usuario, "Usuario"),
+                    Datos = ArregloLogin.ConstruirData(clienteDto, empresa, "Usuario"),
                     Exito = true
                 });
             }

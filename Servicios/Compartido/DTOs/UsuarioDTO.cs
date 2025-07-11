@@ -27,5 +27,6 @@ namespace Compartido.DTOs
         public string? NombreGenero { get; set; }
         public string? NombreTipoDocumento { get; set; }
         public string? NombreSede { get; set; }
+        public string? NombreRol { get; set; }
     }
 }
