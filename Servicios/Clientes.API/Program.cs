@@ -1,6 +1,7 @@
 ﻿using Clientes.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Clientes.API.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,8 @@ builder.Services.AddDbContext<GeneralContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionGeneral")));
 
 builder.Services.AddScoped<FactoryContext>();
+
+builder.Services.AddScoped<ClientesService>();
 
 // 🔧 Configuración de CORS
 builder.Services.AddCors(options =>
