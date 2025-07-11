@@ -8,7 +8,7 @@ namespace Compartido.Metodos
 {
     public static class ArregloLogin
     {
-        public static object ConstruirData(object usuario, object empresa, string valor)
+        public static object ConstruirData(object usuario, object empresa, object funcionabilidad, string valor)
         {
 
             if (valor == "Usuario")
@@ -20,7 +20,7 @@ namespace Compartido.Metodos
             {
                 Usuario = usuario,
                 Empresa = empresa,
-                Funcionalidad = ""
+                Funcionalidad = funcionabilidad
             };
 
             return (respuesta);

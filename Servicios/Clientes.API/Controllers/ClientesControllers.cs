@@ -5,6 +5,7 @@ using Compartido.Constantes;
 using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
+using Clientes.API.Servicios;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clientes.API.Controllers
@@ -16,12 +17,14 @@ namespace Clientes.API.Controllers
         private readonly GeneralContext ContextGene;
         private readonly FactoryContext ContextFact;
         private readonly IConfiguration configuracion;
+        private readonly ClientesService ClienteService;
 
-        public ClientesControllers(GeneralContext gen, FactoryContext fac, IConfiguration config)
+        public ClientesControllers(GeneralContext gen, FactoryContext fac, IConfiguration config, ClientesService cliser)
         {
             ContextGene = gen;
             ContextFact = fac;
             configuracion = config;
+            ClienteService = cliser;
         }
 
         [HttpPost("login")]
@@ -63,28 +66,14 @@ namespace Clientes.API.Controllers
 
                 var token = Token.GenerarToken(usuario.login, empresa.conexionBD, claveSecreta, expiracion);
 
-                var clienteDto = new ClienteDTO
-                {
-                    Id = usuario.id,
-                    Nombre = usuario.nombre,
-                    Correo = usuario.correo,
-                    Password = usuario.password,
-                    Telefono = usuario.telefono,
-                    FechaNacimiento = usuario.fechaNacimiento,
-                    Genero = usuario.genero,
-                    TipoDocumento = usuario.tipoDocumento,
-                    Documento = usuario.documento,
-                    Estado = usuario.estado,
-                    FechaCreacion = usuario.fechaCreacion,
-                    NombreGenero = usuario.generoNavigation?.nombre,
-                    NombreTipoDocumento = usuario.tipoDocumentoNavigation?.nombre,
-                    NombreRol = "Cliente"
-                };
+                var clienteDto = ClienteService.ProcesarUsuario(usuario);
+
+                var funcionalidad = ClienteService.ProcesarFuncionabilidad(usuario, nombreBase);
 
                 return Ok(new LoginResponse
                 {
                     Token = token,
-                    Datos = ArregloLogin.ConstruirData(clienteDto, empresa, "Usuario"),
+                    Datos = ArregloLogin.ConstruirData(clienteDto, empresa, funcionalidad, "Usuario"),
                     Exito = true
                 });
             }
