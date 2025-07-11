@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Usuarios.API.Data;
+using Usuarios.API.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,8 @@ builder.Services.AddDbContext<GeneralContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionGeneral")));
 
 builder.Services.AddScoped<FactoryContext>();
+
+builder.Services.AddScoped<UsuarioService>();
 
 // 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
 
