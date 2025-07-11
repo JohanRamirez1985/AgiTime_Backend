@@ -53,7 +53,12 @@ namespace Usuarios.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var usuario = ContextBD.Usuarios.FirstOrDefault(u => u.login == request.Login);
+                var usuario = ContextBD.Usuarios
+                            .Include(u => u.generoNavigation)
+                            .Include(u => u.tipoDocumentoNavigation)
+                            .Include(u => u.sedeNavigation)
+                            .Include(u => u.idRols)
+                            .FirstOrDefault(u => u.login == request.Login);
 
                 if (usuario == null || !EncripPassword.VerificarPassword(request.Password, usuario.password))
                 {
@@ -69,10 +74,35 @@ namespace Usuarios.API.Controllers
 
                 var token = Token.GenerarToken(usuario.login, empresa.conexionBD, claveSecreta, expiracion);
 
+                var primerRol = usuario.idRols.FirstOrDefault();
+
+                var usuarioDto = new UsuarioDTO
+                {
+                    Id = usuario.id,
+                    Nombre = usuario.nombre,
+                    Correo = usuario.correo,
+                    Password = usuario.password,
+                    Telefono = usuario.telefono,
+                    FechaNacimiento = usuario.fechaNacimiento,
+                    Genero = usuario.genero,
+                    TipoDocumento = usuario.tipoDocumento,
+                    Sede = usuario.sede,
+                    Documento = usuario.documento,
+                    Estado = usuario.estado,
+                    FechaCreacion = usuario.fechaCreacion,
+
+                    NombreGenero = usuario.generoNavigation?.nombre,
+                    NombreTipoDocumento = usuario.tipoDocumentoNavigation?.nombre,
+                    NombreSede = usuario.sedeNavigation?.Nombre,
+
+                    rol = primerRol?.id ?? 0,
+                    NombreRol = primerRol?.nombre
+                };
+
                 return Ok(new LoginResponse 
                 { 
                     Token = token,
-                    Datos = ArregloLogin.ConstruirData(usuario, empresa,"Usuario"),
+                    Datos = ArregloLogin.ConstruirData(usuarioDto, empresa,"Usuario"),
                     Exito = true
                 });
             }
