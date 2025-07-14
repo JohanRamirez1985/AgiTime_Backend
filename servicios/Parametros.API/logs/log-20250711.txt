@@ -1643,3 +1643,68 @@ WHERE [e].[id] = @__emp_0
 2025-07-11 17:04:36.062 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerSedes (Parametros.API)'
 2025-07-11 17:04:36.069 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/rol?emp=1 - - - 200 - application/json;+charset=utf-8 456.2685ms
 2025-07-11 17:04:36.072 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/sede?emp=1 - - - 200 - application/json;+charset=utf-8 472.4138ms
+2025-07-11 17:20:03.123 -05:00 [INF] Now listening on: https://localhost:44384
+2025-07-11 17:20:03.242 -05:00 [INF] Now listening on: http://localhost:5059
+2025-07-11 17:20:03.329 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-11 17:20:03.331 -05:00 [INF] Hosting environment: Development
+2025-07-11 17:20:03.333 -05:00 [INF] Content root path: F:\apps\agiTimev3\AgiTime\Servicios\Parametros.API\
+2025-07-11 17:20:04.990 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/index.html - -
+2025-07-11 17:20:05.557 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/index.html - - - 200 - text/html;charset=utf-8 577.0251ms
+2025-07-11 17:20:05.588 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_vs/browserLink - -
+2025-07-11 17:20:05.589 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - -
+2025-07-11 17:20:05.604 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - - - 200 12360 application/javascript;+charset=utf-8 15.2080ms
+2025-07-11 17:20:05.754 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 165.5668ms
+2025-07-11 17:20:05.849 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - -
+2025-07-11 17:20:05.865 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 16.4950ms
+2025-07-11 17:20:10.099 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/rol?emp=1 - -
+2025-07-11 17:20:10.143 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/genero?emp=1 - -
+2025-07-11 17:20:10.100 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/tipodocumento?emp=1 - -
+2025-07-11 17:20:10.146 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/api/Parametros/sede?emp=1 - -
+2025-07-11 17:20:10.232 -05:00 [INF] CORS policy execution successful.
+2025-07-11 17:20:10.254 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerGeneros (Parametros.API)'
+2025-07-11 17:20:10.239 -05:00 [INF] CORS policy execution successful.
+2025-07-11 17:20:10.239 -05:00 [INF] CORS policy execution successful.
+2025-07-11 17:20:10.261 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerSedes (Parametros.API)'
+2025-07-11 17:20:10.232 -05:00 [INF] CORS policy execution successful.
+2025-07-11 17:20:10.260 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerTiposDocumento (Parametros.API)'
+2025-07-11 17:20:10.294 -05:00 [INF] Executing endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerRoles (Parametros.API)'
+2025-07-11 17:20:10.332 -05:00 [INF] Route matched with {action = "ObtenerGeneros", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerGeneros(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 17:20:10.333 -05:00 [INF] Route matched with {action = "ObtenerSedes", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerSedes(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 17:20:10.335 -05:00 [INF] Route matched with {action = "ObtenerTiposDocumento", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerTiposDocumento(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 17:20:10.341 -05:00 [INF] Route matched with {action = "ObtenerRoles", controller = "Parametros"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult ObtenerRoles(Int32) on controller Parametros.API.Controllers.ParametrosController (Parametros.API).
+2025-07-11 17:20:12.246 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 17:20:12.246 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 17:20:12.246 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 17:20:12.246 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-11 17:20:13.839 -05:00 [INF] Executed DbCommand (107ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 17:20:13.839 -05:00 [INF] Executed DbCommand (107ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 17:20:13.839 -05:00 [INF] Executed DbCommand (107ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 17:20:13.839 -05:00 [INF] Executed DbCommand (107ms) [Parameters=[@__emp_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__emp_0
+2025-07-11 17:20:14.492 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Genero, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 17:20:14.492 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.TipoDocumento, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 17:20:14.492 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Rol, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 17:20:14.492 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[Parametros.API.Data.Modelos.Sede, Parametros.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-11 17:20:14.513 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerTiposDocumento (Parametros.API) in 3904.0591ms
+2025-07-11 17:20:14.513 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerGeneros (Parametros.API) in 3910.8242ms
+2025-07-11 17:20:14.513 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerSedes (Parametros.API) in 3908.2779ms
+2025-07-11 17:20:14.513 -05:00 [INF] Executed action Parametros.API.Controllers.ParametrosController.ObtenerRoles (Parametros.API) in 3899.6107ms
+2025-07-11 17:20:14.517 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerTiposDocumento (Parametros.API)'
+2025-07-11 17:20:14.517 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerGeneros (Parametros.API)'
+2025-07-11 17:20:14.520 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerSedes (Parametros.API)'
+2025-07-11 17:20:14.523 -05:00 [INF] Executed endpoint 'Parametros.API.Controllers.ParametrosController.ObtenerRoles (Parametros.API)'
+2025-07-11 17:20:14.540 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/sede?emp=1 - - - 200 - application/json;+charset=utf-8 4395.2005ms
+2025-07-11 17:20:14.540 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/tipodocumento?emp=1 - - - 200 - application/json;+charset=utf-8 4440.6674ms
+2025-07-11 17:20:14.540 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/genero?emp=1 - - - 200 - application/json;+charset=utf-8 4397.1137ms
+2025-07-11 17:20:14.541 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/api/Parametros/rol?emp=1 - - - 200 - application/json;+charset=utf-8 4442.0653ms
