@@ -8,6 +8,10 @@ namespace Parametros.API.Data
 {
     public partial class ParametrosContext : DbContext
     {
+        public ParametrosContext()
+        {
+        }
+
         public ParametrosContext(DbContextOptions<ParametrosContext> options)
             : base(options)
         {
@@ -110,7 +114,7 @@ namespace Parametros.API.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.password)
-                    .HasMaxLength(50)
+                    .HasMaxLength(200)
                     .IsUnicode(false);
 
                 entity.Property(e => e.telefono)

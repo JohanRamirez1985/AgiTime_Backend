@@ -146,7 +146,7 @@ namespace Usuarios.API.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.password)
-                    .HasMaxLength(50)
+                    .HasMaxLength(200)
                     .IsUnicode(false);
 
                 entity.Property(e => e.telefono)
