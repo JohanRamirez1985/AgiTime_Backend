@@ -24,3 +24,36 @@
 2025-07-15 09:46:09.680 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 195.3505ms
 2025-07-15 09:46:09.751 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - -
 2025-07-15 09:46:09.763 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 11.7525ms
+2025-07-15 10:44:08.440 -05:00 [INF] Now listening on: https://localhost:44384
+2025-07-15 10:44:09.410 -05:00 [INF] Now listening on: http://localhost:5059
+2025-07-15 10:44:09.716 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-15 10:44:09.719 -05:00 [INF] Hosting environment: Development
+2025-07-15 10:44:09.721 -05:00 [INF] Content root path: F:\apps\agiTimev3\AgiTime\Servicios\Clientes.API\
+2025-07-15 10:44:09.790 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/index.html - -
+2025-07-15 10:44:10.275 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/index.html - - - 200 - text/html;charset=utf-8 486.1209ms
+2025-07-15 10:44:10.279 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - -
+2025-07-15 10:44:10.320 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_vs/browserLink - -
+2025-07-15 10:44:10.330 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - - - 200 12356 application/javascript;+charset=utf-8 50.4943ms
+2025-07-15 10:44:10.469 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 148.6184ms
+2025-07-15 10:44:10.582 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - -
+2025-07-15 10:44:10.593 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 11.8669ms
+2025-07-15 10:47:20.182 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Clientes/login application/json 75
+2025-07-15 10:47:20.197 -05:00 [INF] Executing endpoint 'Clientes.API.Controllers.ClientesController.LoginCliente (Clientes.API)'
+2025-07-15 10:47:20.236 -05:00 [INF] Route matched with {action = "LoginCliente", controller = "Clientes"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult LoginCliente(Compartido.DTOs.LoginRequest) on controller Clientes.API.Controllers.ClientesController (Clientes.API).
+2025-07-15 10:47:30.613 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-15 10:47:32.252 -05:00 [INF] Executed DbCommand (105ms) [Parameters=[@__request_empresa_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__request_empresa_0
+2025-07-15 10:48:07.462 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-15 10:48:07.483 -05:00 [INF] Executed action Clientes.API.Controllers.ClientesController.LoginCliente (Clientes.API) in 47229.4941ms
+2025-07-15 10:48:07.486 -05:00 [INF] Executed endpoint 'Clientes.API.Controllers.ClientesController.LoginCliente (Clientes.API)'
+2025-07-15 10:48:07.497 -05:00 [INF] Request finished HTTP/2 POST https://localhost:44384/api/Clientes/login application/json 75 - 200 - application/json;+charset=utf-8 47315.9087ms
+2025-07-15 10:48:27.090 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Clientes/login application/json 78
+2025-07-15 10:48:27.094 -05:00 [INF] Executing endpoint 'Clientes.API.Controllers.ClientesController.LoginCliente (Clientes.API)'
+2025-07-15 10:48:27.099 -05:00 [INF] Route matched with {action = "LoginCliente", controller = "Clientes"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult LoginCliente(Compartido.DTOs.LoginRequest) on controller Clientes.API.Controllers.ClientesController (Clientes.API).
+2025-07-15 10:48:39.823 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-15 10:48:39.838 -05:00 [INF] Executed DbCommand (4ms) [Parameters=[@__request_empresa_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__request_empresa_0
