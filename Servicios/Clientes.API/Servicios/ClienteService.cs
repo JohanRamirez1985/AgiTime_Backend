@@ -35,6 +35,7 @@ namespace Clientes.API.Servicios
 
                 NombreGenero = usuario.generoNavigation?.nombre,
                 NombreTipoDocumento = usuario.tipoDocumentoNavigation?.nombre,
+                NombreRol = "Cliente",
             };
         }
 

@@ -50,7 +50,10 @@ namespace Clientes.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var usuario = ContextBD.Clientes.FirstOrDefault(u => u.login == request.Login);
+                var usuario = ContextBD.Clientes
+                            .Include(u => u.generoNavigation)
+                            .Include(u => u.tipoDocumentoNavigation)
+                            .FirstOrDefault(u => u.login == request.Login);
 
                 if (usuario == null || !EncripPassword.VerificarPassword(request.Password, usuario.password))
                 {
