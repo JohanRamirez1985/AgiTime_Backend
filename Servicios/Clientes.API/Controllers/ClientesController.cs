@@ -12,14 +12,14 @@ namespace Clientes.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ClientesControllers : ControllerBase
+    public class ClientesController : ControllerBase
     {
         private readonly GeneralContext ContextGene;
         private readonly FactoryContext ContextFact;
         private readonly IConfiguration configuracion;
         private readonly ClientesService ClienteService;
 
-        public ClientesControllers(GeneralContext gen, FactoryContext fac, IConfiguration config, ClientesService cliser)
+        public ClientesController(GeneralContext gen, FactoryContext fac, IConfiguration config, ClientesService cliser)
         {
             ContextGene = gen;
             ContextFact = fac;
