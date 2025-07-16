@@ -77,14 +77,16 @@ namespace Usuarios.API.Controllers
 
                 var token = Token.GenerarToken(usuario.login, empresa.conexionBD, claveSecreta, expiracion);
 
-                var usuarioDto = UsuarioService.ProcesarUsuario(usuario);
+                var info = UsuarioService.ProcesarUsuario(usuario, empresa, nombreBase);
 
-                var funcionalidad = UsuarioService.ProcesarFuncionabilidad(usuario, nombreBase);
+                //var usuarioDto = UsuarioService.ProcesarUsuario(usuario);
+
+                //var funcionalidad = UsuarioService.ProcesarFuncionabilidad(usuario, nombreBase);
 
                 return Ok(new LoginResponse
                 {
                     Token = token,
-                    Datos = ArregloLogin.ConstruirData(usuarioDto, empresa, funcionalidad,"Usuario"),
+                    Datos = ArregloLogin.ConstruirData(info, "Usuario"),
                     Exito = true
                 });
             }
