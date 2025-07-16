@@ -4,12 +4,12 @@ namespace Usuarios.API.Data
 {
     public class FactoryContext
     {
-        public UsuariosContext Create(string connectionString)
+        public ModeloContext Create(string connectionString)
         {
-            var optionsBuilder = new DbContextOptionsBuilder<UsuariosContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<ModeloContext>();
             optionsBuilder.UseSqlServer(connectionString);
 
-            return new UsuariosContext(optionsBuilder.Options);
+            return new ModeloContext(optionsBuilder.Options);
         }
     }
 }

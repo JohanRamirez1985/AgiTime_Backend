@@ -5,6 +5,11 @@ namespace Clientes.API.Data.Modelos
 {
     public partial class Cliente
     {
+        public Cliente()
+        {
+            Cita = new HashSet<Cita>();
+        }
+
         public int id { get; set; }
         public string nombre { get; set; } = null!;
         public string correo { get; set; } = null!;
@@ -20,5 +25,6 @@ namespace Clientes.API.Data.Modelos
 
         public virtual Genero generoNavigation { get; set; } = null!;
         public virtual TipoDocumento tipoDocumentoNavigation { get; set; } = null!;
+        public virtual ICollection<Cita> Cita { get; set; }
     }
 }

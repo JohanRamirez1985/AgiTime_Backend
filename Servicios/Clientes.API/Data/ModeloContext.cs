@@ -2,32 +2,82 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Usuarios.API.Data.Modelos;
+using Clientes.API.Data.Modelos;
 
-namespace Usuarios.API.Data
+namespace Clientes.API.Data
 {
-    public partial class UsuariosContext : DbContext
+    public partial class ModeloContext : DbContext
     {
-        public UsuariosContext()
+        public ModeloContext()
         {
         }
 
-        public UsuariosContext(DbContextOptions<UsuariosContext> options)
+        public ModeloContext(DbContextOptions<ModeloContext> options)
             : base(options)
         {
         }
 
+        public virtual DbSet<BloqueosHorario> BloqueosHorarios { get; set; } = null!;
+        public virtual DbSet<Cita> Citas { get; set; } = null!;
         public virtual DbSet<Ciudad> Ciudads { get; set; } = null!;
+        public virtual DbSet<Cliente> Clientes { get; set; } = null!;
+        public virtual DbSet<DetalleProducto> DetalleProductos { get; set; } = null!;
         public virtual DbSet<Funcionalidade> Funcionalidades { get; set; } = null!;
         public virtual DbSet<FuncionalidadesSet> FuncionalidadesSets { get; set; } = null!;
         public virtual DbSet<Genero> Generos { get; set; } = null!;
+        public virtual DbSet<Log> Logs { get; set; } = null!;
+        public virtual DbSet<Producto> Productos { get; set; } = null!;
         public virtual DbSet<Rol> Rols { get; set; } = null!;
         public virtual DbSet<Sede> Sedes { get; set; } = null!;
+        public virtual DbSet<Servicio> Servicios { get; set; } = null!;
         public virtual DbSet<TipoDocumento> TipoDocumentos { get; set; } = null!;
         public virtual DbSet<Usuario> Usuarios { get; set; } = null!;
+        public virtual DbSet<Ventum> Venta { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<BloqueosHorario>(entity =>
+            {
+                entity.ToTable("BloqueosHorario");
+
+                entity.Property(e => e.fechaFin).HasColumnType("datetime");
+
+                entity.Property(e => e.fechaInicio).HasColumnType("datetime");
+
+                entity.Property(e => e.motivo).IsUnicode(false);
+
+                entity.HasOne(d => d.usuarioNavigation)
+                    .WithMany(p => p.BloqueosHorarios)
+                    .HasForeignKey(d => d.usuario)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BloqueosHorario_Usuarios");
+            });
+
+            modelBuilder.Entity<Cita>(entity =>
+            {
+                entity.Property(e => e.estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.fechaFin).HasColumnType("datetime");
+
+                entity.Property(e => e.fechaInicio).HasColumnType("datetime");
+
+                entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
+
+                entity.HasOne(d => d.clienteNavigation)
+                    .WithMany(p => p.Cita)
+                    .HasForeignKey(d => d.cliente)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Citas_Clientes");
+
+                entity.HasOne(d => d.usuarioNavigation)
+                    .WithMany(p => p.Cita)
+                    .HasForeignKey(d => d.usuario)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Citas_Usuarios");
+            });
+
             modelBuilder.Entity<Ciudad>(entity =>
             {
                 entity.ToTable("Ciudad");
@@ -35,6 +85,72 @@ namespace Usuarios.API.Data
                 entity.Property(e => e.nombre)
                     .HasMaxLength(50)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Cliente>(entity =>
+            {
+                entity.Property(e => e.correo)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.documento)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
+
+                entity.Property(e => e.fechaNacimiento).HasColumnType("datetime");
+
+                entity.Property(e => e.login)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.nombre)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.password)
+                    .HasMaxLength(200)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.telefono)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.HasOne(d => d.generoNavigation)
+                    .WithMany(p => p.Clientes)
+                    .HasForeignKey(d => d.genero)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Clientes_Genero");
+
+                entity.HasOne(d => d.tipoDocumentoNavigation)
+                    .WithMany(p => p.Clientes)
+                    .HasForeignKey(d => d.tipoDocumento)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Clientes_TipoDocumento");
+            });
+
+            modelBuilder.Entity<DetalleProducto>(entity =>
+            {
+                entity.ToTable("DetalleProducto");
+
+                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
+
+                entity.HasOne(d => d.productoNavigation)
+                    .WithMany(p => p.DetalleProductos)
+                    .HasForeignKey(d => d.producto)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_DetalleProducto_Producto");
+
+                entity.HasOne(d => d.usuarioCreacionNavigation)
+                    .WithMany(p => p.DetalleProductos)
+                    .HasForeignKey(d => d.usuarioCreacion)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_DetalleProducto_Usuarios");
             });
 
             modelBuilder.Entity<Funcionalidade>(entity =>
@@ -76,6 +192,32 @@ namespace Usuarios.API.Data
                     .IsUnicode(false);
             });
 
+            modelBuilder.Entity<Log>(entity =>
+            {
+                entity.Property(e => e.Level).HasMaxLength(50);
+
+                entity.Property(e => e.Timestamp).HasColumnType("datetime");
+            });
+
+            modelBuilder.Entity<Producto>(entity =>
+            {
+                entity.ToTable("Producto");
+
+                entity.Property(e => e.Nombre)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.codigo)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.precio).HasColumnType("decimal(18, 0)");
+            });
+
             modelBuilder.Entity<Rol>(entity =>
             {
                 entity.ToTable("Rol");
@@ -108,6 +250,19 @@ namespace Usuarios.API.Data
                 entity.Property(e => e.telefono)
                     .HasMaxLength(50)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Servicio>(entity =>
+            {
+                entity.Property(e => e.estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.nombre)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
             });
 
             modelBuilder.Entity<TipoDocumento>(entity =>
@@ -183,6 +338,15 @@ namespace Usuarios.API.Data
 
                             j.ToTable("UsuarioRol");
                         });
+            });
+
+            modelBuilder.Entity<Ventum>(entity =>
+            {
+                entity.Property(e => e.factura)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.fechaVenta).HasColumnType("datetime");
             });
 
             OnModelCreatingPartial(modelBuilder);

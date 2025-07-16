@@ -4,12 +4,12 @@ namespace Parametros.API.Data
 {
     public class FactoryContext
     {
-        public ParametrosContext Create(string connectionString)
+        public ModeloContext Create(string connectionString)
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ParametrosContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<ModeloContext>();
             optionsBuilder.UseSqlServer(connectionString);
 
-            return new ParametrosContext(optionsBuilder.Options);
+            return new ModeloContext(optionsBuilder.Options);
         }
     }
 }
