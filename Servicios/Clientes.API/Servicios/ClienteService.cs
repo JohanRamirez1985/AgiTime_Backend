@@ -23,7 +23,7 @@ namespace Clientes.API.Servicios
             var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
             var connectionString = string.Format(connectionTemplate, nombreBase);
 
-            using var ContextBD = ContextFact.Create(connectionString);
+            var ContextBD = ContextFact.Create(connectionString);
 
             var user = new
             {
