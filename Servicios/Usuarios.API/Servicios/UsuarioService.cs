@@ -60,11 +60,22 @@ namespace Usuarios.API.Servicios
 
             var sedes = ContextBD.Sedes.OrderBy(s => s.Nombre);
 
+            var emp = new
+            {
+                Id = empresa.id,
+                Nombre = empresa.nombre,
+                Nit = empresa.nit,
+                Logo = empresa.logo,
+                Conexion = empresa.conexionBD,
+                Estados = empresa.estado,
+                Sedes = sedes
+            };
+
             var datos = new
             {
                 Usuario = user,
                 Funcionaidades = funcionalidades,
-                Empresa = new { empresa, sedes }
+                Empresa = emp
             };
 
             return datos;
