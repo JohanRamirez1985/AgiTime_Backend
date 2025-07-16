@@ -17,11 +17,16 @@ namespace Usuarios.API.Servicios
             configuracion = config;
         }
 
-        public UsuarioDTO ProcesarUsuario(Usuario usuario)
+        public object ProcesarUsuario(Usuario usuario, Empresa empresa, string nombreBase)
         {
+            var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+            var connectionString = string.Format(connectionTemplate, nombreBase);
+
+            using var ContextBD = ContextFact.Create(connectionString);
+
             var primerRol = usuario.idRols.FirstOrDefault();
 
-            return new UsuarioDTO
+            var user = new
             {
                 Id = usuario.id,
                 Nombre = usuario.nombre,
@@ -43,16 +48,6 @@ namespace Usuarios.API.Servicios
                 rol = primerRol?.id ?? 0,
                 NombreRol = primerRol?.nombre
             };
-        }
-
-        public object ProcesarFuncionabilidad(Usuario usuario, string nombreBase)
-        {
-            var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
-            var connectionString = string.Format(connectionTemplate, nombreBase);
-
-            using var ContextBD = ContextFact.Create(connectionString);
-
-            var primerRol = usuario.idRols.FirstOrDefault();
 
             var funcionalidades = ContextBD.FuncionalidadesSets
                     .Include(fs => fs.funcionalidadNavigation)
@@ -63,7 +58,37 @@ namespace Usuarios.API.Servicios
                     })
                     .ToList();
 
-            return funcionalidades;
+            var sedes = ContextBD.Sedes.OrderBy(s => s.Nombre);
+
+            var datos = new
+            {
+                Usuario = user,
+                Funcionaidades = funcionalidades,
+                Empresa = new { empresa, sedes }
+            };
+
+            return datos;
         }
+
+        //public object ProcesarFuncionabilidad(Usuario usuario, string nombreBase)
+        //{
+        //    var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+        //    var connectionString = string.Format(connectionTemplate, nombreBase);
+
+        //    using var ContextBD = ContextFact.Create(connectionString);
+
+        //    var primerRol = usuario.idRols.FirstOrDefault();
+
+        //    var funcionalidades = ContextBD.FuncionalidadesSets
+        //            .Include(fs => fs.funcionalidadNavigation)
+        //            .Where(fs => fs.rol == primerRol.id && fs.estado == "Activo")
+        //            .Select(fs => new
+        //            {
+        //                fs.funcionalidadNavigation.codigo
+        //            })
+        //            .ToList();
+
+        //    return funcionalidades;
+        //}
     }
 }
