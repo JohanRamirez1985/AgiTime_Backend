@@ -22,7 +22,7 @@ namespace Usuarios.API.Servicios
             var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
             var connectionString = string.Format(connectionTemplate, nombreBase);
 
-            using var ContextBD = ContextFact.Create(connectionString);
+            var ContextBD = ContextFact.Create(connectionString);
 
             var primerRol = usuario.idRols.FirstOrDefault();
 
