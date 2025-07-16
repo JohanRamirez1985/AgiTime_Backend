@@ -19,16 +19,28 @@ set PROVIDER=Microsoft.EntityFrameworkCore.SqlServer
 dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --output-dir Data\Modelos ^
 --context-dir Data ^
---context ClientesContext ^
+--context ModeloContext ^
 --use-database-names ^
 --no-onconfiguring ^
 --force ^
---table TipoDocumento ^
---table Genero ^
+--table BloqueosHorario ^
+--table Citas ^
+--table Ciudad ^
 --table Clientes ^
+--table DetalleProducto ^
 --table Funcionalidades ^
 --table FuncionalidadesSet ^
---table Rol
+--table Genero ^
+--table Logs ^
+--table Producto ^
+--table Rol ^
+--table Sede ^
+--table Servicios ^
+--table TipoDocumento ^
+--table UsuarioRol ^
+--table Usuarios ^
+--table Venta ^
+--table VentaDetallel
 
 echo ==============================================
 echo ✅ Generación completada correctamente

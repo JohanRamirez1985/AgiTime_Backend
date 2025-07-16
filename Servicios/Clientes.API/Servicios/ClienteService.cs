@@ -2,6 +2,7 @@
 using Clientes.API.Data.Modelos;
 using Compartido.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 
 namespace Clientes.API.Servicios
@@ -17,9 +18,14 @@ namespace Clientes.API.Servicios
             configuracion = config;
         }
 
-        public UsuarioDTO ProcesarUsuario(Cliente usuario)
+        public object ProcesarUsuario(Cliente usuario, Empresa empresa, string nombreBase)
         {
-            return new UsuarioDTO
+            var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+            var connectionString = string.Format(connectionTemplate, nombreBase);
+
+            using var ContextBD = ContextFact.Create(connectionString);
+
+            var user = new
             {
                 Id = usuario.id,
                 Nombre = usuario.nombre,
@@ -37,14 +43,6 @@ namespace Clientes.API.Servicios
                 NombreTipoDocumento = usuario.tipoDocumentoNavigation?.nombre,
                 NombreRol = "Cliente",
             };
-        }
-
-        public object ProcesarFuncionabilidad(Cliente usuario, string nombreBase)
-        {
-            var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
-            var connectionString = string.Format(connectionTemplate, nombreBase);
-
-            using var ContextBD = ContextFact.Create(connectionString);
 
             var funcionalidades = ContextBD.FuncionalidadesSets
                     .Include(f => f.funcionalidadNavigation)
@@ -52,7 +50,33 @@ namespace Clientes.API.Servicios
                     .Where(f => f.rolNavigation.nombre == "Cliente")
                     .ToList();
 
-            return funcionalidades;
+            var sedes = ContextBD.Sedes.OrderBy(s => s.Nombre);
+
+            var datos = new
+            {
+                Usuario = user,
+                Funcionaidades = funcionalidades,
+                Empresa = new { empresa,sedes }
+            };
+
+            return datos;
+
         }
+
+        //public object ProcesarFuncionabilidad(Cliente usuario, Empresa empresa, string nombreBase)
+        //{
+        //    var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+        //    var connectionString = string.Format(connectionTemplate, nombreBase);
+
+        //    using var ContextBD = ContextFact.Create(connectionString);
+
+        //    var funcionalidades = ContextBD.FuncionalidadesSets
+        //            .Include(f => f.funcionalidadNavigation)
+        //            .Include(f => f.rolNavigation)
+        //            .Where(f => f.rolNavigation.nombre == "Cliente")
+        //            .ToList();
+
+        //    return funcionalidades;
+        //}
     }
 }

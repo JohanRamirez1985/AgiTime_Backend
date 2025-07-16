@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Compartido.DTOs
 {
-    public partial class UsuarioDTO
+    public partial class ClienteDTOUsuarioDTO
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = null!;

@@ -68,15 +68,15 @@ namespace Clientes.API.Controllers
                 int expiracion = int.Parse(configuracion["Jwt:ExpiracionMinutos"]);
 
                 var token = Token.GenerarToken(usuario.login, empresa.conexionBD, claveSecreta, expiracion);
+                
+                var info = ClienteService.ProcesarUsuario(usuario, empresa, nombreBase);
 
-                var clienteDto = ClienteService.ProcesarUsuario(usuario);
-
-                var funcionalidad = ClienteService.ProcesarFuncionabilidad(usuario, nombreBase);
+                //var funcionalidad = ClienteService.ProcesarFuncionabilidad(usuario, nombreBase);
 
                 return Ok(new LoginResponse
                 {
                     Token = token,
-                    Datos = ArregloLogin.ConstruirData(clienteDto, empresa, funcionalidad, "Usuario"),
+                    Datos = ArregloLogin.ConstruirData(info, "Usuario"),
                     Exito = true
                 });
             }

@@ -5,6 +5,14 @@ namespace Parametros.API.Data.Modelos
 {
     public partial class Usuario
     {
+        public Usuario()
+        {
+            BloqueosHorarios = new HashSet<BloqueosHorario>();
+            Cita = new HashSet<Cita>();
+            DetalleProductos = new HashSet<DetalleProducto>();
+            idRols = new HashSet<Rol>();
+        }
+
         public int id { get; set; }
         public string nombre { get; set; } = null!;
         public int tipoDocumento { get; set; }
@@ -22,5 +30,10 @@ namespace Parametros.API.Data.Modelos
         public virtual Genero generoNavigation { get; set; } = null!;
         public virtual Sede sedeNavigation { get; set; } = null!;
         public virtual TipoDocumento tipoDocumentoNavigation { get; set; } = null!;
+        public virtual ICollection<BloqueosHorario> BloqueosHorarios { get; set; }
+        public virtual ICollection<Cita> Cita { get; set; }
+        public virtual ICollection<DetalleProducto> DetalleProductos { get; set; }
+
+        public virtual ICollection<Rol> idRols { get; set; }
     }
 }
