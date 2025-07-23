@@ -8,6 +8,7 @@ namespace Clientes.API.Data.Modelos
         public Producto()
         {
             DetalleProductos = new HashSet<DetalleProducto>();
+            VentaDetalles = new HashSet<VentaDetalle>();
         }
 
         public int id { get; set; }
@@ -18,5 +19,6 @@ namespace Clientes.API.Data.Modelos
         public string estado { get; set; } = null!;
 
         public virtual ICollection<DetalleProducto> DetalleProductos { get; set; }
+        public virtual ICollection<VentaDetalle> VentaDetalles { get; set; }
     }
 }

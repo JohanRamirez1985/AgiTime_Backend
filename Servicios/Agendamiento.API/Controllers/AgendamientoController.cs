@@ -28,7 +28,7 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpPost("registrarCita")]
-        public IActionResult CrearCita([FromBody] ClienteDTO dto)
+        public IActionResult CrearCita([FromBody] CitaDTO dto)
         {
             string nombreBase = string.Empty;
             try
@@ -50,29 +50,246 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var nuevoCliente = new Cliente
+                var nuevo = new Cita
                 {
-                    nombre = dto.Nombre,
-                    correo = dto.Correo,
-                    login = dto.Correo,
-                    password = EncripPassword.EncriptarPassword(dto.Password),
-                    telefono = dto.Telefono,
-                    fechaNacimiento = dto.FechaNacimiento,
-                    genero = dto.Genero,
-                    tipoDocumento = dto.TipoDocumento,
-                    documento = dto.Documento,
+                    fechaInicio = dto.FechaIni,
+                    fechaFin = dto.FechaFin,
+                    recurso = dto.recurso,
+                    cliente = dto.Cliente,
+                    servicio = dto.Servicio,
+                    valor = dto.Valor,
                     estado = Estados.Activo,
-                    fechaCreacion = DateTime.Now
+                    fechaCreacion = DateTime.Now,
+                    usuarioCreacion = dto.UsuarioCreacion
                 };
 
-                ContextBD.Clientes.Add(nuevoCliente);
+                ContextBD.Citas.Add(nuevo);
                 ContextBD.SaveChanges();
 
                 return Ok(new
                 {
-                    mensaje = "Cliente registrado exitosamente",
+                    mensaje = "Cita registrada exitosamente",
+                    exito = true
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("registrarBloqueo")]
+        public IActionResult CrearBloqueo([FromBody] BloqueoDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var nuevo = new BloqueosHorario
+                {
+                    fechaInicio = dto.FechaIni,
+                    fechaFin = dto.FechaFin,
+                    motivo = dto.Motivo,
+                    usuario = dto.usuario
+                };
+
+                ContextBD.BloqueosHorarios.Add(nuevo);
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Cita registrada exitosamente",
+                    exito = true
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarBloqueos")]
+        public IActionResult ObtenerBloqueos([FromQuery] BloqueoDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.BloqueosHorarios
+                                     .Where(e => e.fechaInicio >= dto.FechaIni
+                                            && e.fechaFin <= dto.FechaFin
+                                            && e.usuario == dto.usuario)
+                                     .ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay bloqueos registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
                     exito = true,
-                    clienteId = nuevoCliente.id
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarAgendaRecurso")]
+        public IActionResult ObtenerAgendaRecurso([FromQuery] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Citas
+                                     .Where(e => e.fechaInicio >= dto.FechaIni
+                                            && e.fechaFin <= dto.FechaFin
+                                            && e.recurso == dto.recurso)
+                                     .ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay citas registradas",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarAgendaCliente")]
+        public IActionResult ObtenerAgendaCliente([FromQuery] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Citas
+                                     .Where(e => e.fechaInicio >= dto.FechaIni
+                                            && e.fechaFin <= dto.FechaFin
+                                            && e.recurso == dto.Cliente)
+                                     .ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay citas registradas",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
                 });
             }
             catch (Exception ex)

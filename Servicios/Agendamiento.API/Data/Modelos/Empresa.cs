@@ -11,5 +11,6 @@ namespace Agendamiento.API.Data.Modelos
         public string logo { get; set; } = null!;
         public string conexionBD { get; set; } = null!;
         public string estado { get; set; } = null!;
+        public bool servicio { get; set; }
     }
 }

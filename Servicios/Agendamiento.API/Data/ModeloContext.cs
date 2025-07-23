@@ -27,6 +27,7 @@ namespace Agendamiento.API.Data
         public virtual DbSet<Genero> Generos { get; set; } = null!;
         public virtual DbSet<Log> Logs { get; set; } = null!;
         public virtual DbSet<Producto> Productos { get; set; } = null!;
+        public virtual DbSet<Recurso> Recursos { get; set; } = null!;
         public virtual DbSet<Rol> Rols { get; set; } = null!;
         public virtual DbSet<Sede> Sedes { get; set; } = null!;
         public virtual DbSet<Servicio> Servicios { get; set; } = null!;
@@ -60,9 +61,15 @@ namespace Agendamiento.API.Data
                     .HasMaxLength(20)
                     .IsUnicode(false);
 
+                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
+
                 entity.Property(e => e.fechaFin).HasColumnType("datetime");
 
                 entity.Property(e => e.fechaInicio).HasColumnType("datetime");
+
+                entity.Property(e => e.usuarioCreacion)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
 
@@ -72,11 +79,10 @@ namespace Agendamiento.API.Data
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Citas_Clientes");
 
-                entity.HasOne(d => d.usuarioNavigation)
+                entity.HasOne(d => d.servicioNavigation)
                     .WithMany(p => p.Cita)
-                    .HasForeignKey(d => d.usuario)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Citas_Usuarios");
+                    .HasForeignKey(d => d.servicio)
+                    .HasConstraintName("FK_Citas_Servicios");
             });
 
             modelBuilder.Entity<Ciudad>(entity =>
@@ -219,6 +225,25 @@ namespace Agendamiento.API.Data
                 entity.Property(e => e.precio).HasColumnType("decimal(18, 0)");
             });
 
+            modelBuilder.Entity<Recurso>(entity =>
+            {
+                entity.Property(e => e.estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
+
+                entity.Property(e => e.nombre)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.HasOne(d => d.sedeNavigation)
+                    .WithMany(p => p.Recursos)
+                    .HasForeignKey(d => d.sede)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Recursos_Sede");
+            });
+
             modelBuilder.Entity<Rol>(entity =>
             {
                 entity.ToTable("Rol");
@@ -335,7 +360,7 @@ namespace Agendamiento.API.Data
                         r => r.HasOne<Usuario>().WithMany().HasForeignKey("idUsuario").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_UsuarioRol_Usuarios"),
                         j =>
                         {
-                            j.HasKey("idUsuario", "idRol").HasName("PK__UsuarioR__179F51512D27B809");
+                            j.HasKey("idUsuario", "idRol").HasName("PK__UsuarioR__179F515182DEE9FE");
 
                             j.ToTable("UsuarioRol");
                         });
