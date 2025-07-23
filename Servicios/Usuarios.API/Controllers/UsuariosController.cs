@@ -145,6 +145,7 @@ namespace Usuarios.API.Controllers
                     documento = dto.Documento,
                     estado = Estados.Activo,
                     fechaCreacion = DateTime.Now,
+                    recurso = dto.recurso,
                     idRols = new List<Rol> { rol }
                 };
 

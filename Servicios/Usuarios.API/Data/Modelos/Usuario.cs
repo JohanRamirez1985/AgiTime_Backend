@@ -8,7 +8,6 @@ namespace Usuarios.API.Data.Modelos
         public Usuario()
         {
             BloqueosHorarios = new HashSet<BloqueosHorario>();
-            Cita = new HashSet<Cita>();
             DetalleProductos = new HashSet<DetalleProducto>();
             idRols = new HashSet<Rol>();
         }
@@ -26,12 +25,12 @@ namespace Usuarios.API.Data.Modelos
         public string estado { get; set; } = null!;
         public DateTime fechaCreacion { get; set; }
         public int sede { get; set; }
+        public bool recurso { get; set; }
 
         public virtual Genero generoNavigation { get; set; } = null!;
         public virtual Sede sedeNavigation { get; set; } = null!;
         public virtual TipoDocumento tipoDocumentoNavigation { get; set; } = null!;
         public virtual ICollection<BloqueosHorario> BloqueosHorarios { get; set; }
-        public virtual ICollection<Cita> Cita { get; set; }
         public virtual ICollection<DetalleProducto> DetalleProductos { get; set; }
 
         public virtual ICollection<Rol> idRols { get; set; }

@@ -68,6 +68,7 @@ namespace Usuarios.API.Servicios
                 Logo = empresa.logo,
                 Conexion = empresa.conexionBD,
                 Estados = empresa.estado,
+                Servicio = empresa.servicio,
                 Sedes = sedes
             };
 

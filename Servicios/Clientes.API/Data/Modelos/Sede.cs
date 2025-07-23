@@ -7,6 +7,7 @@ namespace Clientes.API.Data.Modelos
     {
         public Sede()
         {
+            Recursos = new HashSet<Recurso>();
             Usuarios = new HashSet<Usuario>();
         }
 
@@ -18,6 +19,7 @@ namespace Clientes.API.Data.Modelos
         public string barrio { get; set; } = null!;
         public string estado { get; set; } = null!;
 
+        public virtual ICollection<Recurso> Recursos { get; set; }
         public virtual ICollection<Usuario> Usuarios { get; set; }
     }
 }

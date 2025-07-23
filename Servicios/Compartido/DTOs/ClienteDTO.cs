@@ -21,6 +21,7 @@ namespace Compartido.DTOs
         public string Estado { get; set; } = null!;
         public DateTime FechaCreacion { get; set; }
         public int empresa { get; set; }
+        public int servicio { get; set; }
 
         public string? NombreGenero { get; set; }
         public string? NombreTipoDocumento { get; set; }

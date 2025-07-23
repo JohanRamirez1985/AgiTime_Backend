@@ -11,7 +11,7 @@ if not exist "Data\Modelos" mkdir Data\Modelos
 if not exist "Data" mkdir Data
 
 :: Cadena de conexión
-set CADENA="Server=JOHAN\SQLEXPRESS;Database=AgiTimePrueba;User Id=sa;Password=123456;TrustServerCertificate=True;"
+set CADENA="Server=178.156.162.97,1433;Database=AgiTimePruebas;User Id=sa;Password=@giTime!;TrustServerCertificate=True;"
 :: Proveedor EF Core
 set PROVIDER=Microsoft.EntityFrameworkCore.SqlServer
 
@@ -33,6 +33,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Genero ^
 --table Logs ^
 --table Producto ^
+--table Recursos ^
 --table Rol ^
 --table Sede ^
 --table Servicios ^
@@ -40,7 +41,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table UsuarioRol ^
 --table Usuarios ^
 --table Venta ^
---table VentaDetallel
+--table VentaDetalle
 
 echo ==============================================
 echo ✅ Generación completada correctamente
