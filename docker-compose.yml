@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   usuariosapi:
-    image: usuariosapi:latest
+    build:
+      context: ./servicios
+      dockerfile: Usuarios.API/Dockerfile
     container_name: usuarios-api
     ports:
       - "80:80"
@@ -11,7 +13,9 @@ services:
     restart: always
 
   clientesapi:
-    image: clientesapi:latest
+    build:
+      context: ./servicios
+      dockerfile: Clientes.API/Dockerfile
     container_name: clientes-api
     ports:
       - "81:80"
@@ -20,7 +24,9 @@ services:
     restart: always
 
   parametrosapi:
-    image: parametrosapi:latest
+    build:
+      context: ./servicios
+      dockerfile: Parametros.API/Dockerfile
     container_name: parametros-api
     ports:
       - "82:80"
@@ -29,10 +35,23 @@ services:
     restart: always
 
   agendamientosapi:
-    image: agendamientosapi:latest
+    build:
+      context: ./servicios
+      dockerfile: Agendamiento.API/Dockerfile
     container_name: agendamientos-api
     ports:
       - "83:80"
+    networks:
+      - agitime-net
+    restart: always
+
+  frontend:
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile
+    container_name: agitime-frontend
+    ports:
+      - "4200:80"
     networks:
       - agitime-net
     restart: always
