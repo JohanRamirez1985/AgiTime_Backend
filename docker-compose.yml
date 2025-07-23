@@ -1,49 +1,38 @@
 version: "3.8"
 
 services:
-  gateway:
-    build:
-      context: ./gateway
-    container_name: agitime-gateway
+  usuariosapi:
+    image: usuariosapi:latest
+    container_name: usuarios-api
     ports:
       - "80:80"
-    volumes:
-      - ./gateway/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - frontend
-      - usuariosapi
-      - parametrosapi
-      - clientesapi
-    networks:
-      - agitime-net
-    restart: always
-
-  frontend:
-    image: agitime/agitime-frontend:latest
-    container_name: agitime-frontend
-    ports:
-      - "8080:80"
-    networks:
-      - agitime-net
-    restart: always
-
-  usuariosapi:
-    image: agitime/agitime-usuariosapi:latest
-    container_name: usuarios-api
     networks:
       - agitime-net
     restart: always
 
   clientesapi:
-    image: agitime/agitime-clientesapi:latest
+    image: clientesapi:latest
     container_name: clientes-api
+    ports:
+      - "81:80"
     networks:
       - agitime-net
     restart: always
 
   parametrosapi:
-    image: agitime/agitime-parametrosapi:latest
+    image: parametrosapi:latest
     container_name: parametros-api
+    ports:
+      - "82:80"
+    networks:
+      - agitime-net
+    restart: always
+
+  agendamientosapi:
+    image: agendamientosapi:latest
+    container_name: agendamientos-api
+    ports:
+      - "83:80"
     networks:
       - agitime-net
     restart: always
