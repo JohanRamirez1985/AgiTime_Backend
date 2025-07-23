@@ -45,16 +45,16 @@ services:
       - agitime-net
     restart: always
 
-  frontend:
-    build:
-      context: ./FrontEnd
-      dockerfile: Dockerfile
-    container_name: agitime-frontend
-    ports:
-      - "4200:80"
-    networks:
-      - agitime-net
-    restart: always
+  # frontend:
+  #   build:
+  #     context: ./FrontEnd
+  #     dockerfile: Dockerfile
+  #   container_name: agitime-frontend
+  #   ports:
+  #     - "4200:80"
+  #   networks:
+  #     - agitime-net
+  #   restart: always
 
 networks:
   agitime-net:
