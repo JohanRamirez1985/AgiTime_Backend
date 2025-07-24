@@ -115,6 +115,17 @@ namespace Clientes.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                var valida = ContextBD.Clientes.Where(e => e.documento == dto.Documento).FirstOrDefault();
+
+                if (valida != null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Ya hay un cliente creado con el número de identificación: " + dto.Documento,
+                        exito = false
+                    });
+                }
+
                 var nuevoCliente = new Cliente
                 {
                     nombre = dto.Nombre,

@@ -125,10 +125,25 @@ namespace Usuarios.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                var valida = ContextBD.Usuarios.Where(e => e.documento == dto.Documento).FirstOrDefault();
+
+                if(valida != null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Ya hay un usuario creado con el número de identificación: " + dto.Documento,
+                        exito = false
+                    });
+                }
+
                 var rol = ContextBD.Rols.FirstOrDefault(r => r.id == dto.rol);
                 if (rol == null)
                 {
-                    return BadRequest(new { mensaje = "Rol no válido" });
+                    return Ok(new
+                    {
+                        mensaje = "Rol no válido",
+                        exito = false
+                    });
                 }
 
                 var nuevoUsuario = new Usuario
@@ -154,7 +169,7 @@ namespace Usuarios.API.Controllers
 
                 return Ok(new
                 {
-                    mensaje = "Cliente registrado exitosamente",
+                    mensaje = "Usuario registrado exitosamente",
                     exito = true,
                     clienteId = nuevoUsuario.id
                 });
