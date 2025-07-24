@@ -366,14 +366,6 @@ namespace Parametros.API.Controllers
                             .Include(u => u.idRols)
                             .Where(e => e.estado == Estados.Activo)
                             .OrderBy(o => o.nombre)
-                            //.Select(u => new UsuarioDTO
-                            //{
-                            //    Id = u.id,
-                            //    Nombre = u.nombre,
-                            //    Correo = u.correo,
-                            //    NombreSede = u.sedeNavigation.nombre,
-                            //    NombreRol = u.idRols.Select(r => r.id).ToList()
-                            //})
                             .ToList();
 
                 var lista = new List<UsuarioDTO>();
