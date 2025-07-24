@@ -376,13 +376,13 @@ namespace Parametros.API.Controllers
                             //})
                             .ToList();
 
-                var lista = new List<object>();
+                var lista = new List<UsuarioDTO>();
 
                 foreach (var usu in usuario)
                 {
                     var primerRol = usu.idRols.FirstOrDefault();
 
-                    lista.Add(new
+                    lista.Add(new UsuarioDTO
                     {
                         Id = usu.id,
                         Nombre = usu.nombre,
@@ -396,6 +396,7 @@ namespace Parametros.API.Controllers
                         Documento = usu.documento,
                         Estado = usu.estado,
                         FechaCreacion = usu.fechaCreacion,
+                        recurso = usu.recurso,
 
                         NombreGenero = usu.generoNavigation?.nombre,
                         NombreTipoDocumento = usu.tipoDocumentoNavigation?.nombre,
