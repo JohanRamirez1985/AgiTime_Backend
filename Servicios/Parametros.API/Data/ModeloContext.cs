@@ -17,6 +17,7 @@ namespace Parametros.API.Data
         {
         }
 
+        public virtual DbSet<Agendum> Agenda { get; set; } = null!;
         public virtual DbSet<BloqueosHorario> BloqueosHorarios { get; set; } = null!;
         public virtual DbSet<Cita> Citas { get; set; } = null!;
         public virtual DbSet<Ciudad> Ciudads { get; set; } = null!;
@@ -26,6 +27,7 @@ namespace Parametros.API.Data
         public virtual DbSet<FuncionalidadesSet> FuncionalidadesSets { get; set; } = null!;
         public virtual DbSet<Genero> Generos { get; set; } = null!;
         public virtual DbSet<Log> Logs { get; set; } = null!;
+        public virtual DbSet<Parametro> Parametros { get; set; } = null!;
         public virtual DbSet<Producto> Productos { get; set; } = null!;
         public virtual DbSet<Recurso> Recursos { get; set; } = null!;
         public virtual DbSet<Rol> Rols { get; set; } = null!;
@@ -204,6 +206,17 @@ namespace Parametros.API.Data
                 entity.Property(e => e.Level).HasMaxLength(50);
 
                 entity.Property(e => e.Timestamp).HasColumnType("datetime");
+            });
+
+            modelBuilder.Entity<Parametro>(entity =>
+            {
+                entity.Property(e => e.tipo)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.valor)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<Producto>(entity =>

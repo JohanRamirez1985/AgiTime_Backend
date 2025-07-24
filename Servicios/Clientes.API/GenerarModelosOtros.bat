@@ -23,6 +23,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --use-database-names ^
 --no-onconfiguring ^
 --force ^
+--table Agenda ^
 --table BloqueosHorario ^
 --table Citas ^
 --table Ciudad ^
@@ -32,6 +33,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table FuncionalidadesSet ^
 --table Genero ^
 --table Logs ^
+--table Parametros ^
 --table Producto ^
 --table Recursos ^
 --table Rol ^
