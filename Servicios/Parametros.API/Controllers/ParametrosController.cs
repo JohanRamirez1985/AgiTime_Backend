@@ -1,7 +1,9 @@
 ﻿using Compartido;
 using Compartido.Constantes;
+using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Parametros.API.Data;
 using Parametros.API.Data.Modelos;
 
@@ -357,7 +359,45 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Usuarios.Where(e => e.estado == Estados.Activo).OrderBy(o => o.nombre).ToList();
+                var usuario = ContextBD.Usuarios
+                            .Include(u => u.generoNavigation)
+                            .Include(u => u.tipoDocumentoNavigation)
+                            .Include(u => u.sedeNavigation)
+                            .Include(u => u.idRols)
+                            .Where(e => e.estado == Estados.Activo)
+                            .OrderBy(o => o.nombre)
+                            .ToList();
+
+                var lista = new List<UsuarioDTO>();
+
+                foreach (var usu in usuario)
+                {
+                    var primerRol = usu.idRols.FirstOrDefault();
+
+                    lista.Add(new UsuarioDTO
+                    {
+                        Id = usu.id,
+                        Nombre = usu.nombre,
+                        Correo = usu.correo,
+                        Password = usu.password,
+                        Telefono = usu.telefono,
+                        FechaNacimiento = usu.fechaNacimiento,
+                        Genero = usu.genero,
+                        TipoDocumento = usu.tipoDocumento,
+                        Sede = usu.sede,
+                        Documento = usu.documento,
+                        Estado = usu.estado,
+                        FechaCreacion = usu.fechaCreacion,
+                        recurso = usu.recurso,
+
+                        NombreGenero = usu.generoNavigation?.nombre,
+                        NombreTipoDocumento = usu.tipoDocumentoNavigation?.nombre,
+                        NombreSede = usu.sedeNavigation?.Nombre,
+
+                        rol = primerRol?.id ?? 0,
+                        NombreRol = primerRol?.nombre
+                    });
+                }
 
                 if (lista == null || lista.Count == 0)
                 {
