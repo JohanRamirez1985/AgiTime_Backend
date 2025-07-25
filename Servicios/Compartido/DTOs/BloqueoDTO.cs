@@ -14,5 +14,6 @@ namespace Compartido.DTOs
         public int usuario { get; set; }
         public string Motivo { get; set; }
         public int empresa { get; set; }
+        public int Hora { get; set; }
     }
 }

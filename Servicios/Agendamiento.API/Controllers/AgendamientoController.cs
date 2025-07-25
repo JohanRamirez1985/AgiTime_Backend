@@ -53,7 +53,8 @@ namespace Agendamiento.API.Controllers
                 var nuevo = new Cita
                 {
                     fechaInicio = dto.FechaIni,
-                    fechaFin = dto.FechaFin,
+                    hora = dto.Hora,
+                    fechaFin = dto.FechaIni.AddHours(dto.Hora),
                     recurso = dto.recurso,
                     cliente = dto.Cliente,
                     servicio = dto.Servicio,
@@ -110,7 +111,8 @@ namespace Agendamiento.API.Controllers
                 var nuevo = new BloqueosHorario
                 {
                     fechaInicio = dto.FechaIni,
-                    fechaFin = dto.FechaFin,
+                    hora = dto.Hora,
+                    fechaFin = dto.FechaIni.AddHours(dto.Hora),
                     motivo = dto.Motivo,
                     usuario = dto.usuario
                 };

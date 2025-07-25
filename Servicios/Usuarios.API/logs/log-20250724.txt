@@ -1,0 +1,53 @@
+2025-07-24 15:56:29.094 -05:00 [INF] Now listening on: https://localhost:44384
+2025-07-24 15:56:29.172 -05:00 [INF] Now listening on: http://localhost:5059
+2025-07-24 15:56:29.267 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-24 15:56:29.268 -05:00 [INF] Hosting environment: Development
+2025-07-24 15:56:29.269 -05:00 [INF] Content root path: C:\Johan\Proyectos\Propios\AgiTime\Servicios\Usuarios.API\
+2025-07-24 15:56:30.048 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/index.html - -
+2025-07-24 15:56:30.483 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/index.html - - - 200 - text/html;charset=utf-8 441.0431ms
+2025-07-24 15:56:30.491 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - -
+2025-07-24 15:56:30.491 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/_vs/browserLink - -
+2025-07-24 15:56:30.514 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_framework/aspnetcore-browser-refresh.js - - - 200 12356 application/javascript;+charset=utf-8 22.8612ms
+2025-07-24 15:56:30.613 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 121.6937ms
+2025-07-24 15:56:30.665 -05:00 [INF] Request starting HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - -
+2025-07-24 15:56:30.672 -05:00 [INF] Request finished HTTP/2 GET https://localhost:44384/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 6.1363ms
+2025-07-24 15:58:45.866 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuarios application/json 352
+2025-07-24 15:58:45.876 -05:00 [INF] Request finished HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuarios application/json 352 - 404 0 - 10.0436ms
+2025-07-24 15:58:57.938 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 352
+2025-07-24 15:58:57.948 -05:00 [INF] Executing endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 15:58:57.999 -05:00 [INF] Route matched with {action = "CrearUsuario", controller = "Usuarios"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult CrearUsuario(Compartido.DTOs.UsuarioDTO) on controller Usuarios.API.Controllers.UsuariosController (Usuarios.API).
+2025-07-24 15:58:58.434 -05:00 [INF] Executing BadRequestObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ValidationProblemDetails'.
+2025-07-24 15:58:58.449 -05:00 [INF] Executed action Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API) in 439.5781ms
+2025-07-24 15:58:58.461 -05:00 [INF] Executed endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 15:58:58.469 -05:00 [INF] Request finished HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 352 - 400 - application/problem+json;+charset=utf-8 530.9009ms
+2025-07-24 15:59:38.124 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 352
+2025-07-24 15:59:38.142 -05:00 [INF] Executing endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 15:59:38.144 -05:00 [INF] Route matched with {action = "CrearUsuario", controller = "Usuarios"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult CrearUsuario(Compartido.DTOs.UsuarioDTO) on controller Usuarios.API.Controllers.UsuariosController (Usuarios.API).
+2025-07-24 15:59:38.178 -05:00 [INF] Executing BadRequestObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ValidationProblemDetails'.
+2025-07-24 15:59:38.180 -05:00 [INF] Executed action Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API) in 32.5847ms
+2025-07-24 15:59:38.182 -05:00 [INF] Executed endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 15:59:38.183 -05:00 [INF] Request finished HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 352 - 400 - application/problem+json;+charset=utf-8 59.2934ms
+2025-07-24 16:00:03.416 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 352
+2025-07-24 16:00:03.433 -05:00 [INF] Executing endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 16:00:03.435 -05:00 [INF] Route matched with {action = "CrearUsuario", controller = "Usuarios"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult CrearUsuario(Compartido.DTOs.UsuarioDTO) on controller Usuarios.API.Controllers.UsuariosController (Usuarios.API).
+2025-07-24 16:00:08.309 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-24 16:00:10.303 -05:00 [INF] Executed DbCommand (185ms) [Parameters=[@__dto_empresa_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre], [e].[servicio]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__dto_empresa_0
+2025-07-24 16:00:11.809 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-24 16:00:11.813 -05:00 [INF] Executed action Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API) in 8376.3606ms
+2025-07-24 16:00:11.816 -05:00 [INF] Executed endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 16:00:11.824 -05:00 [INF] Request finished HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 352 - 200 - application/json;+charset=utf-8 8408.0668ms
+2025-07-24 16:01:31.623 -05:00 [INF] Request starting HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 356
+2025-07-24 16:01:31.634 -05:00 [INF] Executing endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 16:01:31.636 -05:00 [INF] Route matched with {action = "CrearUsuario", controller = "Usuarios"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult CrearUsuario(Compartido.DTOs.UsuarioDTO) on controller Usuarios.API.Controllers.UsuariosController (Usuarios.API).
+2025-07-24 16:01:31.650 -05:00 [INF] Entity Framework Core 6.0.0 initialized 'GeneralContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.0' with options: None
+2025-07-24 16:01:31.801 -05:00 [INF] Executed DbCommand (137ms) [Parameters=[@__dto_empresa_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[id], [e].[conexionBD], [e].[estado], [e].[logo], [e].[nit], [e].[nombre], [e].[servicio]
+FROM [Empresa] AS [e]
+WHERE [e].[id] = @__dto_empresa_0
+2025-07-24 16:01:33.092 -05:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`3[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2025-07-24 16:01:33.096 -05:00 [INF] Executed action Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API) in 1457.1758ms
+2025-07-24 16:01:33.099 -05:00 [INF] Executed endpoint 'Usuarios.API.Controllers.UsuariosController.CrearUsuario (Usuarios.API)'
+2025-07-24 16:01:33.100 -05:00 [INF] Request finished HTTP/2 POST https://localhost:44384/api/Usuarios/registrarUsuario application/json 356 - 200 - application/json;+charset=utf-8 1477.4773ms
