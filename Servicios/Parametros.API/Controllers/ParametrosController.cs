@@ -644,5 +644,57 @@ namespace Parametros.API.Controllers
                 });
             }
         }
+
+        [HttpGet("productos")]
+        public IActionResult ObtenerProductos([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Productos.OrderBy(o => o.Nombre).ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay prodcutos registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }

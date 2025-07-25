@@ -7,6 +7,7 @@ using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
 //using Agendamiento.API.Servicios;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace Agendamiento.API.Controllers
 {
@@ -198,6 +199,7 @@ namespace Agendamiento.API.Controllers
         public IActionResult ObtenerAgendaRecurso([FromQuery] CitaDTO dto)
         {
             string nombreBase = string.Empty;
+            List<string> horasGeneradas = new List<string>();
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
@@ -231,11 +233,22 @@ namespace Agendamiento.API.Controllers
                         exito = false
                     });
                 }
+                else
+                {
+                    foreach (var item in lista)
+                    {
+                        for (int i = 0; i < item.hora; i++)
+                        {
+                            DateTime horaActual = item.fechaInicio.AddHours(i);
+                            horasGeneradas.Add(horaActual.ToString("hh:mm tt", new CultureInfo("en-US")));
+                        }
+                    }
+                }
 
                 return Ok(new
                 {
                     exito = true,
-                    datos = lista
+                    datos = horasGeneradas
                 });
             }
             catch (Exception ex)
