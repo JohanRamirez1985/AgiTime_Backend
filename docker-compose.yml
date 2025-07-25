@@ -45,6 +45,17 @@ services:
       - agitime-net
     restart: always
 
+  productosapi:
+    build:
+      context: ./servicios
+      dockerfile: Productos.API/Dockerfile
+    container_name: productos-api
+    ports:
+      - "84:80"
+    networks:
+      - agitime-net
+    restart: always
+    
   # frontend:
   #   build:
   #     context: ./FrontEnd
