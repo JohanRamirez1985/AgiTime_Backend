@@ -4,7 +4,7 @@ echo Generando Modelos y DbContext desde la Base de Datos (.NET 6)
 echo ==============================================
 
 :: Ruta base del proyecto
-cd /d C:\Johan\Proyectos\Propios\AgiTime\Servicios\Cientes.API
+cd /d C:\Johan\Proyectos\Propios\AgiTime\Servicios\Clientes.API
 
 :: Crear carpetas si no existen
 if not exist "Data\Modelos" mkdir Data\Modelos

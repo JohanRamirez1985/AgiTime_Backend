@@ -7,7 +7,8 @@ namespace Usuarios.API.Data.Modelos
     {
         public int id { get; set; }
         public DateTime fechaInicio { get; set; }
-        public DateTime fechaFin { get; set; }
+        public DateTime? fechaFin { get; set; }
+        public int hora { get; set; }
         public int recurso { get; set; }
         public int cliente { get; set; }
         public decimal? valor { get; set; }
