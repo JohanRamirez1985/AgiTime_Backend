@@ -181,5 +181,73 @@ namespace Productos.API.Controllers
                 });
             }
         }
+
+        [HttpPost("ventaProducto")]
+        public IActionResult VentaProducto([FromBody] ProductoDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var prod = ContextBD.Productos.Where(s => s.id == dto.Id).FirstOrDefault();
+
+                if (prod == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Producto " + dto.Nombre + " no encontrado.",
+                        exito = false
+                    });
+                }
+                else
+                {
+                    var nuevoDeta = new DetalleProducto
+                    {
+                        producto = prod.id,
+                        cantidadIngresada = dto.Cantidad,
+                        cantidadStock = prod.stock,
+                        cantidadNueva = dto.Cantidad + prod.stock,
+                        usuarioCreacion = dto.UsuarioCreacion,
+                        fechaCreacion = DateTime.Now
+                    };
+                    ContextBD.DetalleProductos.Add(nuevoDeta);
+
+                    prod.stock = dto.Cantidad + prod.stock;
+                    ContextBD.SaveChanges();
+
+                    return Ok(new
+                    {
+                        mensaje = "Producto registrado exitosamente",
+                        exito = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }
