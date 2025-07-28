@@ -183,7 +183,7 @@ namespace Productos.API.Controllers
         }
 
         [HttpPost("ventaProducto")]
-        public IActionResult VentaProducto([FromBody] ProductoDTO dto)
+        public IActionResult VentaProducto([FromBody] VentaDTO dto)
         {
             string nombreBase = string.Empty;
             try
@@ -205,38 +205,36 @@ namespace Productos.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var prod = ContextBD.Productos.Where(s => s.id == dto.Id).FirstOrDefault();
+                var nuevo = new Ventum
+                {
+                    factura = dto.factura,
+                    fechaVenta = DateTime.Now,
+                    usuarioVenta = dto.usuarioVenta
+                };
 
-                if (prod == null)
+                ContextBD.Venta.Add(nuevo);
+
+                foreach (var detalle in dto.Detalles)
                 {
-                    return Ok(new
+                    var nuevoDetalle = new VentaDetalle
                     {
-                        mensaje = "Producto " + dto.Nombre + " no encontrado.",
-                        exito = false
-                    });
-                }
-                else
-                {
-                    var nuevoDeta = new DetalleProducto
-                    {
-                        producto = prod.id,
-                        cantidadIngresada = dto.Cantidad,
-                        cantidadStock = prod.stock,
-                        cantidadNueva = dto.Cantidad + prod.stock,
-                        usuarioCreacion = dto.UsuarioCreacion,
-                        fechaCreacion = DateTime.Now
+                        venta = nuevo.id,
+                        producto = detalle.Producto,
+                        cantidad = detalle.Cantidad,
+                        valor = detalle.Valor,
+                        total = detalle.Cantidad * detalle.Valor
                     };
-                    ContextBD.DetalleProductos.Add(nuevoDeta);
 
-                    prod.stock = dto.Cantidad + prod.stock;
-                    ContextBD.SaveChanges();
-
-                    return Ok(new
-                    {
-                        mensaje = "Producto registrado exitosamente",
-                        exito = true
-                    });
+                    ContextBD.VentaDetalles.Add(nuevoDetalle);
                 }
+
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Venta registrada exitosamente",
+                    exito = true
+                });
             }
             catch (Exception ex)
             {
