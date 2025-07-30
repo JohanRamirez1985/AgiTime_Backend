@@ -26,6 +26,7 @@ namespace Usuarios.API.Data.Modelos
         public DateTime fechaCreacion { get; set; }
         public int sede { get; set; }
         public bool recurso { get; set; }
+        public string? foto { get; set; }
 
         public virtual Genero generoNavigation { get; set; } = null!;
         public virtual Sede sedeNavigation { get; set; } = null!;

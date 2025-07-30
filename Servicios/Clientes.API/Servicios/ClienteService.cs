@@ -30,7 +30,7 @@ namespace Clientes.API.Servicios
                 Id = usuario.id,
                 Nombre = usuario.nombre,
                 Correo = usuario.correo,
-                Password = usuario.password,
+                //Password = usuario.password,
                 Telefono = usuario.telefono,
                 FechaNacimiento = usuario.fechaNacimiento,
                 Genero = usuario.genero,

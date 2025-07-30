@@ -32,6 +32,7 @@ namespace Agendamiento.API.Controllers
         public IActionResult CrearCita([FromBody] CitaDTO dto)
         {
             string nombreBase = string.Empty;
+            int idCliente = 0;
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
@@ -51,14 +52,35 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                var user = ContextBD.Clientes.Where(e => e.telefono == dto.telefono).FirstOrDefault();
+
+                if (user == null)
+                {
+                    var nueva = new Cliente
+                    {
+                        nombre = dto.nombre,
+                        correo = dto.email,
+                        telefono = dto.telefono,
+                        estado = Estados.Activo,
+                        fechaCreacion = DateTime.Now
+                    };
+
+                    ContextBD.Clientes.Add(nueva);
+
+                    idCliente = nueva.id;
+                }
+                else
+                {
+                    idCliente = user.id;
+                }
+
                 var nuevo = new Cita
                 {
                     fechaInicio = dto.FechaIni,
                     hora = dto.Hora,
                     fechaFin = dto.FechaIni.AddHours(dto.Hora),
                     recurso = dto.recurso,
-                    cliente = dto.Cliente,
-                    servicio = dto.Servicio,
+                    cliente = idCliente,
                     valor = dto.Valor,
                     estado = Estados.Activo,
                     fechaCreacion = DateTime.Now,
@@ -66,6 +88,18 @@ namespace Agendamiento.API.Controllers
                 };
 
                 ContextBD.Citas.Add(nuevo);
+
+                foreach (var detalle in dto.servicios)
+                {
+                    var nuevoServicio = new CitaServicio
+                    {
+                        cita = nuevo.id,
+                        servicio = detalle.Servicios
+                    };
+
+                    ContextBD.CitaServicios.Add(nuevoServicio);
+                }
+
                 ContextBD.SaveChanges();
 
                 return Ok(new
@@ -111,11 +145,14 @@ namespace Agendamiento.API.Controllers
 
                 var nuevo = new BloqueosHorario
                 {
-                    fechaInicio = dto.FechaIni,
-                    hora = dto.Hora,
-                    fechaFin = dto.FechaIni.AddHours(dto.Hora),
+                    tipoBloqueo = dto.TipoBloqueo,
+                    usuario = dto.Usuario,
+                    fechaInicio = dto.FechaInicio,
+                    fechaFin = dto.FechaFin,
+                    horaInicio = TimeSpan.Parse(dto.HoraInicio),
+                    horaFin = TimeSpan.Parse(dto.HoraFin),
                     motivo = dto.Motivo,
-                    usuario = dto.usuario
+                    diasSemana = dto.DiasSemana
                 };
 
                 ContextBD.BloqueosHorarios.Add(nuevo);
@@ -162,25 +199,89 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.BloqueosHorarios
-                                     .Where(e => e.fechaInicio >= dto.FechaIni
-                                            && e.fechaFin <= dto.FechaFin
-                                            && e.usuario == dto.usuario)
-                                     .ToList();
+                //var lista = ContextBD.BloqueosHorarios
+                //                     .Where(e => e.fechaInicio >= dto.FechaInicio
+                //                            && e.fechaFin <= dto.FechaFin
+                //                            && e.usuario == dto.Usuario)
+                //                     .ToList();
 
-                if (lista == null || lista.Count == 0)
+                //if (lista == null || lista.Count == 0)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = "No hay bloqueos registrados",
+                //        exito = false
+                //    });
+                //}
+
+                //return Ok(new
+                //{
+                //    exito = true,
+                //    datos = lista
+                //});
+
+                var diaSemana = (int)dto.FechaInicio.Value.DayOfWeek;
+                if (diaSemana == 0) diaSemana = 7;
+
+                var fechaSolo = dto.FechaInicio.Value.Date;
+
+                var bloqueos = ContextBD.BloqueosHorarios
+                    .AsEnumerable()
+                    .Where(b => b.usuario == dto.Usuario &&
+                        (
+                            (b.tipoBloqueo == 1 &&
+                             b.diasSemana != null &&
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+
+                            ||
+
+                            (b.tipoBloqueo == 2 &&
+                             b.fechaInicio.HasValue && b.fechaFin.HasValue &&
+                             fechaSolo >= b.fechaInicio.Value.Date &&
+                             fechaSolo <= b.fechaFin.Value.Date &&
+                             b.diasSemana != null &&
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+
+                            ||
+
+                            (b.tipoBloqueo == 3 &&
+                             b.fechaInicio.HasValue && b.fechaFin.HasValue &&
+                             fechaSolo >= b.fechaInicio.Value.Date &&
+                             fechaSolo <= b.fechaFin.Value.Date)
+                        )
+                    )
+                    .ToList();
+
+                var resultado = new ResultadoBloqueo();
+
+                foreach (var bloqueo in bloqueos)
                 {
-                    return Ok(new
+                    var inicio = bloqueo.horaInicio;
+                    var fin = bloqueo.horaFin;
+
+                    if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5)) 
                     {
-                        mensaje = "No hay bloqueos registrados",
-                        exito = false
-                    });
+                        resultado.DiaCompletoBloqueado = true;
+                        resultado.HorasBloqueadas.Clear();
+                        return Ok(new
+                        {
+                            exito = true,
+                            datos = resultado
+                        });
+                    }
+
+                    var hora = inicio;
+                    while (hora < fin)
+                    {
+                        resultado.HorasBloqueadas.Add(hora);
+                        hora = hora.Add(TimeSpan.FromMinutes(30));
+                    }
                 }
 
                 return Ok(new
                 {
                     exito = true,
-                    datos = lista
+                    datos = resultado
                 });
             }
             catch (Exception ex)
