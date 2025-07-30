@@ -7,14 +7,15 @@ namespace Agendamiento.API.Data.Modelos
     {
         public Servicio()
         {
-            Cita = new HashSet<Cita>();
+            CitaServicios = new HashSet<CitaServicio>();
         }
 
         public int id { get; set; }
-        public string nombre { get; set; } = null!;
+        public string? nombre { get; set; }
         public decimal? valor { get; set; }
+        public int? tiempo { get; set; }
         public string estado { get; set; } = null!;
 
-        public virtual ICollection<Cita> Cita { get; set; }
+        public virtual ICollection<CitaServicio> CitaServicios { get; set; }
     }
 }

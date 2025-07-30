@@ -20,6 +20,7 @@ namespace Clientes.API.Data
         public virtual DbSet<Agendum> Agenda { get; set; } = null!;
         public virtual DbSet<BloqueosHorario> BloqueosHorarios { get; set; } = null!;
         public virtual DbSet<Cita> Citas { get; set; } = null!;
+        public virtual DbSet<CitaServicio> CitaServicios { get; set; } = null!;
         public virtual DbSet<Ciudad> Ciudads { get; set; } = null!;
         public virtual DbSet<Cliente> Clientes { get; set; } = null!;
         public virtual DbSet<DetalleProducto> DetalleProductos { get; set; } = null!;
@@ -44,11 +45,25 @@ namespace Clientes.API.Data
             {
                 entity.ToTable("BloqueosHorario");
 
+                entity.Property(e => e.diasSemana)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.fechaCreacion)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
                 entity.Property(e => e.fechaFin).HasColumnType("datetime");
 
                 entity.Property(e => e.fechaInicio).HasColumnType("datetime");
 
+                entity.Property(e => e.horaFin).HasDefaultValueSql("('23:59')");
+
+                entity.Property(e => e.horaInicio).HasDefaultValueSql("('00:00')");
+
                 entity.Property(e => e.motivo).IsUnicode(false);
+
+                entity.Property(e => e.tipoBloqueo).HasDefaultValueSql("((3))");
 
                 entity.HasOne(d => d.usuarioNavigation)
                     .WithMany(p => p.BloqueosHorarios)
@@ -80,11 +95,21 @@ namespace Clientes.API.Data
                     .HasForeignKey(d => d.cliente)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Citas_Clientes");
+            });
+
+            modelBuilder.Entity<CitaServicio>(entity =>
+            {
+                entity.HasOne(d => d.citaNavigation)
+                    .WithMany(p => p.CitaServicios)
+                    .HasForeignKey(d => d.cita)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CitaServicios_Citas");
 
                 entity.HasOne(d => d.servicioNavigation)
-                    .WithMany(p => p.Cita)
+                    .WithMany(p => p.CitaServicios)
                     .HasForeignKey(d => d.servicio)
-                    .HasConstraintName("FK_Citas_Servicios");
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CitaServicios_Servicios");
             });
 
             modelBuilder.Entity<Ciudad>(entity =>
@@ -114,16 +139,8 @@ namespace Clientes.API.Data
 
                 entity.Property(e => e.fechaNacimiento).HasColumnType("datetime");
 
-                entity.Property(e => e.login)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
                 entity.Property(e => e.nombre)
                     .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.password)
-                    .HasMaxLength(200)
                     .IsUnicode(false);
 
                 entity.Property(e => e.telefono)
@@ -133,13 +150,11 @@ namespace Clientes.API.Data
                 entity.HasOne(d => d.generoNavigation)
                     .WithMany(p => p.Clientes)
                     .HasForeignKey(d => d.genero)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Clientes_Genero");
 
                 entity.HasOne(d => d.tipoDocumentoNavigation)
                     .WithMany(p => p.Clientes)
                     .HasForeignKey(d => d.tipoDocumento)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Clientes_TipoDocumento");
             });
 
@@ -330,6 +345,10 @@ namespace Clientes.API.Data
                 entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
 
                 entity.Property(e => e.fechaNacimiento).HasColumnType("datetime");
+
+                entity.Property(e => e.foto)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.login)
                     .HasMaxLength(50)
