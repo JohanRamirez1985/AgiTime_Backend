@@ -33,12 +33,13 @@ namespace Agendamiento.API.Controllers
         {
             string nombreBase = string.Empty;
             int idCliente = 0;
+
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
-                nombreBase = empresa.conexionBD;
+                nombreBase = empresa?.conexionBD;
 
-                if (empresa.conexionBD == null)
+                if (string.IsNullOrEmpty(nombreBase))
                 {
                     return Ok(new
                     {
@@ -48,68 +49,87 @@ namespace Agendamiento.API.Controllers
                 }
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
-                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+                var connectionString = string.Format(connectionTemplate, nombreBase);
 
                 using var ContextBD = ContextFact.Create(connectionString);
+                using var transaction = ContextBD.Database.BeginTransaction();
 
-                if (dto.clienteInfo != null)
+                try
                 {
-                    var user = ContextBD.Clientes.Where(e => e.telefono == dto.clienteInfo.Telefono).FirstOrDefault();
-
-                    if (user == null)
+                    if (dto.clienteInfo != null)
                     {
-                        var nueva = new Cliente
+                        var user = ContextBD.Clientes
+                            .FirstOrDefault(e => e.telefono == dto.clienteInfo.Telefono);
+
+                        if (user == null)
                         {
-                            nombre = dto.clienteInfo.Nombre,
-                            correo = dto.clienteInfo.Correo,
-                            telefono = dto.clienteInfo.Telefono,
-                            estado = Estados.Activo,
-                            fechaCreacion = DateTime.Now
-                        };
+                            var nueva = new Cliente
+                            {
+                                nombre = dto.clienteInfo.Nombre,
+                                correo = dto.clienteInfo.Correo,
+                                telefono = dto.clienteInfo.Telefono,
+                                estado = Estados.Activo,
+                                fechaCreacion = DateTime.Now
+                            };
 
-                        ContextBD.Clientes.Add(nueva);
+                            ContextBD.Clientes.Add(nueva);
+                            ContextBD.SaveChanges();
 
-                        idCliente = nueva.id;
+                            idCliente = nueva.id;
+                        }
+                        else
+                        {
+                            idCliente = user.id;
+                        }
                     }
-                    else
+
+                    var nuevo = new Cita
                     {
-                        idCliente = user.id;
-                    }
-                }
-
-                var nuevo = new Cita
-                {
-                    fechaInicio = dto.FechaIni,
-                    hora = dto.Hora,
-                    fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
-                    recurso = dto.recurso,
-                    cliente = dto.clienteInfo != null ? idCliente : null,
-                    valor = dto.Valor,
-                    estado = Estados.Activo,
-                    fechaCreacion = DateTime.Now,
-                    usuarioCreacion = dto.UsuarioCreacion
-                };
-
-                ContextBD.Citas.Add(nuevo);
-
-                foreach (var detalle in dto.servicios)
-                {
-                    var nuevoServicio = new CitaServicio
-                    {
-                        cita = nuevo.id,
-                        servicio = detalle.Servicio
+                        fechaInicio = dto.FechaIni,
+                        hora = dto.Hora,
+                        fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
+                        recurso = dto.recurso,
+                        cliente = dto.clienteInfo != null ? idCliente : null,
+                        valor = dto.Valor,
+                        estado = Estados.Activo,
+                        fechaCreacion = DateTime.Now,
+                        usuarioCreacion = dto.UsuarioCreacion
                     };
 
-                    ContextBD.CitaServicios.Add(nuevoServicio);
+                    ContextBD.Citas.Add(nuevo);
+                    ContextBD.SaveChanges();
+
+                    foreach (var detalle in dto.servicios)
+                    {
+                        var nuevoServicio = new CitaServicio
+                        {
+                            cita = nuevo.id,
+                            servicio = detalle.Servicio
+                        };
+
+                        ContextBD.CitaServicios.Add(nuevoServicio);
+                    }
+
+                    ContextBD.SaveChanges();
+
+                    transaction.Commit();
+                    return Ok(new
+                    {
+                        mensaje = "Cita registrada exitosamente",
+                        exito = true
+                    });
                 }
-
-                ContextBD.SaveChanges();
-
-                return Ok(new
+                catch (Exception ex)
                 {
-                    mensaje = "Cita registrada exitosamente",
-                    exito = true
-                });
+                    transaction.Rollback();
+                    LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                    return StatusCode(500, new
+                    {
+                        mensaje = "Ocurrió un error al registrar la cita",
+                        exito = false
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -117,11 +137,12 @@ namespace Agendamiento.API.Controllers
 
                 return StatusCode(500, new
                 {
-                    mensaje = "Ocurrió un error interno",
+                    mensaje = "Error al conectar con la base de datos",
                     exito = false
                 });
             }
         }
+
 
         [HttpPost("registrarBloqueo")]
         public IActionResult CrearBloqueo([FromBody] BloqueoDTO dto)
