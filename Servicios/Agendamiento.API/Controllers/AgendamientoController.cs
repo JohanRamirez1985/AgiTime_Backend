@@ -348,6 +348,7 @@ namespace Agendamiento.API.Controllers
                                      .Where(e => e.fechaInicio >= dto.FechaIni
                                             && e.fechaFin <= dto.FechaFin
                                             && e.recurso == dto.recurso)
+                                     .OrderBy(o => o.fechaInicio)
                                      .ToList();
 
                 if (lista == null || lista.Count == 0)
@@ -362,9 +363,10 @@ namespace Agendamiento.API.Controllers
                 {
                     foreach (var item in lista)
                     {
-                        for (int i = 0; i < item.hora; i++)
+                        int cantidad = item.hora / 30;
+                        for (int i = 0; i < cantidad; i++)
                         {
-                            DateTime horaActual = item.fechaInicio.AddHours(i);
+                            DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
                             horasGeneradas.Add(horaActual.ToString("hh:mm tt", new CultureInfo("en-US")));
                         }
                     }
