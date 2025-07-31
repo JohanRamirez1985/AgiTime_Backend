@@ -81,7 +81,7 @@ namespace Agendamiento.API.Controllers
                 {
                     fechaInicio = dto.FechaIni,
                     hora = dto.Hora,
-                    fechaFin = dto.FechaIni.AddHours(dto.Hora),
+                    fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
                     recurso = dto.recurso,
                     cliente = dto.clienteInfo != null ? idCliente : null,
                     valor = dto.Valor,
