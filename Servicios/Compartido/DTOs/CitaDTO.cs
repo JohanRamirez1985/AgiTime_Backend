@@ -19,15 +19,9 @@ namespace Compartido.DTOs
         public DateTime FechaCreacion { get; set; }
         public int Hora { get; set; }
         public int empresa { get; set; }
-        public string nombre { get; set; }
-        public string email { get; set; }
-        public string telefono { get; set; }
-
-
-
         public string? NombreCliente { get; set; }
         public string? NombreServicio { get; set; }
-
         public List<CitaServiciosDTO> servicios { get; set; } = new();
+        public ClienteDTO clienteInfo { get; set; }
     }
 }

@@ -10,6 +10,6 @@ namespace Compartido.DTOs
     {
         public int Id { get; set; }
         public int Cita { get; set; }
-        public int Servicios { get; set; }
+        public int Servicio { get; set; }
     }
 }
