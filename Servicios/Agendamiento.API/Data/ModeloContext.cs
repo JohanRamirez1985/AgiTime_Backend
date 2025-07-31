@@ -89,12 +89,6 @@ namespace Agendamiento.API.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
-
-                entity.HasOne(d => d.clienteNavigation)
-                    .WithMany(p => p.Cita)
-                    .HasForeignKey(d => d.cliente)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Citas_Clientes");
             });
 
             modelBuilder.Entity<CitaServicio>(entity =>

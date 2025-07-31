@@ -52,26 +52,29 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var user = ContextBD.Clientes.Where(e => e.telefono == dto.telefono).FirstOrDefault();
-
-                if (user == null)
+                if (dto.clienteInfo != null)
                 {
-                    var nueva = new Cliente
+                    var user = ContextBD.Clientes.Where(e => e.telefono == dto.clienteInfo.Telefono).FirstOrDefault();
+
+                    if (user == null)
                     {
-                        nombre = dto.nombre,
-                        correo = dto.email,
-                        telefono = dto.telefono,
-                        estado = Estados.Activo,
-                        fechaCreacion = DateTime.Now
-                    };
+                        var nueva = new Cliente
+                        {
+                            nombre = dto.clienteInfo.Nombre,
+                            correo = dto.clienteInfo.Correo,
+                            telefono = dto.clienteInfo.Telefono,
+                            estado = Estados.Activo,
+                            fechaCreacion = DateTime.Now
+                        };
 
-                    ContextBD.Clientes.Add(nueva);
+                        ContextBD.Clientes.Add(nueva);
 
-                    idCliente = nueva.id;
-                }
-                else
-                {
-                    idCliente = user.id;
+                        idCliente = nueva.id;
+                    }
+                    else
+                    {
+                        idCliente = user.id;
+                    }
                 }
 
                 var nuevo = new Cita
@@ -80,7 +83,7 @@ namespace Agendamiento.API.Controllers
                     hora = dto.Hora,
                     fechaFin = dto.FechaIni.AddHours(dto.Hora),
                     recurso = dto.recurso,
-                    cliente = idCliente,
+                    cliente = dto.clienteInfo != null ? idCliente : null,
                     valor = dto.Valor,
                     estado = Estados.Activo,
                     fechaCreacion = DateTime.Now,
@@ -94,7 +97,7 @@ namespace Agendamiento.API.Controllers
                     var nuevoServicio = new CitaServicio
                     {
                         cita = nuevo.id,
-                        servicio = detalle.Servicios
+                        servicio = detalle.Servicio
                     };
 
                     ContextBD.CitaServicios.Add(nuevoServicio);
