@@ -208,7 +208,7 @@ namespace Productos.API.Controllers
                 var nuevo = new Ventum
                 {
                     factura = dto.factura,
-                    fechaVenta = DateTime.Now,
+                    fechaVenta = dto.fechaVenta,
                     usuarioVenta = dto.usuarioVenta
                 };
 

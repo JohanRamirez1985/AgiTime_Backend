@@ -69,7 +69,7 @@ namespace Agendamiento.API.Controllers
                                 correo = dto.clienteInfo.Correo,
                                 telefono = dto.clienteInfo.Telefono,
                                 estado = Estados.Activo,
-                                fechaCreacion = DateTime.Now
+                                fechaCreacion = dto.FechaCreacion
                             };
 
                             ContextBD.Clientes.Add(nueva);
@@ -92,7 +92,7 @@ namespace Agendamiento.API.Controllers
                         cliente = dto.clienteInfo != null ? idCliente : null,
                         valor = dto.Valor,
                         estado = Estados.Activo,
-                        fechaCreacion = DateTime.Now,
+                        fechaCreacion = dto.FechaCreacion,
                         usuarioCreacion = dto.UsuarioCreacion
                     };
 
@@ -142,7 +142,6 @@ namespace Agendamiento.API.Controllers
                 });
             }
         }
-
 
         [HttpPost("registrarBloqueo")]
         public IActionResult CrearBloqueo([FromBody] BloqueoDTO dto)
@@ -347,7 +346,8 @@ namespace Agendamiento.API.Controllers
                 var lista = ContextBD.Citas
                                      .Where(e => e.fechaInicio >= dto.FechaIni
                                             && e.fechaFin <= dto.FechaFin
-                                            && e.recurso == dto.recurso)
+                                            && e.recurso == dto.recurso
+                                            && e.estado == Estados.Activo)
                                      .OrderBy(o => o.fechaInicio)
                                      .ToList();
 
@@ -413,11 +413,45 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                var user = ContextBD.Clientes
+                            .FirstOrDefault(e => e.telefono == dto.clienteInfo.Telefono);
+
+                if (user == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Con el telefono ingresado no hay citas agendadas",
+                        exito = false
+                    });
+                }
+
                 var lista = ContextBD.Citas
-                                     .Where(e => e.fechaInicio >= dto.FechaIni
-                                            && e.fechaFin <= dto.FechaFin
-                                            && e.recurso == dto.Cliente)
-                                     .ToList();
+                        .Where(e => e.fechaInicio >= dto.FechaIni
+                                    && e.cliente == user.id
+                                    && e.estado == Estados.Activo)
+                        .Select(c => new
+                        {
+                            c.id,
+                            c.fechaInicio,
+                            Servicios = c.CitaServicios.Select(cs => new ServicioDTO
+                            {
+                                Id = cs.servicioNavigation.id,
+                                Nombre = cs.servicioNavigation.nombre
+                            }).ToList()
+                        })
+                        .AsEnumerable() 
+                        .Select(c => new CitaDTO
+                        {
+                            Id = c.id,
+                            FechaIni = c.fechaInicio,
+                            clienteInfo = new ClienteDTO
+                            {
+                                Nombre = user.nombre,
+                                Telefono = user.telefono
+                            },
+                            infoServicios = c.Servicios
+                        })
+                        .ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -441,6 +475,66 @@ namespace Agendamiento.API.Controllers
                 return StatusCode(500, new
                 {
                     mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("cancelarCita")]
+        public IActionResult CancelarCita([FromBody] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa?.conexionBD;
+
+                if (string.IsNullOrEmpty(nombreBase))
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, nombreBase);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
+
+                if (citaId == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Cita no encontrada",
+                        exito = false
+                    });
+                }
+
+                citaId.fechaCancelacion = dto.FechaCancelacion;
+                citaId.usuarioCancelacion = dto.UsuarioCancelacion;
+                citaId.estado = Estados.Cancelada;
+
+               
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Cita cancelada exitosamente",
+                    exito = true
+                });
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Error al conectar con la base de datos",
                     exito = false
                 });
             }
