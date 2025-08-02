@@ -10,5 +10,6 @@ namespace Compartido.Constantes
     {
         public const string Activo = "Activo";
         public const string Inactivo = "Inactivo";
+        public const string Cancelada = "Cancelada";
     }
 }

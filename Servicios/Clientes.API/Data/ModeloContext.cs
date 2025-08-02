@@ -78,11 +78,17 @@ namespace Clientes.API.Data
                     .HasMaxLength(20)
                     .IsUnicode(false);
 
+                entity.Property(e => e.fechaCancelacion).HasColumnType("datetime");
+
                 entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
 
                 entity.Property(e => e.fechaFin).HasColumnType("datetime");
 
                 entity.Property(e => e.fechaInicio).HasColumnType("datetime");
+
+                entity.Property(e => e.usuarioCancelacion)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.usuarioCreacion)
                     .HasMaxLength(50)

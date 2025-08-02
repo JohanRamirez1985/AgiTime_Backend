@@ -20,6 +20,8 @@ namespace Usuarios.API.Data.Modelos
         public string estado { get; set; } = null!;
         public DateTime fechaCreacion { get; set; }
         public string? usuarioCreacion { get; set; }
+        public DateTime? fechaCancelacion { get; set; }
+        public string? usuarioCancelacion { get; set; }
 
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
     }

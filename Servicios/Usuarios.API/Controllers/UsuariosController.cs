@@ -79,14 +79,10 @@ namespace Usuarios.API.Controllers
 
                 var user = UsuarioService.ProcesarUsuario(usuario, empresa, nombreBase);
 
-                //var usuarioDto = UsuarioService.ProcesarUsuario(usuario);
-
-                //var funcionalidad = UsuarioService.ProcesarFuncionabilidad(usuario, nombreBase);
-
                 return Ok(new LoginResponse
                 {
                     Token = token,
-                    Datos = user, //ArregloLogin.ConstruirData(info, "Usuario"),
+                    Datos = user,
                     Exito = true
                 });
             }
@@ -106,6 +102,8 @@ namespace Usuarios.API.Controllers
         public IActionResult CrearUsuario([FromBody] UsuarioDTO dto)
         {
             string nombreBase = string.Empty;
+            var zonaHorariaColombia = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
+            var fecha = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHorariaColombia);
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
@@ -159,7 +157,7 @@ namespace Usuarios.API.Controllers
                     sede = dto.Sede,
                     documento = dto.Documento,
                     estado = Estados.Activo,
-                    fechaCreacion = DateTime.Now,
+                    fechaCreacion = dto.FechaCreacion,
                     recurso = dto.recurso,
                     idRols = new List<Rol> { rol }
                 };
