@@ -282,7 +282,7 @@ namespace Agendamiento.API.Controllers
                     var inicio = bloqueo.horaInicio;
                     var fin = bloqueo.horaFin;
 
-                    if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5)) 
+                    if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
                     {
                         resultado.DiaCompletoBloqueado = true;
                         resultado.HorasBloqueadas.Clear();
@@ -390,8 +390,8 @@ namespace Agendamiento.API.Controllers
             }
         }
 
-        [HttpGet("consultarAgendaCliente")]
-        public IActionResult ObtenerAgendaCliente([FromQuery] CitaDTO dto)
+        [HttpGet("consultarCitasCliente")]
+        public IActionResult ObtenerCitasCliente([FromQuery] CitaDTO dto)
         {
             string nombreBase = string.Empty;
             try
@@ -436,10 +436,11 @@ namespace Agendamiento.API.Controllers
                             Servicios = c.CitaServicios.Select(cs => new ServicioDTO
                             {
                                 Id = cs.servicioNavigation.id,
-                                Nombre = cs.servicioNavigation.nombre
+                                Nombre = cs.servicioNavigation.nombre,
+                                Valor = cs.servicioNavigation.valor
                             }).ToList()
                         })
-                        .AsEnumerable() 
+                        .AsEnumerable()
                         .Select(c => new CitaDTO
                         {
                             Id = c.id,
@@ -449,6 +450,89 @@ namespace Agendamiento.API.Controllers
                                 Nombre = user.nombre,
                                 Telefono = user.telefono
                             },
+                            infoServicios = c.Servicios
+                        })
+                        .ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay citas registradas",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarCitasRecurso")]
+        public IActionResult ObtenerCitasRecurso([FromQuery] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Citas
+                        .Where(e => e.fechaInicio >= dto.FechaIni
+                                    && e.recurso == dto.recurso
+                                    && e.estado == Estados.Activo)
+                        .Select(c => new
+                        {
+                            c.id,
+                            c.fechaInicio,
+                            clienteInfo = ContextBD.Clientes
+                                .Where(cl => cl.id == c.cliente)
+                                .Select(cl => new ClienteDTO
+                                {
+                                    Nombre = cl.nombre,
+                                    Telefono = cl.telefono
+                                })
+                                .FirstOrDefault(),
+                            Servicios = c.CitaServicios.Select(cs => new ServicioDTO
+                            {
+                                Id = cs.servicioNavigation.id,
+                                Nombre = cs.servicioNavigation.nombre,
+                                Valor = cs.servicioNavigation.valor
+                            }).ToList()
+                        })
+                        .AsEnumerable()
+                        .Select(c => new CitaDTO
+                        {
+                            Id = c.id,
+                            FechaIni = c.fechaInicio,
+                            clienteInfo = c.clienteInfo,
                             infoServicios = c.Servicios
                         })
                         .ToList();
@@ -518,7 +602,7 @@ namespace Agendamiento.API.Controllers
                 citaId.usuarioCancelacion = dto.UsuarioCancelacion;
                 citaId.estado = Estados.Cancelada;
 
-               
+
                 ContextBD.SaveChanges();
 
                 return Ok(new
