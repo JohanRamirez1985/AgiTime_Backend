@@ -426,33 +426,33 @@ namespace Agendamiento.API.Controllers
                 }
 
                 var lista = ContextBD.Citas
-                        .Where(e => e.fechaInicio >= dto.FechaIni
-                                    && e.cliente == user.id
-                                    && e.estado == Estados.Activo)
-                        .Select(c => new
+                    .Where(e => e.fechaInicio >= dto.FechaIni
+                                && e.cliente == user.id
+                                && e.estado == Estados.Activo)
+                    .Select(c => new
+                    {
+                        c.id,
+                        c.fechaInicio,
+                        c.estado,
+                        Servicios = c.CitaServicios.Select(cs => new
                         {
-                            c.id,
-                            c.fechaInicio,
-                            Servicios = c.CitaServicios.Select(cs => new ServicioDTO
-                            {
-                                Id = cs.servicioNavigation.id,
-                                Nombre = cs.servicioNavigation.nombre,
-                                Valor = cs.servicioNavigation.valor
-                            }).ToList()
-                        })
-                        .AsEnumerable()
-                        .Select(c => new CitaDTO
-                        {
-                            Id = c.id,
-                            FechaIni = c.fechaInicio,
-                            clienteInfo = new ClienteDTO
-                            {
-                                Nombre = user.nombre,
-                                Telefono = user.telefono
-                            },
-                            infoServicios = c.Servicios
-                        })
-                        .ToList();
+                            Id = cs.servicioNavigation.id,
+                            Nombre = cs.servicioNavigation.nombre,
+                            Valor = cs.servicioNavigation.valor
+                        }).ToList()
+                    })
+                    .AsEnumerable()
+                    .Select(c => new
+                    {
+                        c.id,
+                        c.fechaInicio,
+                        c.estado,
+                        nombreCliente = user.nombre,
+                        telefonoCliente = user.telefono,
+                        servicios = c.Servicios
+                    })
+                    .ToList();
+
 
                 if (lista == null || lista.Count == 0)
                 {
@@ -505,37 +505,41 @@ namespace Agendamiento.API.Controllers
                 using var ContextBD = ContextFact.Create(connectionString);
 
                 var lista = ContextBD.Citas
-                        .Where(e => e.fechaInicio >= dto.FechaIni
-                                    && e.recurso == dto.recurso
-                                    && e.estado == Estados.Activo)
-                        .Select(c => new
-                        {
-                            c.id,
-                            c.fechaInicio,
-                            clienteInfo = ContextBD.Clientes
-                                .Where(cl => cl.id == c.cliente)
-                                .Select(cl => new ClienteDTO
-                                {
-                                    Nombre = cl.nombre,
-                                    Telefono = cl.telefono
-                                })
-                                .FirstOrDefault(),
-                            Servicios = c.CitaServicios.Select(cs => new ServicioDTO
+                    .Where(e => e.fechaInicio >= dto.FechaIni
+                                && e.recurso == dto.recurso
+                                && e.estado == Estados.Activo)
+                    .Select(c => new
+                    {
+                        c.id,
+                        c.fechaInicio,
+                        c.estado,
+                        Cliente = ContextBD.Clientes
+                            .Where(cl => cl.id == c.cliente)
+                            .Select(cl => new
                             {
-                                Id = cs.servicioNavigation.id,
-                                Nombre = cs.servicioNavigation.nombre,
-                                Valor = cs.servicioNavigation.valor
-                            }).ToList()
-                        })
-                        .AsEnumerable()
-                        .Select(c => new CitaDTO
+                                NombreCliente = cl.nombre,
+                                TelefonoCliente = cl.telefono
+                            })
+                            .FirstOrDefault(),
+                        Servicios = c.CitaServicios.Select(cs => new
                         {
-                            Id = c.id,
-                            FechaIni = c.fechaInicio,
-                            clienteInfo = c.clienteInfo,
-                            infoServicios = c.Servicios
-                        })
-                        .ToList();
+                            Id = cs.servicioNavigation.id,
+                            Nombre = cs.servicioNavigation.nombre,
+                            Valor = cs.servicioNavigation.valor
+                        }).ToList()
+                    })
+                    .AsEnumerable()
+                    .Select(c => new
+                    {
+                        c.id,
+                        c.fechaInicio,
+                        c.estado,
+                        nombreCliente = c.Cliente?.NombreCliente,
+                        telefonoCliente = c.Cliente?.TelefonoCliente,
+                        servicios = c.Servicios
+                    })
+                    .OrderBy(o => o.fechaInicio)
+                    .ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
