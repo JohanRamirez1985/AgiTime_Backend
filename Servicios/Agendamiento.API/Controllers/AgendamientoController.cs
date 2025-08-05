@@ -498,6 +498,7 @@ namespace Agendamiento.API.Controllers
 
                 var lista = ContextBD.Citas
                     .Where(e => e.fechaInicio >= dto.FechaIni
+                                && e.fechaFin <= dto.FechaFin
                                 && e.recurso == dto.recurso
                                 && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
                     .Select(c => new
