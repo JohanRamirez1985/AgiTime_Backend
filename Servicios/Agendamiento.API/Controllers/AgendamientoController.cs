@@ -56,7 +56,10 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni && c.recurso == dto.recurso).FirstOrDefault();
+                    var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni 
+                                                           && c.recurso == dto.recurso
+                                                           && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
+                                                           ).FirstOrDefault();
 
                     if (validaHora == null)
                     {
