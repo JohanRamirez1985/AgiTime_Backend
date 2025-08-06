@@ -191,7 +191,9 @@ namespace Agendamiento.API.Controllers
                     horaInicio = TimeSpan.Parse(dto.HoraInicio),
                     horaFin = TimeSpan.Parse(dto.HoraFin),
                     motivo = dto.Motivo,
-                    diasSemana = dto.DiasSemana
+                    diasSemana = dto.DiasSemana,
+                    fechaCreacion = dto.FechaCreacion,
+                    estado = Estados.Activo
                 };
 
                 ContextBD.BloqueosHorarios.Add(nuevo);
@@ -251,14 +253,14 @@ namespace Agendamiento.API.Controllers
                              b.diasSemana != null &&
                              b.diasSemana.Split(',').Contains(diaSemana.ToString()))
 
-                            ||
+                            //||
 
-                            (b.tipoBloqueo == 2 &&
-                             b.fechaInicio.HasValue && b.fechaFin.HasValue &&
-                             fechaSolo >= b.fechaInicio.Value.Date &&
-                             fechaSolo <= b.fechaFin.Value.Date &&
-                             b.diasSemana != null &&
-                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+                            //(b.tipoBloqueo == 2 &&
+                            // b.fechaInicio.HasValue && b.fechaFin.HasValue &&
+                            // fechaSolo >= b.fechaInicio.Value.Date &&
+                            // fechaSolo <= b.fechaFin.Value.Date &&
+                            // b.diasSemana != null &&
+                            // b.diasSemana.Split(',').Contains(diaSemana.ToString()))
 
                             ||
 

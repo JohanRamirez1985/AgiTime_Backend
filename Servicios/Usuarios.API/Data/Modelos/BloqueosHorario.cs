@@ -15,6 +15,7 @@ namespace Usuarios.API.Data.Modelos
         public string motivo { get; set; } = null!;
         public int usuario { get; set; }
         public DateTime fechaCreacion { get; set; }
+        public string? estado { get; set; }
 
         public virtual Usuario usuarioNavigation { get; set; } = null!;
     }
