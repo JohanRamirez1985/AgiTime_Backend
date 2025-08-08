@@ -49,6 +49,10 @@ namespace Usuarios.API.Data
                     .HasMaxLength(20)
                     .IsUnicode(false);
 
+                entity.Property(e => e.estado)
+                    .HasMaxLength(10)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.fechaCreacion)
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
