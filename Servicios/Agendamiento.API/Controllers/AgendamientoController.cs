@@ -38,6 +38,7 @@ namespace Agendamiento.API.Controllers
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
                 nombreBase = empresa?.conexionBD;
+                int newHora = 0;
 
                 if (string.IsNullOrEmpty(nombreBase))
                 {
@@ -90,11 +91,40 @@ namespace Agendamiento.API.Controllers
                             }
                         }
 
+                        if (dto.Hora <= 30)
+                        {
+                            newHora = 30;
+                        }
+                        else if (dto.Hora >= 45 && dto.Hora <= 60)
+                        {
+                            newHora = 60;
+                        }
+                        else if (dto.Hora > 60 && dto.Hora <= 90)
+                        {
+                            newHora = 90;
+                        }
+                        else if (dto.Hora > 90 && dto.Hora <= 120)
+                        {
+                            newHora = 120;
+                        }
+                        else if (dto.Hora > 120 && dto.Hora <= 150)
+                        {
+                            newHora = 150;
+                        }
+                        else if (dto.Hora > 150 && dto.Hora <= 180)
+                        {
+                            newHora = 180;
+                        }
+                        else
+                        {
+                            newHora = dto.Hora;
+                        }
+
                         var nuevo = new Cita
                         {
                             fechaInicio = dto.FechaIni,
                             hora = dto.Hora,
-                            fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
+                            fechaFin = dto.FechaIni.AddMinutes(newHora),
                             recurso = dto.recurso,
                             cliente = dto.clienteInfo != null ? idCliente : null,
                             valor = dto.Valor,
