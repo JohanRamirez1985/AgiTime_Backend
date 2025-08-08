@@ -9,6 +9,6 @@ namespace Compartido.DTOs
     public partial class ResultadoBloqueo
     {
         public bool DiaCompletoBloqueado { get; set; }
-        public List<TimeSpan> HorasBloqueadas { get; set; } = new();
+        public List<string> HorasBloqueadas { get; set; } = new();
     }
 }

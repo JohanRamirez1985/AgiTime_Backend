@@ -217,8 +217,8 @@ namespace Agendamiento.API.Controllers
             }
         }
 
-        [HttpGet("consultarBloqueos")]
-        public IActionResult ObtenerBloqueos([FromQuery] BloqueoDTO dto)
+        [HttpGet("consultarBloqueosHoras")]
+        public IActionResult ObtenerBloqueosHoras([FromQuery] BloqueoDTO dto)
         {
             string nombreBase = string.Empty;
             try
@@ -264,10 +264,9 @@ namespace Agendamiento.API.Controllers
 
                             ||
 
-                            (b.tipoBloqueo == 3 &&
-                             b.fechaInicio.HasValue && b.fechaFin.HasValue &&
-                             fechaSolo >= b.fechaInicio.Value.Date &&
-                             fechaSolo <= b.fechaFin.Value.Date)
+                            (b.tipoBloqueo == 2 &&
+                             b.fechaInicio.HasValue &&
+                             fechaSolo >= b.fechaInicio.Value.Date)
                         )
                     )
                     .ToList();
@@ -293,7 +292,7 @@ namespace Agendamiento.API.Controllers
                     var hora = inicio;
                     while (hora < fin)
                     {
-                        resultado.HorasBloqueadas.Add(hora);
+                        resultado.HorasBloqueadas.Add(DateTime.Today.Add(hora).ToString("hh:mm tt", new CultureInfo("en-US")));
                         hora = hora.Add(TimeSpan.FromMinutes(30));
                     }
                 }
@@ -302,6 +301,67 @@ namespace Agendamiento.API.Controllers
                 {
                     exito = true,
                     datos = resultado
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarBloqueos")]
+        public IActionResult ObtenerBloqueos([FromQuery] BloqueoDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa.conexionBD;
+
+                if (empresa.conexionBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var diaSemana = (int)dto.FechaInicio.Value.DayOfWeek;
+                if (diaSemana == 0) diaSemana = 7;
+
+                var fechaSolo = dto.FechaInicio.Value.Date;
+
+                var bloqueos = ContextBD.BloqueosHorarios
+                    .AsEnumerable()
+                    .Where(b => b.usuario == dto.Usuario &&
+                        (
+                            (b.tipoBloqueo == 1)
+
+                            ||
+
+                            (b.tipoBloqueo == 2 &&
+                             b.fechaInicio.HasValue &&
+                             fechaSolo == b.fechaInicio.Value.Date)
+                        )
+                    )
+                    .ToList();
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = bloqueos
                 });
             }
             catch (Exception ex)
