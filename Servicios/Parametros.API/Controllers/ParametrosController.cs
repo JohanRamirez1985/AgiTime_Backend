@@ -364,7 +364,7 @@ namespace Parametros.API.Controllers
                             .Include(u => u.tipoDocumentoNavigation)
                             .Include(u => u.sedeNavigation)
                             .Include(u => u.idRols)
-                            .Where(e => e.estado == Estados.Activo)
+                            .Where(e => e.estado == Estados.Activo && !e.idRols.Any(r => r.nombre == "SuperAdmin"))
                             .OrderBy(o => o.nombre)
                             .ToList();
 

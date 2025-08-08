@@ -75,7 +75,7 @@ namespace Usuarios.API.Servicios
             var datos = new
             {
                 Usuario = user,
-                Funcionaidades = funcionalidades,
+                Funcionalidades = funcionalidades,
                 Empresa = emp
             };
 
