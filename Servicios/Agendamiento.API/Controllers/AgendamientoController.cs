@@ -774,5 +774,65 @@ namespace Agendamiento.API.Controllers
                 });
             }
         }
+
+        [HttpPost("cambiarEstadoBloqueo")]
+        public IActionResult CambiarEstadoBloqueo([FromBody] BloqueoDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                nombreBase = empresa?.conexionBD;
+
+                if (string.IsNullOrEmpty(nombreBase))
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La empresa no tiene base de datos asignada",
+                        exito = false
+                    });
+                }
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, nombreBase);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var bloqueoId = ContextBD.BloqueosHorarios.FirstOrDefault(p => p.id == dto.Id);
+
+                if (bloqueoId == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Bloqueo no encontrado",
+                        exito = false
+                    });
+                }
+
+                if (dto.Activar)
+                    bloqueoId.estado = Estados.Activo;
+                else
+                    bloqueoId.estado = Estados.Inactivo;
+
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Bloqueo actualizado exitosamente",
+                    exito = true
+                });
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }

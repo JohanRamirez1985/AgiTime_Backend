@@ -19,5 +19,6 @@ namespace Compartido.DTOs
         public string Motivo { get; set; } = string.Empty;
         public int empresa { get; set; }
         public DateTime FechaCreacion { get; set; }
+        public bool Activar { get; set; }
     }
 }
