@@ -10,8 +10,8 @@ using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Usuarios.API.Data;
-using Usuarios.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Usuarios.API.Servicios;
 
 namespace Usuarios.API.Controllers

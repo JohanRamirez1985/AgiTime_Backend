@@ -2,8 +2,8 @@
 using Compartido.Constantes;
 using Compartido.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using Productos.API.Data;
-using Productos.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 
 namespace Productos.API.Controllers
 {

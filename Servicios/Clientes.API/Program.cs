@@ -1,4 +1,4 @@
-﻿using Clientes.API.Data;
+﻿using Compartido.Data;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Clientes.API.Servicios;

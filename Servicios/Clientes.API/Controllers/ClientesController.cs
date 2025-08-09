@@ -1,5 +1,5 @@
-﻿using Clientes.API.Data;
-using Clientes.API.Data.Modelos;
+﻿using Compartido.Data;
+using Compartido.Data.Modelos;
 using Compartido;
 using Compartido.Constantes;
 using Compartido.DTOs;

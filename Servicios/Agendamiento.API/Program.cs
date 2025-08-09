@@ -1,4 +1,4 @@
-﻿using Agendamiento.API.Data;
+﻿using Compartido.Data;
 //using Agendamiento.API.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Serilog;

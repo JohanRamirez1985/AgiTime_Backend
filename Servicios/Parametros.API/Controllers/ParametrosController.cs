@@ -4,8 +4,8 @@ using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Parametros.API.Data;
-using Parametros.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 
 namespace Parametros.API.Controllers
 {

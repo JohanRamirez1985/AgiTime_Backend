@@ -1,9 +1,8 @@
-﻿using Agendamiento.API.Data;
-using Agendamiento.API.Data.Modelos;
-using Compartido;
+﻿using Compartido;
 using Compartido.Constantes;
 using Compartido.DTOs;
-using Compartido.Metodos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Microsoft.AspNetCore.Mvc;
 //using Agendamiento.API.Servicios;
 using Microsoft.EntityFrameworkCore;

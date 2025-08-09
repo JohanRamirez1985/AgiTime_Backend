@@ -1,5 +1,6 @@
-﻿using Productos.API.Data;
+﻿using Compartido.Data;
 //using Productos.API.Servicios;
+
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 

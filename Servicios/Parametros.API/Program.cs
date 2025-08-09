@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Parametros.API.Data;
+using Compartido.Data;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);

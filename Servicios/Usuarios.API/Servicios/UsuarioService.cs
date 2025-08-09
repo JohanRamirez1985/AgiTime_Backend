@@ -1,7 +1,7 @@
 ﻿using Compartido.DTOs;
 using Microsoft.EntityFrameworkCore;
-using Usuarios.API.Data;
-using Usuarios.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Usuarios.API.Servicios
