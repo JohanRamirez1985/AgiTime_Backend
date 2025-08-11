@@ -24,6 +24,13 @@ namespace Compartido.Metodos
         }
         public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = false)
         {
+            if (_settings == null)
+                throw new InvalidOperationException("La configuración SMTP (_settings) no fue inicializada.");
+            if (string.IsNullOrWhiteSpace(_settings.Host))
+                throw new InvalidOperationException("SmtpSettings.Host no está configurado.");
+            if (string.IsNullOrWhiteSpace(_settings.User))
+                throw new InvalidOperationException("SmtpSettings.User no está configurado.");
+
             using var smtp = new SmtpClient(_settings.Host, _settings.Port)
             {
                 Credentials = new NetworkCredential(_settings.User, _settings.Password),

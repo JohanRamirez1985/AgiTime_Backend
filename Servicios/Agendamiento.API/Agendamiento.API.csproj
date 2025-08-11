@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <Folder Include="logs\" />
-    <Folder Include="Servicios\" />
   </ItemGroup>
 
 </Project>

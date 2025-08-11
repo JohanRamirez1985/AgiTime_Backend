@@ -5,7 +5,7 @@ using Compartido.Data.Modelos;
 using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
-//using Agendamiento.API.Servicios;
+using Agendamiento.API.Servicios;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -18,15 +18,15 @@ namespace Agendamiento.API.Controllers
         private readonly GeneralContext ContextGene;
         private readonly FactoryContext ContextFact;
         private readonly IConfiguration configuracion;
-        //private readonly ClientesService ClienteService;
+        private readonly AgendamientoService agendaService;
         private readonly IEmailService emailService;
 
-        public AgendamientoController(GeneralContext gen, FactoryContext fac, IConfiguration config, IEmailService email/*, ClientesService cliser*/)
+        public AgendamientoController(GeneralContext gen, FactoryContext fac, IConfiguration config, IEmailService email, AgendamientoService ageSer)
         {
             ContextGene = gen;
             ContextFact = fac;
             configuracion = config;
-            //ClienteService = cliser;
+            agendaService = ageSer;
             emailService = email;
         }
 
@@ -35,6 +35,8 @@ namespace Agendamiento.API.Controllers
         {
             string nombreBase = string.Empty;
             int idCliente = 0;
+            string emailCliente = "";
+            string nombreCliente = "";
 
             try
             {
@@ -86,10 +88,14 @@ namespace Agendamiento.API.Controllers
                                 ContextBD.SaveChanges();
 
                                 idCliente = nueva.id;
+                                nombreCliente = nueva.nombre;
+                                emailCliente = nueva.correo;
                             }
                             else
                             {
                                 idCliente = user.id;
+                                nombreCliente = user.nombre;
+                                emailCliente = user.correo;
                             }
                         }
 
@@ -125,7 +131,7 @@ namespace Agendamiento.API.Controllers
                         var nuevo = new Cita
                         {
                             fechaInicio = dto.FechaIni,
-                            hora = dto.Hora,
+                            hora = newHora,
                             fechaFin = dto.FechaIni.AddMinutes(newHora),
                             recurso = dto.recurso,
                             cliente = dto.clienteInfo != null ? idCliente : null,
@@ -152,15 +158,34 @@ namespace Agendamiento.API.Controllers
                         ContextBD.SaveChanges();
 
                         transaction.Commit();
-                        // Si el cliente tiene correo registrado, enviamos confirmación
-                        if (!string.IsNullOrEmpty(dto.clienteInfo?.Correo))
+                        
+                        if (!string.IsNullOrEmpty(emailCliente))
                         {
                             await emailService.SendEmailAsync(
-                                dto.clienteInfo.Correo,
+                                emailCliente,
                                 "Confirmación de cita",
-                                $"<h1>Hola {dto.clienteInfo.Nombre}</h1><p>Tu cita ha sido agendada para {dto.FechaIni:dd/MM/yyyy HH:mm}.</p>",
+                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni),//$"<h1>Hola {nombreCliente}</h1><p>Tu cita ha sido agendada para {dto.FechaIni:dd/MM/yyyy HH:mm}.</p>",
                                 isHtml: true
                             );
+                        }
+
+                        var infoRecurso = ContextBD.Usuarios
+                                            .Where(e => e.estado == Estados.Activo
+                                                && e.recurso == true
+                                                && e.id == dto.recurso)
+                                            .FirstOrDefault();
+
+                        if (infoRecurso != null)
+                        {
+                            if (!string.IsNullOrEmpty(infoRecurso.correo))
+                            {
+                                await emailService.SendEmailAsync(
+                                    infoRecurso.correo,
+                                    "Confirmación de cita",
+                                    agendaService.mensajeEmailUsuario(nombreCliente,infoRecurso.nombre, dto.FechaIni),
+                                    isHtml: true
+                                );
+                            }
                         }
 
                         return Ok(new
@@ -181,7 +206,7 @@ namespace Agendamiento.API.Controllers
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                    LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                     return StatusCode(500, new
                     {
@@ -192,7 +217,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -250,7 +275,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -348,7 +373,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -409,7 +434,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -480,7 +505,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -571,7 +596,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -659,7 +684,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -718,7 +743,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -778,7 +803,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -838,7 +863,7 @@ namespace Agendamiento.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {

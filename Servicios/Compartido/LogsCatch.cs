@@ -18,7 +18,7 @@ namespace Compartido
         private static readonly GeneralContext ContextGene;
         private static readonly FactoryContext ContextFact;
         
-        public static void GuardarError(Exception ex, IConfiguration config, string nombreBase = null)
+        public static void GuardarError(Exception ex, IConfiguration config, FactoryContext factory, string nombreBase = null)
         {
             try
             {
@@ -29,7 +29,7 @@ namespace Compartido
                     var connectionTemplate = config["ConnectionStrings:ConnectionFactory"];
                     var connectionString = string.Format(connectionTemplate, nombreBase);
 
-                    using var ContextBD = ContextFact.Create(connectionString);
+                    using var ContextBD = factory.Create(connectionString);
 
                     var log = new LogDB
                     {

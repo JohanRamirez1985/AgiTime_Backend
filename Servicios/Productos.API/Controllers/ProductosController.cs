@@ -104,7 +104,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -172,7 +172,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -238,7 +238,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
