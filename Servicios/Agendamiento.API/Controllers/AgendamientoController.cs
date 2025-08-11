@@ -448,7 +448,9 @@ namespace Agendamiento.API.Controllers
         public IActionResult ObtenerAgendaRecurso([FromQuery] CitaDTO dto)
         {
             string nombreBase = string.Empty;
-            List<string> horasGeneradas = new List<string>();
+            var horasOcupadas = new HashSet<string>();
+            bool diaCompletoBloqueado = false;
+
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
@@ -467,41 +469,114 @@ namespace Agendamiento.API.Controllers
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
 
                 using var ContextBD = ContextFact.Create(connectionString);
+                var diaSemana = (int)dto.FechaIni.DayOfWeek;
+                if (diaSemana == 0) diaSemana = 7;
 
-                var lista = ContextBD.Citas
-                                     .Where(e => e.fechaInicio >= dto.FechaIni
-                                            && e.fechaFin <= dto.FechaFin
-                                            && e.recurso == dto.recurso
-                                            && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
-                                     .OrderBy(o => o.fechaInicio)
-                                     .ToList();
+                var fechaSolo = dto.FechaIni.Date;
 
-                if (lista == null || lista.Count == 0)
+                var bloqueos = ContextBD.BloqueosHorarios
+                    .AsEnumerable()
+                    .Where(b => b.usuario == dto.recurso &&
+                        (
+                            (b.tipoBloqueo == 1 &&
+                             b.diasSemana != null &&
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+                            ||
+                            (b.tipoBloqueo == 2 &&
+                             b.fechaInicio.HasValue &&
+                             fechaSolo >= b.fechaInicio.Value.Date)
+                        )
+                    )
+                    .ToList();
+
+                foreach (var bloqueo in bloqueos)
                 {
-                    return Ok(new
+                    var inicio = bloqueo.horaInicio;
+                    var fin = bloqueo.horaFin;
+
+                    // Día completo bloqueado
+                    if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
                     {
-                        mensaje = "No hay citas registradas",
-                        exito = false
-                    });
+                        diaCompletoBloqueado = true;
+                        horasOcupadas.Clear();
+                        break;
+                    }
+
+                    var hora = inicio;
+                    while (hora < fin)
+                    {
+                        horasOcupadas.Add(DateTime.Today.Add(hora).ToString("HH:mm"));
+                        hora = hora.Add(TimeSpan.FromMinutes(30));
+                    }
                 }
-                else
+
+                if (!diaCompletoBloqueado)
                 {
-                    foreach (var item in lista)
+                    var listaCitas = ContextBD.Citas
+                                .Where(e => e.fechaInicio >= dto.FechaIni
+                                         && e.fechaFin <= dto.FechaFin
+                                         && e.recurso == dto.recurso
+                                         && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
+                                .ToList();
+
+                    foreach (var item in listaCitas)
                     {
                         int cantidad = item.hora / 30;
                         for (int i = 0; i < cantidad; i++)
                         {
                             DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
-                            horasGeneradas.Add(horaActual.ToString("hh:mm tt", new CultureInfo("en-US")));
+                            horasOcupadas.Add(horaActual.ToString("HH:mm"));
                         }
                     }
                 }
 
+                var listaOrdenada = horasOcupadas
+                                    .Select(h => TimeSpan.Parse(h))
+                                    .OrderBy(t => t)
+                                    .Select(t => DateTime.Today.Add(t).ToString("hh:mm tt", new CultureInfo("en-US")))
+                                    .ToList();
+
                 return Ok(new
                 {
                     exito = true,
-                    datos = horasGeneradas
+                    diaCompletoBloqueado,
+                    horasOcupadas = listaOrdenada
                 });
+
+                //var lista = ContextBD.Citas
+                //                     .Where(e => e.fechaInicio >= dto.FechaIni
+                //                            && e.fechaFin <= dto.FechaFin
+                //                            && e.recurso == dto.recurso
+                //                            && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
+                //                     .OrderBy(o => o.fechaInicio)
+                //                     .ToList();
+
+                //if (lista == null || lista.Count == 0)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = "No hay citas registradas",
+                //        exito = false
+                //    });
+                //}
+                //else
+                //{
+                //    foreach (var item in lista)
+                //    {
+                //        int cantidad = item.hora / 30;
+                //        for (int i = 0; i < cantidad; i++)
+                //        {
+                //            DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
+                //            horasGeneradas.Add(horaActual.ToString("hh:mm tt", new CultureInfo("en-US")));
+                //        }
+                //    }
+                //}
+
+                //return Ok(new
+                //{
+                //    exito = true,
+                //    datos = horasGeneradas
+                //});
             }
             catch (Exception ex)
             {
