@@ -1,8 +1,9 @@
 ﻿using Compartido;
 using Compartido.Constantes;
-using Compartido.DTOs;
 using Compartido.Data;
 using Compartido.Data.Modelos;
+using Compartido.DTOs;
+using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
 //using Agendamiento.API.Servicios;
 using Microsoft.EntityFrameworkCore;
@@ -18,17 +19,19 @@ namespace Agendamiento.API.Controllers
         private readonly FactoryContext ContextFact;
         private readonly IConfiguration configuracion;
         //private readonly ClientesService ClienteService;
+        private readonly IEmailService emailService;
 
-        public AgendamientoController(GeneralContext gen, FactoryContext fac, IConfiguration config/*, ClientesService cliser*/)
+        public AgendamientoController(GeneralContext gen, FactoryContext fac, IConfiguration config, IEmailService email/*, ClientesService cliser*/)
         {
             ContextGene = gen;
             ContextFact = fac;
             configuracion = config;
             //ClienteService = cliser;
+            emailService = email;
         }
 
         [HttpPost("registrarCita")]
-        public IActionResult CrearCita([FromBody] CitaDTO dto)
+        public async Task<IActionResult> CrearCita([FromBody] CitaDTO dto)
         {
             string nombreBase = string.Empty;
             int idCliente = 0;
@@ -149,6 +152,17 @@ namespace Agendamiento.API.Controllers
                         ContextBD.SaveChanges();
 
                         transaction.Commit();
+                        // Si el cliente tiene correo registrado, enviamos confirmación
+                        if (!string.IsNullOrEmpty(dto.clienteInfo?.Correo))
+                        {
+                            await emailService.SendEmailAsync(
+                                dto.clienteInfo.Correo,
+                                "Confirmación de cita",
+                                $"<h1>Hola {dto.clienteInfo.Nombre}</h1><p>Tu cita ha sido agendada para {dto.FechaIni:dd/MM/yyyy HH:mm}.</p>",
+                                isHtml: true
+                            );
+                        }
+
                         return Ok(new
                         {
                             mensaje = "Cita registrada exitosamente",
