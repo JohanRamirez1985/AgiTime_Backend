@@ -469,6 +469,7 @@ namespace Agendamiento.API.Controllers
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
 
                 using var ContextBD = ContextFact.Create(connectionString);
+
                 var diaSemana = (int)dto.FechaIni.DayOfWeek;
                 if (diaSemana == 0) diaSemana = 7;
 
@@ -484,7 +485,7 @@ namespace Agendamiento.API.Controllers
                             ||
                             (b.tipoBloqueo == 2 &&
                              b.fechaInicio.HasValue &&
-                             fechaSolo >= b.fechaInicio.Value.Date)
+                             fechaSolo == b.fechaInicio.Value.Date)
                         )
                     )
                     .ToList();
@@ -528,6 +529,15 @@ namespace Agendamiento.API.Controllers
                             horasOcupadas.Add(horaActual.ToString("HH:mm"));
                         }
                     }
+                }
+
+                if (horasOcupadas.Count == 0 && !diaCompletoBloqueado)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay citas registradas",
+                        exito = false
+                    });
                 }
 
                 var listaOrdenada = horasOcupadas
