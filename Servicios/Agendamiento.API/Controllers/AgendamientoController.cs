@@ -1,13 +1,14 @@
-﻿using Compartido;
+﻿using Agendamiento.API.Servicios;
+using Compartido;
 using Compartido.Constantes;
 using Compartido.Data;
 using Compartido.Data.Modelos;
 using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
-using Agendamiento.API.Servicios;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Linq;
 
 namespace Agendamiento.API.Controllers
 {
@@ -635,7 +636,7 @@ namespace Agendamiento.API.Controllers
                     });
                 }
 
-                var lista = ContextBD.Citas
+                var citasRaw = ContextBD.Citas
                     .Where(e => e.fechaInicio >= dto.FechaIni
                                 && e.cliente == user.id
                                 && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
@@ -644,24 +645,87 @@ namespace Agendamiento.API.Controllers
                         c.id,
                         c.fechaInicio,
                         c.estado,
+                        c.recurso,
                         Servicios = c.CitaServicios.Select(cs => new
                         {
                             Id = cs.servicioNavigation.id,
                             Nombre = cs.servicioNavigation.nombre,
                             Valor = cs.servicioNavigation.valor
                         }).ToList()
-                    })
-                    .AsEnumerable()
-                    .Select(c => new
-                    {
-                        c.id,
-                        c.fechaInicio,
-                        c.estado,
-                        nombreCliente = user.nombre,
-                        telefonoCliente = user.telefono,
-                        servicios = c.Servicios
-                    })
-                    .ToList();
+                    }).ToList();
+
+                var recursoIds = citasRaw.Select(c => c.recurso).Distinct().ToList();
+
+                var usuariosRecursos = ContextBD.Usuarios
+                                        .Where(u => recursoIds.Contains(u.id) && u.recurso)
+                                        .Select(u => new {
+                                            u.id,
+                                            u.nombre,
+                                            nombreSede = u.sedeNavigation.Nombre
+                                        })
+                                        .ToList();
+
+                List<int> usuarioIds = usuariosRecursos.Select(u => u.id).ToList();
+                var recursos = new List<(int id, string nombre, string nombreSede)>();
+
+                if (!usuariosRecursos.Any())
+                {
+                    recursos = ContextBD.Recursos
+                                .Where(r => recursoIds.Contains(r.id))
+                                .Select(r => new ValueTuple<int, string, string>(
+                                    r.id,
+                                    r.nombre,
+                                    r.sedeNavigation.Nombre
+                                ))
+                                .ToList();
+                }
+
+                var recursoNombreDict = usuariosRecursos
+                                        .Select(u => new
+                                        {
+                                            u.id,
+                                            u.nombre,
+                                            u.nombreSede
+                                        })
+                                        .Concat(
+                                            recursos.Select(r => new
+                                            {
+                                                id = r.id,
+                                                nombre = r.nombre,
+                                                nombreSede = "Sin sede"
+                                            })
+                                        )
+                                        .ToDictionary(x => x.id, x => new { x.nombre, x.nombreSede });
+
+                var lista = citasRaw
+                            .Select(c => new
+                            {
+                                c.id,
+                                c.fechaInicio,
+                                c.estado,
+                                nombreCliente = user.nombre,
+                                telefonoCliente = user.telefono,
+                                servicios = c.Servicios,
+                                recursoNombre = recursoNombreDict.ContainsKey(c.recurso)
+                                    ? recursoNombreDict[c.recurso].nombre
+                                    : "Desconocido",
+                                sede = recursoNombreDict.ContainsKey(c.recurso)
+                                    ? recursoNombreDict[c.recurso].nombreSede
+                                    : "Desconocida"
+                            })
+                            .ToList();
+
+                //.AsEnumerable()
+                //.Select(c => new
+                //{
+                //    c.id,
+                //    c.fechaInicio,
+                //    c.estado,
+                //    nombreCliente = user.nombre,
+                //    telefonoCliente = user.telefono,
+                //    servicios = c.Servicios
+                //})
+                //.ToList();
 
 
                 if (lista == null || lista.Count == 0)
