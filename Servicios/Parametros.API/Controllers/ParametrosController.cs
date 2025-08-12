@@ -30,7 +30,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -82,7 +82,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -134,7 +134,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -186,7 +186,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -238,7 +238,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -290,7 +290,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -342,7 +342,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -432,7 +432,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -489,7 +489,7 @@ namespace Parametros.API.Controllers
 
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -599,7 +599,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -651,7 +651,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
