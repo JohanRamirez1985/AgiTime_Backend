@@ -1,5 +1,7 @@
-﻿using Agendamiento.API.Data;
-//using Agendamiento.API.Servicios;
+﻿using Compartido.Data;
+using Compartido.DTOs;
+using Compartido.Metodos;
+using Agendamiento.API.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -24,7 +26,14 @@ builder.Services.AddDbContext<GeneralContext>(options =>
 
 builder.Services.AddScoped<FactoryContext>();
 
-//builder.Services.AddScoped<ClientesService>();
+builder.Services.AddScoped<AgendamientoService>();
+
+//Configuracion para el envio del email
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("SmtpSettings")
+);
+
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 // 🔧 Configuración de CORS
 builder.Services.AddCors(options =>

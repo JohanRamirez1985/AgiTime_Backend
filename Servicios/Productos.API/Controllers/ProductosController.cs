@@ -2,8 +2,8 @@
 using Compartido.Constantes;
 using Compartido.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using Productos.API.Data;
-using Productos.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 
 namespace Productos.API.Controllers
 {
@@ -104,7 +104,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -172,7 +172,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -238,7 +238,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {

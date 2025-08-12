@@ -1,5 +1,10 @@
-﻿using Productos.API.Data;
+﻿using Compartido.Data;
+using Compartido.DTOs;
+
+using Compartido.Metodos;
+
 //using Productos.API.Servicios;
+
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -25,6 +30,13 @@ builder.Services.AddDbContext<GeneralContext>(options =>
 builder.Services.AddScoped<FactoryContext>();
 
 //builder.Services.AddScoped<ClientesService>();
+
+//Configuracion para el envio del email
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("SmtpSettings")
+);
+
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 // 🔧 Configuración de CORS
 builder.Services.AddCors(options =>

@@ -10,8 +10,8 @@ using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Usuarios.API.Data;
-using Usuarios.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Usuarios.API.Servicios;
 
 namespace Usuarios.API.Controllers
@@ -88,7 +88,7 @@ namespace Usuarios.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -175,7 +175,7 @@ namespace Usuarios.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
