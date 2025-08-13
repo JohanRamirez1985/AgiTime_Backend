@@ -1,11 +1,38 @@
 services:
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: agitime-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - usuariosapi
+      - clientesapi
+      - parametrosapi
+      - agendamientosapi
+      - productosapi
+      - frontend
+    networks:
+      - agitime-net
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agitime-frontend
+    expose:
+      - "80"
+    networks:
+      - agitime-net
+    restart: always
+
   usuariosapi:
     build:
       context: ./servicios
       dockerfile: Usuarios.API/Dockerfile
     container_name: usuarios-api
-    ports:
-      - "80:80"
     networks:
       - agitime-net
     restart: always
@@ -15,8 +42,6 @@ services:
       context: ./servicios
       dockerfile: Clientes.API/Dockerfile
     container_name: clientes-api
-    ports:
-      - "81:80"
     networks:
       - agitime-net
     restart: always
@@ -26,8 +51,6 @@ services:
       context: ./servicios
       dockerfile: Parametros.API/Dockerfile
     container_name: parametros-api
-    ports:
-      - "82:80"
     networks:
       - agitime-net
     restart: always
@@ -37,8 +60,6 @@ services:
       context: ./servicios
       dockerfile: Agendamiento.API/Dockerfile
     container_name: agendamientos-api
-    ports:
-      - "83:80"
     networks:
       - agitime-net
     restart: always
@@ -48,22 +69,9 @@ services:
       context: ./servicios
       dockerfile: Productos.API/Dockerfile
     container_name: productos-api
-    ports:
-      - "84:80"
     networks:
       - agitime-net
     restart: always
-    
-  # frontend:
-  #   build:
-  #     context: ./FrontEnd
-  #     dockerfile: Dockerfile
-  #   container_name: agitime-frontend
-  #   ports:
-  #     - "4200:80"
-  #   networks:
-  #     - agitime-net
-  #   restart: always
 
 networks:
   agitime-net:
