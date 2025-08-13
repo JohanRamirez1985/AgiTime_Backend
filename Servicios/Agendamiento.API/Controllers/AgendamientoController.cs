@@ -41,7 +41,7 @@ namespace Agendamiento.API.Controllers
 
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa?.conexionBD;
                 int newHora = 0;
 
@@ -234,7 +234,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -292,7 +292,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -390,7 +390,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -454,7 +454,7 @@ namespace Agendamiento.API.Controllers
 
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -607,7 +607,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -761,7 +761,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -849,7 +849,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa?.conexionBD;
 
                 if (string.IsNullOrEmpty(nombreBase))
@@ -908,7 +908,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa?.conexionBD;
 
                 if (string.IsNullOrEmpty(nombreBase))
@@ -968,7 +968,7 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa?.conexionBD;
 
                 if (string.IsNullOrEmpty(nombreBase))

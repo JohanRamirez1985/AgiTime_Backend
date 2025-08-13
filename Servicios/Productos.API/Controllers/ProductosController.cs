@@ -30,7 +30,7 @@ namespace Productos.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -120,7 +120,7 @@ namespace Productos.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
@@ -188,7 +188,7 @@ namespace Productos.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 nombreBase = empresa.conexionBD;
 
                 if (empresa.conexionBD == null)
