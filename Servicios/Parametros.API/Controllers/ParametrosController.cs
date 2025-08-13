@@ -31,16 +31,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -83,16 +85,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -135,16 +139,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -187,16 +193,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -239,16 +247,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -291,16 +301,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -343,16 +355,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -433,16 +447,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -490,16 +506,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -600,16 +618,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -652,16 +672,18 @@ namespace Parametros.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                nombreBase = empresa.conexionBD;
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
