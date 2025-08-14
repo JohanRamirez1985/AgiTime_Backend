@@ -18,8 +18,8 @@ FrontEnd/portal-angular/node_modules/
 FrontEnd/portal-angular/dist/
 FrontEnd/portal-angular/.angular/cache/
 *.log
-**/Dockerfile
-docker-compose.override.yml
+#**/Dockerfile
+#docker-compose.override.yml
 .env
 Thumbs.db
 .DS_Store
