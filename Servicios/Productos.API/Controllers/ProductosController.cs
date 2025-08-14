@@ -1,9 +1,10 @@
 ﻿using Compartido;
 using Compartido.Constantes;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Compartido.DTOs;
+using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
-using Productos.API.Data;
-using Productos.API.Data.Modelos;
 
 namespace Productos.API.Controllers
 {
@@ -30,17 +31,19 @@ namespace Productos.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -104,7 +107,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -120,17 +123,19 @@ namespace Productos.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -172,7 +177,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -188,17 +193,19 @@ namespace Productos.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -208,7 +215,7 @@ namespace Productos.API.Controllers
                 var nuevo = new Ventum
                 {
                     factura = dto.factura,
-                    fechaVenta = DateTime.Now,
+                    fechaVenta = dto.fechaVenta,
                     usuarioVenta = dto.usuarioVenta
                 };
 
@@ -238,7 +245,7 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {

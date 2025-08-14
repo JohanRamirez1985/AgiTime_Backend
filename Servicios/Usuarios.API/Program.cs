@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Compartido.Data;
+using Compartido.DTOs;
+using Compartido.Metodos;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Usuarios.API.Data;
 using Usuarios.API.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +27,13 @@ builder.Services.AddDbContext<GeneralContext>(options =>
 builder.Services.AddScoped<FactoryContext>();
 
 builder.Services.AddScoped<UsuarioService>();
+
+//Configuracion para el envio del email
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("SmtpSettings")
+);
+
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 // 🔧 Configuración para autenticación JWT si la usas (opcional según tu caso)
 

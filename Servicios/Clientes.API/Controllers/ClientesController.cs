@@ -1,5 +1,5 @@
-﻿using Clientes.API.Data;
-using Clientes.API.Data.Modelos;
+﻿using Compartido.Data;
+using Compartido.Data.Modelos;
 using Compartido;
 using Compartido.Constantes;
 using Compartido.DTOs;
@@ -33,17 +33,19 @@ namespace Clientes.API.Controllers
         //    string nombreBase = string.Empty;
         //    try
         //    {
-        //        var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == request.empresa);
-        //        nombreBase = empresa.conexionBD;
+        //        var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == request.empresa && e.estado == Estados.Activo);
+        //        var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-        //        if (empresa.conexionBD == null)
-        //        {
-        //            return Ok(new
-        //            {
-        //                mensaje = "La empresa no tiene base de datos asignada",
-        //                exito = false
-        //            });
-        //        }
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                //nombreBase = empresa.conexionBD;
 
         //        var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
         //        var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -68,7 +70,7 @@ namespace Clientes.API.Controllers
         //        int expiracion = int.Parse(configuracion["Jwt:ExpiracionMinutos"]);
 
         //        var token = Token.GenerarToken(usuario.login, empresa.conexionBD, claveSecreta, expiracion);
-                
+
         //        var user = ClienteService.ProcesarUsuario(usuario, empresa, nombreBase);
 
         //        //var funcionalidad = ClienteService.ProcesarFuncionabilidad(usuario, nombreBase);
@@ -82,7 +84,7 @@ namespace Clientes.API.Controllers
         //    }
         //    catch (Exception ex)
         //    {
-        //        LogsCatch.GuardarError(ex, configuracion, nombreBase);
+        //        LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
         //        return StatusCode(500, new
         //        {
@@ -98,17 +100,19 @@ namespace Clientes.API.Controllers
         //    string nombreBase = string.Empty;
         //    try
         //    {
-        //        var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
-        //        nombreBase = empresa.conexionBD;
+        //        var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+        //        var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-        //        if (empresa.conexionBD == null)
-        //        {
-        //            return Ok(new
-        //            {
-        //                mensaje = "La empresa no tiene base de datos asignada",
-        //                exito = false
-        //            });
-        //        }
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                //nombreBase = empresa.conexionBD;
 
         //        var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
         //        var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -153,7 +157,7 @@ namespace Clientes.API.Controllers
         //    }
         //    catch (Exception ex)
         //    {
-        //        LogsCatch.GuardarError(ex, configuracion, nombreBase);
+        //        LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
         //        return StatusCode(500, new
         //        {

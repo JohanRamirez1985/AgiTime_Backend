@@ -4,8 +4,8 @@ using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Parametros.API.Data;
-using Parametros.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 
 namespace Parametros.API.Controllers
 {
@@ -30,17 +30,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -66,7 +68,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -82,17 +84,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -118,7 +122,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -134,17 +138,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -170,7 +176,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -186,17 +192,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -222,7 +230,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -238,17 +246,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -274,7 +284,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -290,17 +300,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -326,7 +338,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -342,17 +354,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -364,7 +378,7 @@ namespace Parametros.API.Controllers
                             .Include(u => u.tipoDocumentoNavigation)
                             .Include(u => u.sedeNavigation)
                             .Include(u => u.idRols)
-                            .Where(e => e.estado == Estados.Activo)
+                            .Where(e => e.estado == Estados.Activo && !e.idRols.Any(r => r.nombre == "SuperAdmin"))
                             .OrderBy(o => o.nombre)
                             .ToList();
 
@@ -416,7 +430,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -432,17 +446,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -470,7 +486,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -489,17 +505,19 @@ namespace Parametros.API.Controllers
 
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -548,7 +566,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -583,7 +601,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -599,17 +617,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -635,7 +655,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -651,17 +671,19 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -687,7 +709,7 @@ namespace Parametros.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {

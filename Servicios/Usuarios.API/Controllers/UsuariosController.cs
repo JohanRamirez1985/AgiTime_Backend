@@ -10,8 +10,8 @@ using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Usuarios.API.Data;
-using Usuarios.API.Data.Modelos;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Usuarios.API.Servicios;
 
 namespace Usuarios.API.Controllers
@@ -39,17 +39,19 @@ namespace Usuarios.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == request.empresa);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == request.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -79,20 +81,16 @@ namespace Usuarios.API.Controllers
 
                 var user = UsuarioService.ProcesarUsuario(usuario, empresa, nombreBase);
 
-                //var usuarioDto = UsuarioService.ProcesarUsuario(usuario);
-
-                //var funcionalidad = UsuarioService.ProcesarFuncionabilidad(usuario, nombreBase);
-
                 return Ok(new LoginResponse
                 {
                     Token = token,
-                    Datos = user, //ArregloLogin.ConstruirData(info, "Usuario"),
+                    Datos = user,
                     Exito = true
                 });
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -106,19 +104,23 @@ namespace Usuarios.API.Controllers
         public IActionResult CrearUsuario([FromBody] UsuarioDTO dto)
         {
             string nombreBase = string.Empty;
+            var zonaHorariaColombia = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
+            var fecha = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHorariaColombia);
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa);
-                nombreBase = empresa.conexionBD;
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                if (empresa.conexionBD == null)
+                if (!resultado.Exito)
                 {
                     return Ok(new
                     {
-                        mensaje = "La empresa no tiene base de datos asignada",
+                        mensaje = resultado.Mensaje,
                         exito = false
                     });
                 }
+
+                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -159,7 +161,7 @@ namespace Usuarios.API.Controllers
                     sede = dto.Sede,
                     documento = dto.Documento,
                     estado = Estados.Activo,
-                    fechaCreacion = DateTime.Now,
+                    fechaCreacion = dto.FechaCreacion,
                     recurso = dto.recurso,
                     idRols = new List<Rol> { rol }
                 };
@@ -177,7 +179,7 @@ namespace Usuarios.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, nombreBase);
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
 
                 return StatusCode(500, new
                 {
