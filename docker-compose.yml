@@ -24,6 +24,8 @@ services:
     container_name: agitime-frontend
     expose:
       - "80"
+    volumes:
+    - /Data/agitime/frontend/assets/img:/usr/share/nginx/html/assets/img
     networks:
       - agitime-net
     restart: always
