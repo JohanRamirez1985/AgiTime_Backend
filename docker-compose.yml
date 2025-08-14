@@ -12,7 +12,7 @@ services:
       - parametrosapi
       - agendamientosapi
       - productosapi
-      - frontend
+      # - frontend
     networks:
       - agitime-net
     restart: always
