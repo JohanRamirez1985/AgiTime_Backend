@@ -49,60 +49,65 @@ namespace Productos.API.Controllers
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
 
                 using var ContextBD = ContextFact.Create(connectionString);
+                using var transaction = ContextBD.Database.BeginTransaction();
 
-                var prod = ContextBD.Productos.Where(s => s.codigo == dto.Codigo).FirstOrDefault();
-
-                if (prod == null)
+                try
                 {
-                    var nuevoProd = new Producto
-                    {
-                        Nombre = dto.Nombre,
-                        codigo = dto.Codigo,
-                        precio = dto.Precio,
-                        stock = dto.Cantidad,
-                        estado = Estados.Activo
-                    };
+                    var prod = ContextBD.Productos.Where(s => s.codigo == dto.Codigo).FirstOrDefault();
 
-                    ContextBD.Productos.Add(nuevoProd);
-
-                    var nuevoDeta = new DetalleProducto
+                    if (prod == null)
                     {
-                        producto = nuevoProd.id,
-                        cantidadIngresada = dto.Cantidad,
-                        cantidadStock = 0,
-                        cantidadNueva = dto.Cantidad,
-                        usuarioCreacion = dto.UsuarioCreacion,
-                        fechaCreacion = DateTime.Now
-                    };
-                    ContextBD.DetalleProductos.Add(nuevoDeta);
-                    ContextBD.SaveChanges();
+                        var nuevoProd = new Producto
+                        {
+                            Nombre = dto.Nombre,
+                            codigo = dto.Codigo,
+                            precio = dto.Precio,
+                            stock = dto.Cantidad,
+                            estado = Estados.Activo
+                        };
 
-                    return Ok(new
+                        ContextBD.Productos.Add(nuevoProd);
+                        ContextBD.SaveChanges();
+
+                        var nuevoDeta = new DetalleProducto
+                        {
+                            producto = nuevoProd.id,
+                            cantidadIngresada = dto.Cantidad,
+                            cantidadStock = 0,
+                            cantidadNueva = dto.Cantidad,
+                            usuarioCreacion = dto.UsuarioCreacion,
+                            fechaCreacion = dto.FechaCreacion
+                        };
+                        ContextBD.DetalleProductos.Add(nuevoDeta);
+                        ContextBD.SaveChanges();
+
+                        transaction.Commit();
+
+                        return Ok(new
+                        {
+                            mensaje = "Producto registrado exitosamente",
+                            exito = true
+                        });
+                    }
+                    else
                     {
-                        mensaje = "Producto registrado exitosamente",
-                        exito = true
-                    });
+                        return Ok(new
+                        {
+                            mensaje = "El codigo de producto " + dto.Codigo + " ya existe.",
+                            exito = false
+                        });
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    return Ok(new
+                    transaction.Rollback();
+                    LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                    return StatusCode(500, new
                     {
-                        mensaje = "El codigo de producto " + dto.Codigo + " ya existe.",
+                        mensaje = "Ocurrió un error interno",
                         exito = false
                     });
-                    //var nuevoDeta = new DetalleProducto
-                    //{
-                    //    producto = prod.id,
-                    //    cantidadIngresada = dto.Cantidad,
-                    //    cantidadStock = prod.stock,
-                    //    cantidadNueva = dto.Cantidad + prod.stock,
-                    //    usuarioCreacion = dto.UsuarioCreacion,
-                    //    fechaCreacion = DateTime.Now
-                    //};
-                    //ContextBD.DetalleProductos.Add(nuevoDeta);
-
-                    //prod.stock = dto.Cantidad + prod.stock;
-                    //ContextBD.SaveChanges();
                 }    
             }
             catch (Exception ex)
@@ -161,7 +166,7 @@ namespace Productos.API.Controllers
                         cantidadStock = prod.stock,
                         cantidadNueva = dto.Cantidad + prod.stock,
                         usuarioCreacion = dto.UsuarioCreacion,
-                        fechaCreacion = DateTime.Now
+                        fechaCreacion = dto.FechaCreacion
                     };
                     ContextBD.DetalleProductos.Add(nuevoDeta);
 
@@ -211,37 +216,54 @@ namespace Productos.API.Controllers
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
 
                 using var ContextBD = ContextFact.Create(connectionString);
+                using var transaction = ContextBD.Database.BeginTransaction();
 
-                var nuevo = new Ventum
+                try
                 {
-                    factura = dto.factura,
-                    fechaVenta = dto.fechaVenta,
-                    usuarioVenta = dto.usuarioVenta
-                };
-
-                ContextBD.Venta.Add(nuevo);
-
-                foreach (var detalle in dto.Detalles)
-                {
-                    var nuevoDetalle = new VentaDetalle
+                    var nuevo = new Ventum
                     {
-                        venta = nuevo.id,
-                        producto = detalle.Producto,
-                        cantidad = detalle.Cantidad,
-                        valor = detalle.Valor,
-                        total = detalle.Cantidad * detalle.Valor
+                        factura = dto.factura,
+                        fechaVenta = dto.fechaVenta,
+                        usuarioVenta = dto.usuarioVenta
                     };
 
-                    ContextBD.VentaDetalles.Add(nuevoDetalle);
+                    ContextBD.Venta.Add(nuevo);
+                    ContextBD.SaveChanges();
+
+                    foreach (var detalle in dto.Detalles)
+                    {
+                        var nuevoDetalle = new VentaDetalle
+                        {
+                            venta = nuevo.id,
+                            producto = detalle.Producto,
+                            cantidad = detalle.Cantidad,
+                            valor = detalle.Valor,
+                            total = detalle.Cantidad * detalle.Valor
+                        };
+
+                        ContextBD.VentaDetalles.Add(nuevoDetalle);
+                    }
+
+                    ContextBD.SaveChanges();
+                    transaction.Commit();
+
+                    return Ok(new
+                    {
+                        mensaje = "Venta registrada exitosamente",
+                        exito = true
+                    });
                 }
-
-                ContextBD.SaveChanges();
-
-                return Ok(new
+                catch (Exception ex)
                 {
-                    mensaje = "Venta registrada exitosamente",
-                    exito = true
-                });
+                    transaction.Rollback();
+                    LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                    return StatusCode(500, new
+                    {
+                        mensaje = "Ocurrió un error interno",
+                        exito = false
+                    });
+                }
             }
             catch (Exception ex)
             {
