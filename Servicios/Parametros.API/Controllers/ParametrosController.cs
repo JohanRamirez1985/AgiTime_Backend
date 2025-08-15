@@ -696,7 +696,7 @@ namespace Parametros.API.Controllers
                 {
                     return Ok(new
                     {
-                        mensaje = "No hay prodcutos registrados",
+                        mensaje = "No hay productos registrados",
                         exito = false
                     });
                 }
