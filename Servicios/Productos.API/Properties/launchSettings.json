@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "Agendamiento.API": {
+    "Productos.API": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
