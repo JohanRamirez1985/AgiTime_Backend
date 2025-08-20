@@ -345,6 +345,12 @@ namespace Compartido.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
+
+                entity.HasOne(d => d.SedeNavigation)
+                    .WithMany(p => p.Servicios)
+                    .HasForeignKey(d => d.Sede)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Servicios_Sede");
             });
 
             modelBuilder.Entity<TipoDocumento>(entity =>

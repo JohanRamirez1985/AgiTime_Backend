@@ -636,7 +636,7 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Servicios.OrderBy(o => o.nombre).ToList();
+                var lista = ContextBD.Servicios.Where(s => s.estado == Estados.Activo).OrderBy(o => o.Orden).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
