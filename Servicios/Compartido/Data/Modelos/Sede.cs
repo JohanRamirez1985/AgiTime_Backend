@@ -8,6 +8,7 @@ namespace Compartido.Data.Modelos
         public Sede()
         {
             Recursos = new HashSet<Recurso>();
+            Servicios = new HashSet<Servicio>();
             Usuarios = new HashSet<Usuario>();
         }
 
@@ -20,6 +21,7 @@ namespace Compartido.Data.Modelos
         public string estado { get; set; }
 
         public virtual ICollection<Recurso> Recursos { get; set; }
+        public virtual ICollection<Servicio> Servicios { get; set; }
         public virtual ICollection<Usuario> Usuarios { get; set; }
     }
 }
