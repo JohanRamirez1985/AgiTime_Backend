@@ -175,7 +175,67 @@ namespace Productos.API.Controllers
 
                     return Ok(new
                     {
-                        mensaje = "Producto registrado exitosamente",
+                        mensaje = "Se cargo el inventario al producto exitosamente",
+                        exito = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("editarProducto")]
+        public IActionResult EditarProducto([FromBody] ProductoDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var prod = ContextBD.Productos.Where(s => s.id == dto.Id).FirstOrDefault();
+
+                if (prod == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Producto " + dto.Nombre + " no encontrado.",
+                        exito = false
+                    });
+                }
+                else
+                {
+                    prod.Nombre = dto.Nombre;
+                    prod.precio = dto.Precio;
+                    ContextBD.SaveChanges();
+
+                    return Ok(new
+                    {
+                        mensaje = "Producto editado exitosamente",
                         exito = true
                     });
                 }
