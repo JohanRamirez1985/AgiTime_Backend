@@ -12,6 +12,7 @@ services:
       - parametrosapi
       - agendamientosapi
       - productosapi
+      - informesapi
       # - frontend
     networks:
       - agitime-net
@@ -71,6 +72,15 @@ services:
       context: ./servicios
       dockerfile: Productos.API/Dockerfile
     container_name: productos-api
+    networks:
+      - agitime-net
+    restart: always
+    
+  informesapi:
+    build:
+      context: ./servicios
+      dockerfile: Informes.API/Dockerfile
+    container_name: informes-api
     networks:
       - agitime-net
     restart: always

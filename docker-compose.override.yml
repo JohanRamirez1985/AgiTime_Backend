@@ -23,6 +23,10 @@ services:
   productosapi:
     ports:
       - "5005:80"
+      
+  informesapi:
+    ports:
+      - "5006:80"
 
   gateway:
     volumes:
