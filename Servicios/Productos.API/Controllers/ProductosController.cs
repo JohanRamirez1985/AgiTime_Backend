@@ -298,7 +298,7 @@ namespace Productos.API.Controllers
                             producto = detalle.Producto,
                             cantidad = detalle.Cantidad,
                             valor = detalle.Valor,
-                            total = detalle.Cantidad * detalle.Valor
+                            total = detalle.Total
                         };
 
                         ContextBD.VentaDetalles.Add(nuevoDetalle);
