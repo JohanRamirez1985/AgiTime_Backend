@@ -152,8 +152,8 @@ namespace Usuarios.API.Controllers
                 {
                     nombre = dto.Nombre,
                     correo = dto.Correo,
-                    login = dto.Correo,
-                    password = EncripPassword.EncriptarPassword(dto.Password),
+                    login = dto.Documento,
+                    password = EncripPassword.EncriptarPassword(dto.Documento),
                     telefono = dto.Telefono,
                     fechaNacimiento = dto.FechaNacimiento,
                     genero = dto.Genero,
