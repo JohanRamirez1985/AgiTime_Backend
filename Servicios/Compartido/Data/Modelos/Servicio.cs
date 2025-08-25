@@ -14,11 +14,12 @@ namespace Compartido.Data.Modelos
         public string nombre { get; set; }
         public decimal? valor { get; set; }
         public int? tiempo { get; set; }
-        public int? Orden { get; set; }
-        public int Sede { get; set; }
+        public int? orden { get; set; }
+        public int sede { get; set; }
         public string estado { get; set; }
+        public bool? esPago { get; set; }
 
-        public virtual Sede SedeNavigation { get; set; }
+        public virtual Sede sedeNavigation { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
     }
 }

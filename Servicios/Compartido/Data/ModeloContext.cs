@@ -335,6 +335,8 @@ namespace Compartido.Data
 
             modelBuilder.Entity<Servicio>(entity =>
             {
+                entity.Property(e => e.esPago).HasDefaultValueSql("((1))");
+
                 entity.Property(e => e.estado)
                     .IsRequired()
                     .HasMaxLength(20)
@@ -346,9 +348,9 @@ namespace Compartido.Data
 
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
 
-                entity.HasOne(d => d.SedeNavigation)
+                entity.HasOne(d => d.sedeNavigation)
                     .WithMany(p => p.Servicios)
-                    .HasForeignKey(d => d.Sede)
+                    .HasForeignKey(d => d.sede)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Servicios_Sede");
             });
