@@ -403,6 +403,7 @@ namespace Parametros.API.Controllers
                         Estado = usu.estado,
                         FechaCreacion = usu.fechaCreacion,
                         recurso = usu.recurso,
+                        Porcentaje = usu.porcentaje,
 
                         NombreGenero = usu.generoNavigation?.nombre,
                         NombreTipoDocumento = usu.tipoDocumentoNavigation?.nombre,

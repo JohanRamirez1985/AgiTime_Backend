@@ -12,5 +12,11 @@ namespace Compartido.DTOs
         public string? Nombre { get; set; }
         public decimal? Valor { get; set; }
         public int? Tiempo { get; set; }
+        public int? Orden { get; set; }
+        public int Sede { get; set; }
+        public string Estado { get; set; }
+        public bool? EsPago { get; set; }
+        public int empresa { get; set; }
+        public string? NombreSede { get; set; }
     }
 }
