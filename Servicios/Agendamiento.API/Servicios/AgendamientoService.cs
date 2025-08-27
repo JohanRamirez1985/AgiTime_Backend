@@ -4,7 +4,7 @@ namespace Agendamiento.API.Servicios
 {
     public class AgendamientoService
     {
-        public string mensajeEmailCliente (string nombre, DateTime fecha)
+        public string mensajeEmailCliente (string nombre, DateTime fecha, string nombreEmpresa, string sede, string logo)
         {
             var mensaje = "";
 
@@ -33,12 +33,17 @@ namespace Agendamiento.API.Servicios
                         border-top: 1px solid #ddd;
                         padding-top: 10px;
                     }}
+                    .logo {{
+                        max-width: 150px;
+                        margin-bottom: 20px;
+                    }}
                 </style>
             </head>
             <body>
                 <div class='container'>
+                    <img class='logo' src='{logo}' alt='Logo de la empresa' />
                     <h1>Hola {nombre}</h1>
-                    <p>Tu cita ha sido agendada para <strong>{fecha:dd/MM/yyyy HH:mm}</strong>.</p>
+                    <p>Tu cita ha sido agendada en <strong>{nombreEmpresa}</strong>, en la sede <strong>{sede}</strong>, para el día <strong>{fecha:dd/MM/yyyy HH:mm}</strong>.</p>
                     <p>Gracias por utilizar nuestros servicios.</p>
                     <div class='footer'>
                         Este es un mensaje automático, por favor no responda a este correo.
@@ -50,7 +55,7 @@ namespace Agendamiento.API.Servicios
             return mensaje;
         }
 
-        public string mensajeEmailUsuario(string nombreCliente, string nombreUsuario, DateTime fecha)
+        public string mensajeEmailUsuario(string nombreCliente, string nombreUsuario, DateTime fecha, string logo)
         {
             var mensaje = "";
 
@@ -84,10 +89,15 @@ namespace Agendamiento.API.Servicios
                         padding: 8px;
                         border-radius: 4px;
                     }}
+                    .logo {{
+                        max-width: 150px;
+                        margin-bottom: 20px;
+                    }}
                 </style>
             </head>
             <body>
                 <div class='container'>
+                    <img class='logo' src='{logo}' alt='Logo de la empresa' />
                     <h2>Notificación de nueva cita</h2>
                     <p>Hola <strong>{nombreUsuario}</strong>,</p>
                     <p>Se ha agendado una nueva cita con el siguiente detalle:</p>
