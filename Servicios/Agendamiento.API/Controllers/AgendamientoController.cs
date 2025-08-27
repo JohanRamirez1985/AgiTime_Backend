@@ -35,6 +35,9 @@ namespace Agendamiento.API.Controllers
         public async Task<IActionResult> CrearCita([FromBody] CitaDTO dto)
         {
             string nombreBase = string.Empty;
+            string logo = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string nombreSede = string.Empty;
             int idCliente = 0;
             string emailCliente = "";
             string nombreCliente = "";
@@ -55,6 +58,8 @@ namespace Agendamiento.API.Controllers
                 }
 
                 nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "assets/img/" + empresa.logo;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, nombreBase);
@@ -161,18 +166,9 @@ namespace Agendamiento.API.Controllers
                         ContextBD.SaveChanges();
 
                         transaction.Commit();
-                        
-                        if (!string.IsNullOrEmpty(emailCliente))
-                        {
-                            await emailService.SendEmailAsync(
-                                emailCliente,
-                                "Confirmación de cita",
-                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni),//$"<h1>Hola {nombreCliente}</h1><p>Tu cita ha sido agendada para {dto.FechaIni:dd/MM/yyyy HH:mm}.</p>",
-                                isHtml: true
-                            );
-                        }
 
                         var infoRecurso = ContextBD.Usuarios
+                                            .Include(u => u.sedeNavigation)
                                             .Where(e => e.estado == Estados.Activo
                                                 && e.recurso == true
                                                 && e.id == dto.recurso)
@@ -180,16 +176,43 @@ namespace Agendamiento.API.Controllers
 
                         if (infoRecurso != null)
                         {
+                            nombreSede = infoRecurso.sedeNavigation?.Nombre;
+
                             if (!string.IsNullOrEmpty(infoRecurso.correo))
                             {
                                 await emailService.SendEmailAsync(
                                     infoRecurso.correo,
                                     "Confirmación de cita",
-                                    agendaService.mensajeEmailUsuario(nombreCliente,infoRecurso.nombre, dto.FechaIni),
+                                    agendaService.mensajeEmailUsuario(nombreCliente, infoRecurso.nombre, dto.FechaIni, logo),
                                     isHtml: true
                                 );
                             }
                         }
+                        else
+                        {
+                            var Recurso = ContextBD.Recursos
+                                            .Include(u => u.sedeNavigation)
+                                            .Where(e => e.estado == Estados.Activo)
+                                            .FirstOrDefault();
+                            if (Recurso != null)
+                            {
+                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(emailCliente))
+                        {
+                            await emailService.SendEmailAsync(
+                                emailCliente,
+                                "Confirmación de cita",
+                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
+                                isHtml: true
+                            );
+                        }
+
+                        
+
+                        
 
                         return Ok(new
                         {
