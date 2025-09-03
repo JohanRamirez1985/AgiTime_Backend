@@ -302,6 +302,13 @@ namespace Productos.API.Controllers
                         };
 
                         ContextBD.VentaDetalles.Add(nuevoDetalle);
+
+                        var prod = ContextBD.Productos.Where(s => s.id == detalle.Producto).FirstOrDefault();
+
+                        if(prod != null)
+                        {
+                            prod.stock -= detalle.Cantidad;
+                        }
                     }
 
                     ContextBD.SaveChanges();
