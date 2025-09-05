@@ -88,6 +88,7 @@ namespace Agendamiento.API.Controllers
                                     nombre = dto.clienteInfo.Nombre,
                                     correo = dto.clienteInfo.Correo,
                                     telefono = dto.clienteInfo.Telefono,
+                                    fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                     estado = Estados.Activo,
                                     fechaCreacion = dto.FechaCreacion
                                 };
@@ -209,10 +210,6 @@ namespace Agendamiento.API.Controllers
                                 isHtml: true
                             );
                         }
-
-                        
-
-                        
 
                         return Ok(new
                         {
