@@ -24,7 +24,7 @@ namespace Compartido.DTOs
         public int empresa { get; set; }
         public int rol { get; set; }
         public bool recurso { get; set; }
-        public int? Porcentaje { get; set; }
+        public decimal? Porcentaje { get; set; }
         public string? NombreGenero { get; set; }
         public string? NombreTipoDocumento { get; set; }
         public string? NombreSede { get; set; }

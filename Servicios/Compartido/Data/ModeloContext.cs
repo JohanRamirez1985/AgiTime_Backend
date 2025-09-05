@@ -409,6 +409,8 @@ namespace Compartido.Data
                     .HasMaxLength(200)
                     .IsUnicode(false);
 
+                entity.Property(e => e.porcentaje).HasColumnType("decimal(18, 1)");
+
                 entity.Property(e => e.telefono)
                     .IsRequired()
                     .HasMaxLength(100)
