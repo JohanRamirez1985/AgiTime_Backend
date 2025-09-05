@@ -643,7 +643,7 @@ namespace Parametros.API.Controllers
                 {
                     return Ok(new
                     {
-                        mensaje = "No hay tipos de documento registrados",
+                        mensaje = "No hay servicios registrados",
                         exito = false
                     });
                 }

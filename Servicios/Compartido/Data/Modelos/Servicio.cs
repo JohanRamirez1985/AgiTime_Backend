@@ -18,6 +18,7 @@ namespace Compartido.Data.Modelos
         public int sede { get; set; }
         public string estado { get; set; }
         public bool? esPago { get; set; }
+        public string observaciones { get; set; }
 
         public virtual Sede sedeNavigation { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
