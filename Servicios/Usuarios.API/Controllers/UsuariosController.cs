@@ -285,7 +285,8 @@ namespace Usuarios.API.Controllers
                         orden = dto.Orden,
                         sede = dto.Sede,
                         estado = Estados.Activo,
-                        esPago = dto.EsPago
+                        esPago = dto.EsPago,
+                        observaciones = dto.Observaciones 
                     };
 
                     ContextBD.Servicios.Add(nuevoServicio);
@@ -375,6 +376,8 @@ namespace Usuarios.API.Controllers
                         serv.estado = dto.Estado;
                     if (!serv.esPago.Equals(dto.EsPago))
                         serv.esPago = dto.EsPago;
+                    if (!serv.observaciones.Equals(dto.Observaciones))
+                        serv.observaciones = dto.Observaciones;
 
                     ContextBD.SaveChanges();
 
@@ -435,7 +438,8 @@ namespace Usuarios.API.Controllers
                         Sede = s.sede,
                         Estado = s.estado, 
                         EsPago = s.esPago,
-                        NombreSede = s.sedeNavigation != null ? s.sedeNavigation.Nombre : null
+                        Observaciones = s.observaciones,
+                        NombreSede = s.sedeNavigation != null ? s.sedeNavigation.Nombre : null 
                     })
                     .ToList();
 

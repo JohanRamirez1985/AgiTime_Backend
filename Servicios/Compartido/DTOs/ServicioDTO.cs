@@ -18,5 +18,6 @@ namespace Compartido.DTOs
         public bool? EsPago { get; set; }
         public int empresa { get; set; }
         public string? NombreSede { get; set; }
+        public string? Observaciones { get; set; }
     }
 }
