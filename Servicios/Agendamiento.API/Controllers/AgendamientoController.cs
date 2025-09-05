@@ -59,7 +59,7 @@ namespace Agendamiento.API.Controllers
 
                 nombreBase = empresa.conexionBD;
                 nombreEmpresa = empresa.nombre;
-                logo = "assets/img/" + empresa.logo;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, nombreBase);
