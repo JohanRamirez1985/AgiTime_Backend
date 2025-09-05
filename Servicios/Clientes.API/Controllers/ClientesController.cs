@@ -27,6 +27,60 @@ namespace Clientes.API.Controllers
             ClienteService = cliser;
         }
 
+        [HttpGet("clientes")]
+        public IActionResult ObtenerClientes([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Clientes.OrderBy(o => o.id).ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay clientes registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
         //[HttpPost("login")]
         //public IActionResult LoginCliente([FromBody] LoginRequest request)
         //{
@@ -36,16 +90,16 @@ namespace Clientes.API.Controllers
         //        var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == request.empresa && e.estado == Estados.Activo);
         //        var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                //if (!resultado.Exito)
-                //{
-                //    return Ok(new
-                //    {
-                //        mensaje = resultado.Mensaje,
-                //        exito = false
-                //    });
-                //}
+        //if (!resultado.Exito)
+        //{
+        //    return Ok(new
+        //    {
+        //        mensaje = resultado.Mensaje,
+        //        exito = false
+        //    });
+        //}
 
-                //nombreBase = empresa.conexionBD;
+        //nombreBase = empresa.conexionBD;
 
         //        var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
         //        var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -103,16 +157,16 @@ namespace Clientes.API.Controllers
         //        var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
         //        var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-                //if (!resultado.Exito)
-                //{
-                //    return Ok(new
-                //    {
-                //        mensaje = resultado.Mensaje,
-                //        exito = false
-                //    });
-                //}
+        //if (!resultado.Exito)
+        //{
+        //    return Ok(new
+        //    {
+        //        mensaje = resultado.Mensaje,
+        //        exito = false
+        //    });
+        //}
 
-                //nombreBase = empresa.conexionBD;
+        //nombreBase = empresa.conexionBD;
 
         //        var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
         //        var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
