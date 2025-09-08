@@ -18,6 +18,7 @@ namespace Compartido.Data.Modelos
         public int? cliente { get; set; }
         public decimal? valor { get; set; }
         public string estado { get; set; }
+        public bool? pago { get; set; }
         public DateTime fechaCreacion { get; set; }
         public string usuarioCreacion { get; set; }
         public DateTime? fechaCancelacion { get; set; }
