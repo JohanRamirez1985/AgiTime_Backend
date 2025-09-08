@@ -631,6 +631,86 @@ namespace Agendamiento.API.Controllers
             }
         }
 
+        [HttpGet("consultarMiAgenda")]
+        public IActionResult ObtenerMiAgenda([FromQuery] CitaDTO dto)
+
+        {
+            string nombreBase = string.Empty;
+            var horasOcupadas = new HashSet<string>();
+            bool diaCompletoBloqueado = false;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var listaCitas = ContextBD.Citas
+                            .Where(e => e.fechaInicio >= dto.FechaIni
+                                     && e.fechaFin <= dto.FechaFin
+                                     && e.recurso == dto.recurso
+                                     && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                            .ToList();
+
+                foreach (var item in listaCitas)
+                {
+                    int cantidad = item.hora / 30;
+                    for (int i = 0; i < cantidad; i++)
+                    {
+                        DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
+                        horasOcupadas.Add(horaActual.ToString("HH:mm"));
+                    }
+                }
+                
+                if (horasOcupadas.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay citas registradas",
+                        exito = false
+                    });
+                }
+
+                var listaOrdenada = horasOcupadas
+                                    .Select(h => TimeSpan.Parse(h))
+                                    .OrderBy(t => t)
+                                    .Select(t => DateTime.Today.Add(t).ToString("hh:mm tt", new CultureInfo("en-US")))
+                                    .ToList();
+
+                return Ok(new
+                {
+                    exito = true,
+                    diaCompletoBloqueado,
+                    horasOcupadas = listaOrdenada
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
         [HttpGet("consultarCitasCliente")]
         public IActionResult ObtenerCitasCliente([FromQuery] CitaDTO dto)
         {
