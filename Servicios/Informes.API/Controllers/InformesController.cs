@@ -120,11 +120,10 @@ namespace Informes.API.Controllers
                 using var ContextBD = ContextFact.Create(connectionString);
 
                 var usuarios = ContextBD.Usuarios
-                                .Include(u => u.idRols)
-                                .Where(u => u.id == 3)
+                                .Where(u => u.idRols.Any(r => r.id == 3))
                                 .ToList();
 
-                foreach(Usuario u in usuarios)
+                foreach (Usuario u in usuarios)
                 {
                     var info = (from c in ContextBD.Citas
                                join sc in ContextBD.CitaServicios on c.id equals sc.cita
@@ -156,12 +155,114 @@ namespace Informes.API.Controllers
                         descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList()
                     };
 
+                    if (resultado.totalServicios > 0)
+                        resumenUsuarios.Add(resultado);
+                }
+
+                if (resumenUsuarios.Count > 0)
+                {
+                    var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, nombreEmpresa, logo);
+
+                    return File(pdfBytes, "application/pdf", $"Resumen_{DateTime.Now:yyyyMMdd}.pdf");
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No se encontraron registros para el día solicitado.",
+                        exito = false
+                    });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("informacionSemanal")]
+        public async Task<IActionResult> InformacionSemanal([FromQuery] DateTime fechaIncio, DateTime fechaFin, int emp)
+        {
+            string nombreBase = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string logo = string.Empty;
+
+            var resumenUsuarios = new List<object>();
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var usuarios = ContextBD.Usuarios
+                                .Include(u => u.idRols)
+                                .Where(u => u.id == 3)
+                                .ToList();
+
+                foreach (Usuario u in usuarios)
+                {
+                    var info = (from c in ContextBD.Citas
+                                join sc in ContextBD.CitaServicios on c.id equals sc.cita
+                                join s in ContextBD.Servicios on sc.servicio equals s.id
+                                where c.fechaInicio >= fechaIncio && c.fechaInicio <= fechaFin
+                                && c.recurso == u.id
+                                && c.estado == Estados.Asistio
+                                select new
+                                {
+                                    idCita = c.id,
+                                    fechaIni = c.fechaInicio,
+                                    servicio = s.nombre,
+                                    pagoCita = c.pago,
+                                    pagoServicio = s.esPago,
+                                    valor = s.valor
+                                })
+                               .ToList();
+
+                    var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
+                    var obsequios = info.Where(i => i.pagoServicio == false).ToList();
+                    var noPagas = info.Where(i => i.pagoCita == false).ToList();
+
+                    var resultado = new
+                    {
+                        nombre = u.nombre,
+                        totalServicios = pagas.Count,
+                        servicios = pagas.Select(s => new { s.servicio, s.valor }).ToList(),
+                        totalPlata = pagas.Sum(s => s.valor),
+                        obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
+                        descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList()
+                    };
+
                     resumenUsuarios.Add(resultado);
                 }
 
-                var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, nombreEmpresa,logo);
+                var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, nombreEmpresa, logo);
 
-                return File(pdfBytes, "application/pdf", $"Resumen_{fecha:yyyyMMdd}.pdf");
+                return File(pdfBytes, "application/pdf", $"Resumen_{DateTime.Now:yyyyMMdd}.pdf");
 
             }
             catch (Exception ex)
