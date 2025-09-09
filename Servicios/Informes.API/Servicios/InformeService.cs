@@ -80,7 +80,7 @@ namespace Informes.API.Servicios
                 gfx.DrawString($"Total plata: {r.totalPlata}", fontBold, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
                 y += 25;
 
-                if (r.obsequios.Count != null && r.obsequios.Any())
+                if (r.obsequios is IEnumerable<dynamic> obsequios && obsequios.Any())
                 {
                     gfx.DrawString("Obsequios:", fontBold, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
                     y += 20;
@@ -91,7 +91,7 @@ namespace Informes.API.Servicios
                     }
                 }
 
-                if(r.descanso.Count != null && r.descanso.Any())
+                if(r.descanso is IEnumerable<dynamic> descanso && descanso.Any())
                 {
                     gfx.DrawString("Descanso:", fontBold, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
                     y += 20;
