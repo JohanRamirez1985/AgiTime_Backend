@@ -93,6 +93,8 @@ namespace Compartido.Data
 
                 entity.Property(e => e.fechaInicio).HasColumnType("datetime");
 
+                entity.Property(e => e.pago).HasDefaultValueSql("((0))");
+
                 entity.Property(e => e.usuarioCancelacion)
                     .HasMaxLength(50)
                     .IsUnicode(false);

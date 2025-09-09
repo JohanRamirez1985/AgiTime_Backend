@@ -42,6 +42,7 @@ namespace Agendamiento.API.Controllers
             string emailCliente = "";
             string nombreCliente = "";
             int newHora = 0;
+            bool pago = true;
 
             try
             {
@@ -137,6 +138,41 @@ namespace Agendamiento.API.Controllers
                             newHora = dto.Hora;
                         }
 
+                        bool diaCompletoBloqueado = false;
+                        var diaSemana = (int)dto.FechaIni.DayOfWeek;
+                        if (diaSemana == 0) diaSemana = 7;
+
+                        var fechaSolo = dto.FechaIni.Date;
+
+                        var bloqueos = ContextBD.BloqueosHorarios
+                                        .AsEnumerable()
+                                        .Where(b => b.usuario == dto.recurso &&
+                                            (
+                                                (b.tipoBloqueo == 1 &&
+                                                 b.diasSemana != null &&
+                                                 b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+                                            )
+                                        )
+                                        .ToList();
+
+                        foreach (var bloqueo in bloqueos)
+                        {
+                            var inicio = bloqueo.horaInicio;
+                            var fin = bloqueo.horaFin;
+
+                            // Día completo bloqueado
+                            if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
+                            {
+                                diaCompletoBloqueado = true;
+                                break;
+                            }
+                        }
+
+                        if (diaCompletoBloqueado)
+                        {
+                            pago = false;
+                        }
+
                         var nuevo = new Cita
                         {
                             fechaInicio = dto.FechaIni,
@@ -145,7 +181,8 @@ namespace Agendamiento.API.Controllers
                             recurso = dto.recurso,
                             cliente = dto.clienteInfo != null ? idCliente : null,
                             valor = dto.Valor,
-                            estado = Estados.Activo,
+                            estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                            pago = pago,
                             fechaCreacion = dto.FechaCreacion,
                             usuarioCreacion = dto.UsuarioCreacion
                         };
@@ -618,6 +655,86 @@ namespace Agendamiento.API.Controllers
                 //    exito = true,
                 //    datos = horasGeneradas
                 //});
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarMiAgenda")]
+        public IActionResult ObtenerMiAgenda([FromQuery] CitaDTO dto)
+
+        {
+            string nombreBase = string.Empty;
+            var horasOcupadas = new HashSet<string>();
+            bool diaCompletoBloqueado = false;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var listaCitas = ContextBD.Citas
+                            .Where(e => e.fechaInicio >= dto.FechaIni
+                                     && e.fechaFin <= dto.FechaFin
+                                     && e.recurso == dto.recurso
+                                     && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                            .ToList();
+
+                foreach (var item in listaCitas)
+                {
+                    int cantidad = item.hora / 30;
+                    for (int i = 0; i < cantidad; i++)
+                    {
+                        DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
+                        horasOcupadas.Add(horaActual.ToString("HH:mm"));
+                    }
+                }
+                
+                if (horasOcupadas.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay citas registradas",
+                        exito = false
+                    });
+                }
+
+                var listaOrdenada = horasOcupadas
+                                    .Select(h => TimeSpan.Parse(h))
+                                    .OrderBy(t => t)
+                                    .Select(t => DateTime.Today.Add(t).ToString("hh:mm tt", new CultureInfo("en-US")))
+                                    .ToList();
+
+                return Ok(new
+                {
+                    exito = true,
+                    diaCompletoBloqueado,
+                    horasOcupadas = listaOrdenada
+                });
             }
             catch (Exception ex)
             {

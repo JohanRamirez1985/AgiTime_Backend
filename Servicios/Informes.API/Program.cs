@@ -1,7 +1,8 @@
 ﻿using Compartido.Data;
 using Compartido.DTOs;
 using Compartido.Metodos;
-//using Informes.API.Servicios;
+using Informes.API;
+using Informes.API.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -26,7 +27,7 @@ builder.Services.AddDbContext<GeneralContext>(options =>
 
 builder.Services.AddScoped<FactoryContext>();
 
-//builder.Services.AddScoped<InformesService>();
+builder.Services.AddScoped<InformeService>();
 
 //Configuracion para el envio del email
 builder.Services.Configure<SmtpSettings>(
@@ -45,6 +46,8 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+
+PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = CustomFontResolver.Instance;
 
 var app = builder.Build();
 
