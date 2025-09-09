@@ -12,9 +12,9 @@ namespace Informes.API.Servicios
             var doc = new PdfDocument();
             var pagina = doc.AddPage();
             var gfx = XGraphics.FromPdfPage(pagina);
-            var font = new XFont("Arial", 10, XFontStyle.Regular);
-            var fontBold = new XFont("Arial", 10, XFontStyle.Bold);
-            var fontTitle = new XFont("Arial", 14, XFontStyle.Bold);
+            var font = new XFont("OpenSans", 10, XFontStyle.Regular);
+            var fontBold = new XFont("OpenSans", 10, XFontStyle.Bold);
+            var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
             double y = 40;
 
             void NuevaPagina()

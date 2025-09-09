@@ -1,6 +1,7 @@
 ﻿using Compartido.Data;
 using Compartido.DTOs;
 using Compartido.Metodos;
+using Informes.API;
 using Informes.API.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -45,6 +46,8 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+
+PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = CustomFontResolver.Instance;
 
 var app = builder.Build();
 
