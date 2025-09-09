@@ -163,7 +163,7 @@ namespace Informes.API.Controllers
                 {
                     var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, nombreEmpresa, logo);
 
-                    return File(pdfBytes, "application/pdf", $"Resumen_{DateTime.Now:yyyyMMdd}.pdf");
+                    return File(pdfBytes, "application/pdf", $"Resumen_Diario_{DateTime.Now:yyyyMMdd}.pdf");
                 }
                 else
                 {
@@ -188,11 +188,14 @@ namespace Informes.API.Controllers
         }
 
         [HttpGet("informacionSemanal")]
-        public async Task<IActionResult> InformacionSemanal([FromQuery] DateTime fechaIncio, DateTime fechaFin, int emp)
+        public async Task<IActionResult> InformacionSemanal([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp)
         {
             string nombreBase = string.Empty;
             string nombreEmpresa = string.Empty;
             string logo = string.Empty;
+            decimal? porcentaje = 0;
+            decimal? porcentajeBarber = 0;
+            int total = 0;
 
             var resumenUsuarios = new List<object>();
 
@@ -220,8 +223,7 @@ namespace Informes.API.Controllers
                 using var ContextBD = ContextFact.Create(connectionString);
 
                 var usuarios = ContextBD.Usuarios
-                                .Include(u => u.idRols)
-                                .Where(u => u.id == 3)
+                                .Where(u => u.idRols.Any(r => r.id == 3))
                                 .ToList();
 
                 foreach (Usuario u in usuarios)
@@ -229,7 +231,7 @@ namespace Informes.API.Controllers
                     var info = (from c in ContextBD.Citas
                                 join sc in ContextBD.CitaServicios on c.id equals sc.cita
                                 join s in ContextBD.Servicios on sc.servicio equals s.id
-                                where c.fechaInicio >= fechaIncio && c.fechaInicio <= fechaFin
+                                where c.fechaInicio >= fechaInicio && c.fechaInicio <= fechaFin
                                 && c.recurso == u.id
                                 && c.estado == Estados.Asistio
                                 select new
@@ -247,22 +249,45 @@ namespace Informes.API.Controllers
                     var obsequios = info.Where(i => i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
 
+                    var par1 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_1").FirstOrDefault();
+                    var par2 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_2").FirstOrDefault();
+                    var can1 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_1").FirstOrDefault();
+                    var can2 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_2").FirstOrDefault();
+
+                    total = pagas.Count;
+
+                    porcentaje = total <= int.Parse(can1.valor)
+                                ? u.porcentaje
+                                : (total > int.Parse(can1.valor) && total <= int.Parse(can2.valor))
+                                    ? decimal.Parse(par1.valor)
+                                    : (total > int.Parse(can2.valor))
+                                        ? decimal.Parse(par2.valor)
+                                        : 0;
+
+                    porcentajeBarber = 100 - porcentaje;
+
                     var resultado = new
                     {
                         nombre = u.nombre,
-                        totalServicios = pagas.Count,
-                        servicios = pagas.Select(s => new { s.servicio, s.valor }).ToList(),
+                        totalServicios = total,
+                        porcentaje = porcentaje,
                         totalPlata = pagas.Sum(s => s.valor),
+                        totalEmpleado = pagas.Sum(s => s.valor) * porcentaje / 100,
+                        totalBarber = pagas.Sum(s => s.valor) * porcentajeBarber / 100,
                         obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
-                        descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList()
+                        totalObsequios = obsequios.Count,
+                        totalPlataObsequios = obsequios.Sum(s => s.valor),
+                        descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList(),
+                        totaldescanso = noPagas.Count,
+                        totalPlataDescanso = noPagas.Sum(s => s.valor),
                     };
 
                     resumenUsuarios.Add(resultado);
                 }
 
-                var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, nombreEmpresa, logo);
+                var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, nombreEmpresa, logo);
 
-                return File(pdfBytes, "application/pdf", $"Resumen_{DateTime.Now:yyyyMMdd}.pdf");
+                return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
 
             }
             catch (Exception ex)
