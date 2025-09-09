@@ -42,6 +42,7 @@ namespace Agendamiento.API.Controllers
             string emailCliente = "";
             string nombreCliente = "";
             int newHora = 0;
+            bool pago = true;
 
             try
             {
@@ -137,6 +138,41 @@ namespace Agendamiento.API.Controllers
                             newHora = dto.Hora;
                         }
 
+                        bool diaCompletoBloqueado = false;
+                        var diaSemana = (int)dto.FechaIni.DayOfWeek;
+                        if (diaSemana == 0) diaSemana = 7;
+
+                        var fechaSolo = dto.FechaIni.Date;
+
+                        var bloqueos = ContextBD.BloqueosHorarios
+                                        .AsEnumerable()
+                                        .Where(b => b.usuario == dto.recurso &&
+                                            (
+                                                (b.tipoBloqueo == 1 &&
+                                                 b.diasSemana != null &&
+                                                 b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+                                            )
+                                        )
+                                        .ToList();
+
+                        foreach (var bloqueo in bloqueos)
+                        {
+                            var inicio = bloqueo.horaInicio;
+                            var fin = bloqueo.horaFin;
+
+                            // Día completo bloqueado
+                            if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
+                            {
+                                diaCompletoBloqueado = true;
+                                break;
+                            }
+                        }
+
+                        if (diaCompletoBloqueado)
+                        {
+                            pago = false;
+                        }
+
                         var nuevo = new Cita
                         {
                             fechaInicio = dto.FechaIni,
@@ -145,7 +181,8 @@ namespace Agendamiento.API.Controllers
                             recurso = dto.recurso,
                             cliente = dto.clienteInfo != null ? idCliente : null,
                             valor = dto.Valor,
-                            estado = Estados.Activo,
+                            estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                            pago = pago,
                             fechaCreacion = dto.FechaCreacion,
                             usuarioCreacion = dto.UsuarioCreacion
                         };
