@@ -41,7 +41,7 @@ namespace Agendamiento.API.Controllers
             int idCliente = 0;
             string emailCliente = "";
             string nombreCliente = "";
-            int newHora = 0;
+            //int newHora = 0;
             bool pago = true;
 
             try
@@ -109,34 +109,34 @@ namespace Agendamiento.API.Controllers
                             }
                         }
 
-                        if (dto.Hora <= 30)
-                        {
-                            newHora = 30;
-                        }
-                        else if (dto.Hora >= 45 && dto.Hora <= 60)
-                        {
-                            newHora = 60;
-                        }
-                        else if (dto.Hora > 60 && dto.Hora <= 90)
-                        {
-                            newHora = 90;
-                        }
-                        else if (dto.Hora > 90 && dto.Hora <= 120)
-                        {
-                            newHora = 120;
-                        }
-                        else if (dto.Hora > 120 && dto.Hora <= 150)
-                        {
-                            newHora = 150;
-                        }
-                        else if (dto.Hora > 150 && dto.Hora <= 180)
-                        {
-                            newHora = 180;
-                        }
-                        else
-                        {
-                            newHora = dto.Hora;
-                        }
+                        //if (dto.Hora <= 30)
+                        //{
+                        //    newHora = 30;
+                        //}
+                        //else if (dto.Hora >= 45 && dto.Hora <= 60)
+                        //{
+                        //    newHora = 60;
+                        //}
+                        //else if (dto.Hora > 60 && dto.Hora <= 90)
+                        //{
+                        //    newHora = 90;
+                        //}
+                        //else if (dto.Hora > 90 && dto.Hora <= 120)
+                        //{
+                        //    newHora = 120;
+                        //}
+                        //else if (dto.Hora > 120 && dto.Hora <= 150)
+                        //{
+                        //    newHora = 150;
+                        //}
+                        //else if (dto.Hora > 150 && dto.Hora <= 180)
+                        //{
+                        //    newHora = 180;
+                        //}
+                        //else
+                        //{
+                        //    newHora = dto.Hora;
+                        //}
 
                         bool diaCompletoBloqueado = false;
                         var diaSemana = (int)dto.FechaIni.DayOfWeek;
@@ -176,8 +176,8 @@ namespace Agendamiento.API.Controllers
                         var nuevo = new Cita
                         {
                             fechaInicio = dto.FechaIni,
-                            hora = newHora,
-                            fechaFin = dto.FechaIni.AddMinutes(newHora),
+                            hora = dto.Hora,
+                            fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
                             recurso = dto.recurso,
                             cliente = dto.clienteInfo != null ? idCliente : null,
                             valor = dto.Valor,
@@ -538,6 +538,8 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda").FirstOrDefault();
+
                 var diaSemana = (int)dto.FechaIni.DayOfWeek;
                 if (diaSemana == 0) diaSemana = 7;
 
@@ -575,7 +577,7 @@ namespace Agendamiento.API.Controllers
                     while (hora < fin)
                     {
                         horasOcupadas.Add(DateTime.Today.Add(hora).ToString("HH:mm"));
-                        hora = hora.Add(TimeSpan.FromMinutes(30));
+                        hora = hora.Add(TimeSpan.FromMinutes(int.Parse(tiempo.valor)));
                     }
                 }
 
@@ -590,10 +592,10 @@ namespace Agendamiento.API.Controllers
 
                     foreach (var item in listaCitas)
                     {
-                        int cantidad = item.hora / 30;
+                        int cantidad = item.hora / int.Parse(tiempo.valor);
                         for (int i = 0; i < cantidad; i++)
                         {
-                            DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
+                            DateTime horaActual = item.fechaInicio.AddMinutes(i * int.Parse(tiempo.valor));
                             horasOcupadas.Add(horaActual.ToString("HH:mm"));
                         }
                     }
@@ -697,6 +699,8 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda").FirstOrDefault();
+
                 var listaCitas = ContextBD.Citas
                             .Where(e => e.fechaInicio >= dto.FechaIni
                                      && e.fechaFin <= dto.FechaFin
@@ -706,10 +710,10 @@ namespace Agendamiento.API.Controllers
 
                 foreach (var item in listaCitas)
                 {
-                    int cantidad = item.hora / 30;
+                    int cantidad = item.hora / int.Parse(tiempo.valor);
                     for (int i = 0; i < cantidad; i++)
                     {
-                        DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
+                        DateTime horaActual = item.fechaInicio.AddMinutes(i * int.Parse(tiempo.valor));
                         horasOcupadas.Add(horaActual.ToString("HH:mm"));
                     }
                 }
