@@ -1190,6 +1190,7 @@ namespace Agendamiento.API.Controllers
         public IActionResult ObtenerEstadoActivarme([FromQuery] int emp, int usuario)
         {
             string nombreBase = string.Empty;
+            bool retorno = false;
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
@@ -1223,10 +1224,15 @@ namespace Agendamiento.API.Controllers
                     )
                     .ToList();
 
+                if (bloqueos != null && bloqueos.Count > 0)
+                {
+                    retorno = true;
+                }
+
                 return Ok(new
                 {
                     exito = true,
-                    datos = true
+                    datos = retorno
                 });
             }
             catch (Exception ex)
