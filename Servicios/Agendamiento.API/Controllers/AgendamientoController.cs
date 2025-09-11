@@ -472,6 +472,8 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
+
                 var diaSemana = (int)dto.FechaInicio.Value.DayOfWeek;
                 if (diaSemana == 0) diaSemana = 7;
 
@@ -486,6 +488,7 @@ namespace Agendamiento.API.Controllers
                             ||
 
                             (b.tipoBloqueo == 2 &&
+                             b.motivo != par.valor &&
                              b.fechaInicio.HasValue &&
                              fechaSolo == b.fechaInicio.Value.Date)
                         )
@@ -538,7 +541,7 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda").FirstOrDefault();
+                var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda" && p.estado == true).FirstOrDefault();
 
                 var diaSemana = (int)dto.FechaIni.DayOfWeek;
                 if (diaSemana == 0) diaSemana = 7;
@@ -699,7 +702,7 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda").FirstOrDefault();
+                var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda" && p.estado == true).FirstOrDefault();
 
                 var listaCitas = ContextBD.Citas
                             .Where(e => e.fechaInicio >= dto.FechaIni
@@ -1162,6 +1165,121 @@ namespace Agendamiento.API.Controllers
                 else
                     bloqueoId.estado = Estados.Inactivo;
 
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Bloqueo actualizado exitosamente",
+                    exito = true
+                });
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarEstadoActivarme")]
+        public IActionResult ObtenerEstadoActivarme([FromQuery] int emp, int usuario)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
+
+                var bloqueos = ContextBD.BloqueosHorarios
+                    .AsEnumerable()
+                    .Where(b => b.usuario == usuario &&
+                        (
+                            (b.tipoBloqueo == 2 &&
+                             b.motivo == par.valor)
+                        )
+                    )
+                    .ToList();
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = true
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("cambiarEstadoActivarme")]
+        public IActionResult CambiarEstadoActivarme([FromBody] int emp, int usuario)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, nombreBase);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
+
+                var bloqueoId = ContextBD.BloqueosHorarios.FirstOrDefault(p => p.usuario == usuario && p.motivo == par.valor);
+
+                if (bloqueoId == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Bloqueo no encontrado",
+                        exito = false
+                    });
+                }
+
+                ContextBD.BloqueosHorarios.Remove(bloqueoId);
                 ContextBD.SaveChanges();
 
                 return Ok(new
