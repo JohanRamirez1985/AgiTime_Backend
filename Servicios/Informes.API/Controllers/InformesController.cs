@@ -249,10 +249,10 @@ namespace Informes.API.Controllers
                     var obsequios = info.Where(i => i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
 
-                    var par1 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_1").FirstOrDefault();
-                    var par2 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_2").FirstOrDefault();
-                    var can1 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_1").FirstOrDefault();
-                    var can2 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_2").FirstOrDefault();
+                    var par1 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_1" && p.estado == true).FirstOrDefault();
+                    var par2 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_2" && p.estado == true).FirstOrDefault();
+                    var can1 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_1" && p.estado == true).FirstOrDefault();
+                    var can2 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_2" && p.estado == true).FirstOrDefault();
 
                     total = pagas.Count;
 
