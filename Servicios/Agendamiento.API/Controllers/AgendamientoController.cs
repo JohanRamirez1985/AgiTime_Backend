@@ -1248,12 +1248,12 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpPost("cambiarEstadoActivarme")]
-        public IActionResult CambiarEstadoActivarme([FromBody] int emp, int usuario)
+        public IActionResult CambiarEstadoActivarme([FromBody] BloqueoDTO dto)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1274,7 +1274,7 @@ namespace Agendamiento.API.Controllers
 
                 var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
 
-                var bloqueoId = ContextBD.BloqueosHorarios.FirstOrDefault(p => p.usuario == usuario && p.motivo == par.valor);
+                var bloqueoId = ContextBD.BloqueosHorarios.FirstOrDefault(p => p.usuario == dto.Usuario && p.motivo == par.valor);
 
                 if (bloqueoId == null)
                 {
