@@ -122,7 +122,7 @@ namespace Informes.API.Controllers
                 if (usuario != null)
                 {
                     usuarios = ContextBD.Usuarios
-                                .Where(u => u.id == 3)
+                                .Where(u => u.id == usuario)
                                 .ToList();
                 }
                 else
