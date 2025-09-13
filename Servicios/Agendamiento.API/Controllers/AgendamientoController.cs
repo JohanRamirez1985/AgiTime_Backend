@@ -1311,10 +1311,9 @@ namespace Agendamiento.API.Controllers
         public IActionResult ObtenerAgendaDiaria([FromQuery] CitaDTO dto)
         {
             string nombreBase = string.Empty;
-            var horasOcupadas = new HashSet<string>();
+            
             bool diaCompletoBloqueado = false;
             var agendaDiaria = new List<object>();
-            var listaOrdenada = new List<string>();
 
             try
             {
@@ -1348,6 +1347,9 @@ namespace Agendamiento.API.Controllers
 
                 foreach (Usuario u in usuario) 
                 {
+                    var listaOrdenada = new List<string>();
+                    var horasOcupadas = new HashSet<string>();
+
                     var bloqueos = ContextBD.BloqueosHorarios
                     .AsEnumerable()
                     .Where(b => b.usuario == u.id &&
