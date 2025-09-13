@@ -1426,7 +1426,7 @@ namespace Agendamiento.API.Controllers
                 return Ok(new
                 {
                     exito = true,
-                    ddatos = agendaDiaria
+                    datos = agendaDiaria
                 });
             }
             catch (Exception ex)
