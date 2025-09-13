@@ -590,7 +590,7 @@ namespace Agendamiento.API.Controllers
                                 .Where(e => e.fechaInicio >= dto.FechaIni
                                          && e.fechaFin <= dto.FechaFin
                                          && e.recurso == dto.recurso
-                                         && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
+                                         && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                                 .ToList();
 
                     foreach (var item in listaCitas)
@@ -795,7 +795,7 @@ namespace Agendamiento.API.Controllers
                 var citasRaw = ContextBD.Citas
                     .Where(e => e.fechaInicio >= dto.FechaIni
                                 && e.cliente == user.id
-                                && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
+                                && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                     .Select(c => new
                     {
                         c.id,
@@ -940,7 +940,7 @@ namespace Agendamiento.API.Controllers
                     .Where(e => e.fechaInicio >= dto.FechaIni
                                 && e.fechaFin <= dto.FechaFin
                                 && e.recurso == dto.recurso
-                                && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
+                                && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                     .Select(c => new
                     {
                         c.id,
@@ -1248,12 +1248,12 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpPost("cambiarEstadoActivarme")]
-        public IActionResult CambiarEstadoActivarme([FromBody] int emp, int usuario)
+        public IActionResult CambiarEstadoActivarme([FromBody] BloqueoDTO dto)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1274,7 +1274,7 @@ namespace Agendamiento.API.Controllers
 
                 var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
 
-                var bloqueoId = ContextBD.BloqueosHorarios.FirstOrDefault(p => p.usuario == usuario && p.motivo == par.valor);
+                var bloqueoId = ContextBD.BloqueosHorarios.FirstOrDefault(p => p.usuario == dto.Usuario && p.motivo == par.valor);
 
                 if (bloqueoId == null)
                 {
@@ -1294,6 +1294,140 @@ namespace Agendamiento.API.Controllers
                     exito = true
                 });
 
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("consultarAgendaDiaria")]
+        public IActionResult ObtenerAgendaDiaria([FromQuery] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            var agendaDiaria = new List<object>();
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda" && p.estado == true).FirstOrDefault();
+
+                var diaSemana = (int)dto.FechaIni.DayOfWeek;
+                if (diaSemana == 0) diaSemana = 7;
+
+                var fechaSolo = dto.FechaIni.Date;
+
+                var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
+
+                var usuario = ContextBD.Usuarios.Where(u => u.estado == Estados.Activo && u.recurso == true).ToList();
+
+                foreach (Usuario u in usuario) 
+                {
+                    var listaOrdenada = new List<string>();
+                    var horasOcupadas = new HashSet<string>();
+                    bool diaCompletoBloqueado = false;
+
+                    var bloqueos = ContextBD.BloqueosHorarios
+                    .AsEnumerable()
+                    .Where(b => b.usuario == u.id &&
+                        (
+                            (b.tipoBloqueo == 1 &&
+                             b.diasSemana != null &&
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+                            ||
+                            (b.tipoBloqueo == 2 &&
+                             b.fechaInicio.HasValue &&
+                             fechaSolo == b.fechaInicio.Value.Date)
+                        )
+                    )
+                    .ToList();
+
+                    foreach (var bloqueo in bloqueos)
+                    {
+                        var inicio = bloqueo.horaInicio;
+                        var fin = bloqueo.horaFin;
+
+                        if ((inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5)) || bloqueo.motivo == par.valor)
+                        {
+                            diaCompletoBloqueado = true;
+                            horasOcupadas.Clear();
+                            break;
+                        }
+
+                        var hora = inicio;
+                        while (hora < fin)
+                        {
+                            horasOcupadas.Add(DateTime.Today.Add(hora).ToString("HH:mm"));
+                            hora = hora.Add(TimeSpan.FromMinutes(int.Parse(tiempo.valor)));
+                        }
+                    }
+
+                    if (!diaCompletoBloqueado)
+                    {
+                        var listaCitas = ContextBD.Citas
+                                    .Where(e => e.fechaInicio >= dto.FechaIni
+                                             && e.fechaFin <= dto.FechaFin
+                                             && e.recurso == u.id
+                                             && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                                    .ToList();
+
+                        foreach (var item in listaCitas)
+                        {
+                            int cantidad = item.hora / int.Parse(tiempo.valor);
+                            for (int i = 0; i < cantidad; i++)
+                            {
+                                DateTime horaActual = item.fechaInicio.AddMinutes(i * int.Parse(tiempo.valor));
+                                horasOcupadas.Add(horaActual.ToString("HH:mm"));
+                            }
+                        }
+                    }
+
+                    if (horasOcupadas.Count >= 0 && !diaCompletoBloqueado)
+                    {
+                        listaOrdenada = horasOcupadas
+                                             .Select(h => TimeSpan.Parse(h))
+                                             .OrderBy(t => t)
+                                             .Select(t => DateTime.Today.Add(t).ToString("hh:mm tt", new CultureInfo("en-US")))
+                                             .ToList();
+
+                        agendaDiaria.Add(new
+                        {
+                            usuario = u.id,
+                            nombreUsuario = u.nombre,
+                            horasOcu = listaOrdenada
+                        });
+                    }
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = agendaDiaria
+                });
             }
             catch (Exception ex)
             {

@@ -88,12 +88,12 @@ namespace Informes.API.Controllers
         }
 
         [HttpGet("informacionDiaria")]
-        public async Task<IActionResult> InformacionDiaria([FromQuery] DateTime fecha, int emp)
+        public async Task<IActionResult> InformacionDiaria([FromQuery] DateTime fecha, int emp, int? usuario = null)
         {
             string nombreBase = string.Empty;
             string nombreEmpresa = string.Empty;
             string logo = string.Empty;
-
+            List<Usuario> usuarios;
             var resumenUsuarios = new List<object>();
 
             try
@@ -119,9 +119,18 @@ namespace Informes.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var usuarios = ContextBD.Usuarios
-                                .Where(u => u.idRols.Any(r => r.id == 3))
+                if (usuario != null)
+                {
+                    usuarios = ContextBD.Usuarios
+                                .Where(u => u.id == usuario)
                                 .ToList();
+                }
+                else
+                {
+                    usuarios = ContextBD.Usuarios
+                                    .Where(u => u.idRols.Any(r => r.id == 3))
+                                    .ToList();
+                }
 
                 foreach (Usuario u in usuarios)
                 {
