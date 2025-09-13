@@ -1311,10 +1311,7 @@ namespace Agendamiento.API.Controllers
         public IActionResult ObtenerAgendaDiaria([FromQuery] CitaDTO dto)
         {
             string nombreBase = string.Empty;
-            var horasOcupadas = new HashSet<string>();
-            bool diaCompletoBloqueado = false;
             var agendaDiaria = new List<object>();
-            var listaOrdenada = new List<string>();
 
             try
             {
@@ -1344,10 +1341,16 @@ namespace Agendamiento.API.Controllers
 
                 var fechaSolo = dto.FechaIni.Date;
 
+                var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
+
                 var usuario = ContextBD.Usuarios.Where(u => u.estado == Estados.Activo && u.recurso == true).ToList();
 
                 foreach (Usuario u in usuario) 
                 {
+                    var listaOrdenada = new List<string>();
+                    var horasOcupadas = new HashSet<string>();
+                    bool diaCompletoBloqueado = false;
+
                     var bloqueos = ContextBD.BloqueosHorarios
                     .AsEnumerable()
                     .Where(b => b.usuario == u.id &&
@@ -1368,8 +1371,7 @@ namespace Agendamiento.API.Controllers
                         var inicio = bloqueo.horaInicio;
                         var fin = bloqueo.horaFin;
 
-                        // Día completo bloqueado
-                        if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
+                        if ((inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5)) || bloqueo.motivo == par.valor)
                         {
                             diaCompletoBloqueado = true;
                             horasOcupadas.Clear();
@@ -1404,7 +1406,7 @@ namespace Agendamiento.API.Controllers
                         }
                     }
 
-                    if (horasOcupadas.Count > 0 && !diaCompletoBloqueado)
+                    if (horasOcupadas.Count >= 0 && !diaCompletoBloqueado)
                     {
                         listaOrdenada = horasOcupadas
                                              .Select(h => TimeSpan.Parse(h))
