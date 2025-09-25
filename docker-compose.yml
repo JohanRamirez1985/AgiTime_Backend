@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   gateway:
     build:
@@ -5,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: agitime-gateway
     ports:
-      - "80:80"
+      - "8080:80"  # puerto local de prueba
     depends_on:
       - usuariosapi
       - clientesapi
@@ -13,10 +15,11 @@ services:
       - agendamientosapi
       - productosapi
       - informesapi
-      # - frontend
+      - frontend
     networks:
       - agitime-net
     restart: always
+    image: juliangarciapaz/agitime-gateway:latest
 
   frontend:
     build:
@@ -26,10 +29,11 @@ services:
     expose:
       - "80"
     volumes:
-    - /Data/agitime/frontend/assets/img:/usr/share/nginx/html/assets/img
+      - ./frontend/assets/img:/usr/share/nginx/html/assets/img
     networks:
       - agitime-net
     restart: always
+    image: juliangarciapaz/agitime-frontend:latest
 
   usuariosapi:
     build:
@@ -39,6 +43,7 @@ services:
     networks:
       - agitime-net
     restart: always
+    image: juliangarciapaz/agitime-usuariosapi:latest
 
   clientesapi:
     build:
@@ -48,6 +53,7 @@ services:
     networks:
       - agitime-net
     restart: always
+    image: juliangarciapaz/agitime-clientesapi:latest
 
   parametrosapi:
     build:
@@ -57,6 +63,7 @@ services:
     networks:
       - agitime-net
     restart: always
+    image: juliangarciapaz/agitime-parametrosapi:latest
 
   agendamientosapi:
     build:
@@ -66,6 +73,7 @@ services:
     networks:
       - agitime-net
     restart: always
+    image: juliangarciapaz/agitime-agendamientosapi:latest
 
   productosapi:
     build:
@@ -75,7 +83,8 @@ services:
     networks:
       - agitime-net
     restart: always
-    
+    image: juliangarciapaz/agitime-productosapi:latest
+
   informesapi:
     build:
       context: ./servicios
@@ -84,6 +93,7 @@ services:
     networks:
       - agitime-net
     restart: always
+    image: juliangarciapaz/agitime-informesapi:latest
 
 networks:
   agitime-net:
