@@ -146,7 +146,7 @@ namespace Informes.API.Controllers
                                    servicio = s.nombre,
                                    pagoCita = c.pago,
                                    pagoServicio = s.esPago,
-                                   valor = s.valor
+                                   valor = s.nombre == "Otro" ? c.valor : s.valor
                                })
                                .ToList();
 
@@ -250,7 +250,7 @@ namespace Informes.API.Controllers
                                     servicio = s.nombre,
                                     pagoCita = c.pago,
                                     pagoServicio = s.esPago,
-                                    valor = s.valor
+                                    valor = s.nombre == "Otro" ? c.valor : s.valor
                                 })
                                .ToList();
 
