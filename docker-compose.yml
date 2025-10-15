@@ -19,7 +19,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-gateway:latest
+    image: agitime/agitime-gateway:latest
 
   frontend:
     build:
@@ -33,7 +33,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-frontend:latest
+    image: agitime/agitime-frontend:latest
 
   usuariosapi:
     build:
@@ -43,7 +43,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-usuariosapi:latest
+    image: agitime/agitime-usuariosapi:latest
 
   clientesapi:
     build:
@@ -53,7 +53,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-clientesapi:latest
+    image: agitime/agitime-clientesapi:latest
 
   parametrosapi:
     build:
@@ -63,7 +63,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-parametrosapi:latest
+    image: agitime/agitime-parametrosapi:latest
 
   agendamientosapi:
     build:
@@ -73,7 +73,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-agendamientosapi:latest
+    image: agitime/agitime-agendamientosapi:latest
 
   productosapi:
     build:
@@ -83,7 +83,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-productosapi:latest
+    image: agitime/agitime-productosapi:latest
 
   informesapi:
     build:
@@ -93,7 +93,7 @@ services:
     networks:
       - agitime-net
     restart: always
-    image: juliangarciapaz/agitime-informesapi:latest
+    image: agitime/agitime-informesapi:latest
 
 networks:
   agitime-net:
