@@ -958,7 +958,7 @@ namespace Agendamiento.API.Controllers
                         {
                             Id = cs.servicioNavigation.id,
                             Nombre = cs.servicioNavigation.nombre,
-                            Valor = cs.servicioNavigation.valor
+                            Valor = cs.servicioNavigation.nombre == "Otro" ? c.valor : cs.servicioNavigation.valor
                         }).ToList()
                     })
                     .AsEnumerable()
