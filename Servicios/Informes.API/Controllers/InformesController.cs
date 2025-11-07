@@ -135,19 +135,20 @@ namespace Informes.API.Controllers
                 foreach (Usuario u in usuarios)
                 {
                     var info = (from c in ContextBD.Citas
-                               join sc in ContextBD.CitaServicios on c.id equals sc.cita
-                               join s in ContextBD.Servicios on sc.servicio equals s.id
-                               where c.fechaInicio >= fecha && c.fechaInicio < fecha.AddDays(1)
-                               && c.recurso == u.id
-                               && c.estado == Estados.Asistio
-                               select new {
-                                   idCita = c.id,
-                                   fechaIni = c.fechaInicio,
-                                   servicio = s.nombre,
-                                   pagoCita = c.pago,
-                                   pagoServicio = s.esPago,
-                                   valor = s.nombre == "Otro" ? c.valor : s.valor
-                               })
+                                join sc in ContextBD.CitaServicios on c.id equals sc.cita
+                                join s in ContextBD.Servicios on sc.servicio equals s.id
+                                where c.fechaInicio >= fecha && c.fechaInicio < fecha.AddDays(1)
+                                && c.recurso == u.id
+                                && c.estado == Estados.Asistio
+                                select new
+                                {
+                                    idCita = c.id,
+                                    fechaIni = c.fechaInicio,
+                                    servicio = s.nombre,
+                                    pagoCita = c.pago,
+                                    pagoServicio = s.esPago,
+                                    valor = s.nombre == "Otro" ? c.valor : s.valor
+                                })
                                .ToList();
 
                     var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
@@ -205,6 +206,7 @@ namespace Informes.API.Controllers
             decimal? porcentaje = 0;
             decimal? porcentajeBarber = 0;
             int total = 0;
+            decimal valorDescuentoPorCorte = 0;
 
             var resumenUsuarios = new List<object>();
 
@@ -258,31 +260,50 @@ namespace Informes.API.Controllers
                     var obsequios = info.Where(i => i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
 
-                    var par1 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_1" && p.estado == true).FirstOrDefault();
-                    var par2 = ContextBD.Parametros.Where(p => p.tipo == "Porcentaje_2" && p.estado == true).FirstOrDefault();
                     var can1 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_1" && p.estado == true).FirstOrDefault();
                     var can2 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_2" && p.estado == true).FirstOrDefault();
+                    var can3 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_3" && p.estado == true).FirstOrDefault();
+                    var can4 = ContextBD.Parametros.Where(p => p.tipo == "Total_Cortes_4" && p.estado == true).FirstOrDefault();
+
+                    var val1 = ContextBD.Parametros.Where(p => p.tipo == "Valor_Corte_1" && p.estado == true).FirstOrDefault();
+                    var val2 = ContextBD.Parametros.Where(p => p.tipo == "Valor_Corte_2" && p.estado == true).FirstOrDefault();
+                    var val3 = ContextBD.Parametros.Where(p => p.tipo == "Valor_Corte_3" && p.estado == true).FirstOrDefault();
+                    var val4 = ContextBD.Parametros.Where(p => p.tipo == "Valor_Corte_4" && p.estado == true).FirstOrDefault();
 
                     total = pagas.Count;
 
-                    porcentaje = total <= int.Parse(can1.valor)
-                                ? u.porcentaje
-                                : (total > int.Parse(can1.valor) && total <= int.Parse(can2.valor))
-                                    ? decimal.Parse(par1.valor)
-                                    : (total > int.Parse(can2.valor))
-                                        ? decimal.Parse(par2.valor)
-                                        : 0;
+                    //porcentaje = total <= int.Parse(can1.valor)
+                    //            ? u.porcentaje
+                    //            : (total > int.Parse(can1.valor) && total <= int.Parse(can2.valor))
+                    //                ? decimal.Parse(par1.valor)
+                    //                : (total > int.Parse(can2.valor))
+                    //                    ? decimal.Parse(par2.valor)
+                    //                    : 0;
+                    //porcentajeBarber = 100 - porcentaje;
 
-                    porcentajeBarber = 100 - porcentaje;
+                    if (total <= int.Parse(can1.valor))
+                        valorDescuentoPorCorte = decimal.Parse(val1.valor);
+                    else if (total >= int.Parse(can2.valor) && total < int.Parse(can3.valor))
+                        valorDescuentoPorCorte = decimal.Parse(val2.valor);
+                    else if (total >= int.Parse(can3.valor) && total < int.Parse(can4.valor))
+                        valorDescuentoPorCorte = decimal.Parse(val3.valor);
+                    else if (total >= int.Parse(can4.valor))
+                        valorDescuentoPorCorte = decimal.Parse(val4.valor);
+
+                    decimal? totalPlata = pagas.Sum(s => s.valor);
+                    decimal totalDescuento = total * valorDescuentoPorCorte;
+                    decimal? totalEmpleado = totalPlata - totalDescuento;
 
                     var resultado = new
                     {
                         nombre = u.nombre,
                         totalServicios = total,
-                        porcentaje = porcentaje,
-                        totalPlata = pagas.Sum(s => s.valor),
-                        totalEmpleado = pagas.Sum(s => s.valor) * porcentaje / 100,
-                        totalBarber = pagas.Sum(s => s.valor) * porcentajeBarber / 100,
+                        //porcentaje = porcentaje,
+                        totalPlata = totalPlata,
+                        //totalEmpleado = pagas.Sum(s => s.valor) * porcentaje / 100,
+                        //totalBarber = pagas.Sum(s => s.valor) * porcentajeBarber / 100,
+                        totalEmpleado = totalEmpleado,
+                        totalBarber = totalDescuento,
                         obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
                         totalObsequios = obsequios.Count,
                         totalPlataObsequios = obsequios.Sum(s => s.valor),
