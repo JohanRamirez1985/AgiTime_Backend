@@ -135,19 +135,20 @@ namespace Informes.API.Controllers
                 foreach (Usuario u in usuarios)
                 {
                     var info = (from c in ContextBD.Citas
-                               join sc in ContextBD.CitaServicios on c.id equals sc.cita
-                               join s in ContextBD.Servicios on sc.servicio equals s.id
-                               where c.fechaInicio >= fecha && c.fechaInicio < fecha.AddDays(1)
-                               && c.recurso == u.id
-                               && c.estado == Estados.Asistio
-                               select new {
-                                   idCita = c.id,
-                                   fechaIni = c.fechaInicio,
-                                   servicio = s.nombre,
-                                   pagoCita = c.pago,
-                                   pagoServicio = s.esPago,
-                                   valor = s.nombre == "Otro" ? c.valor : s.valor
-                               })
+                                join sc in ContextBD.CitaServicios on c.id equals sc.cita
+                                join s in ContextBD.Servicios on sc.servicio equals s.id
+                                where c.fechaInicio >= fecha && c.fechaInicio < fecha.AddDays(1)
+                                && c.recurso == u.id
+                                && c.estado == Estados.Asistio
+                                select new
+                                {
+                                    idCita = c.id,
+                                    fechaIni = c.fechaInicio,
+                                    servicio = s.nombre,
+                                    pagoCita = c.pago,
+                                    pagoServicio = s.esPago,
+                                    valor = s.nombre == "Otro" ? c.valor : s.valor
+                                })
                                .ToList();
 
                     var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
