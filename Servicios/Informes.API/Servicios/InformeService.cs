@@ -91,7 +91,7 @@ namespace Informes.API.Servicios
                     }
                 }
 
-                if(r.descanso is IEnumerable<dynamic> descanso && descanso.Any())
+                if (r.descanso is IEnumerable<dynamic> descanso && descanso.Any())
                 {
                     gfx.DrawString("Descanso:", fontBold, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
                     y += 20;

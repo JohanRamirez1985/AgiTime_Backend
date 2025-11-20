@@ -55,7 +55,7 @@ namespace Agendamiento.API.Servicios
             return mensaje;
         }
 
-        public string mensajeEmailUsuario(string nombreCliente, string nombreUsuario, DateTime fecha, string logo)
+        public string mensajeEmailUsuario(string nombreCliente, string telefonoCliente, string nombreUsuario, DateTime fecha, string logo)
         {
             var mensaje = "";
 
@@ -104,8 +104,8 @@ namespace Agendamiento.API.Servicios
 
                     <div class='highlight'>
                         <p><strong>Cliente:</strong> {nombreCliente}</p>
+                        <p><strong>Celular:</strong> {telefonoCliente}</p>
                         <p><strong>Fecha y hora:</strong> {fecha:dd/MM/yyyy HH:mm}</p>
-                        
                     </div>
 
                     <div class='footer'>

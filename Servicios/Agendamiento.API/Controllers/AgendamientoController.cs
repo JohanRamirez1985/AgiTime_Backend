@@ -41,6 +41,7 @@ namespace Agendamiento.API.Controllers
             int idCliente = 0;
             string emailCliente = "";
             string nombreCliente = "";
+            string telefonoCliente = "";
             //int newHora = 0;
             bool pago = true;
 
@@ -100,12 +101,14 @@ namespace Agendamiento.API.Controllers
                                 idCliente = nueva.id;
                                 nombreCliente = nueva.nombre;
                                 emailCliente = nueva.correo;
+                                telefonoCliente = nueva.telefono;
                             }
                             else
                             {
                                 idCliente = user.id;
                                 nombreCliente = user.nombre;
                                 emailCliente = user.correo;
+                                telefonoCliente = user.telefono;
                             }
                         }
 
@@ -147,10 +150,13 @@ namespace Agendamiento.API.Controllers
                         var bloqueos = ContextBD.BloqueosHorarios
                                         .AsEnumerable()
                                         .Where(b => b.usuario == dto.recurso &&
+                                            b.tipoBloqueo == 3 &&
+                                            b.diasSemana != null &&
                                             (
-                                                (b.tipoBloqueo == 1 &&
-                                                 b.diasSemana != null &&
-                                                 b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+                                                diaSemana == 7 &&
+                                                b.diasSemana.Split(',')
+                                                            .Select(x => x.Trim())
+                                                            .Contains("7")
                                             )
                                         )
                                         .ToList();
@@ -205,47 +211,50 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        var infoRecurso = ContextBD.Usuarios
-                                            .Include(u => u.sedeNavigation)
-                                            .Where(e => e.estado == Estados.Activo
-                                                && e.recurso == true
-                                                && e.id == dto.recurso)
-                                            .FirstOrDefault();
-
-                        if (infoRecurso != null)
+                        if (dto.UsuarioCreacion != "Usuario")
                         {
-                            nombreSede = infoRecurso.sedeNavigation?.Nombre;
+                            var infoRecurso = ContextBD.Usuarios
+                                                .Include(u => u.sedeNavigation)
+                                                .Where(e => e.estado == Estados.Activo
+                                                    && e.recurso == true
+                                                    && e.id == dto.recurso)
+                                                .FirstOrDefault();
 
-                            if (!string.IsNullOrEmpty(infoRecurso.correo))
+                            if (infoRecurso != null)
+                            {
+                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
+
+                                if (!string.IsNullOrEmpty(infoRecurso.correo))
+                                {
+                                    await emailService.SendEmailAsync(
+                                        infoRecurso.correo,
+                                        "Confirmación de cita",
+                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
+                                        isHtml: true
+                                    );
+                                }
+                            }
+                            else
+                            {
+                                var Recurso = ContextBD.Recursos
+                                                .Include(u => u.sedeNavigation)
+                                                .Where(e => e.estado == Estados.Activo)
+                                                .FirstOrDefault();
+                                if (Recurso != null)
+                                {
+                                    nombreSede = infoRecurso.sedeNavigation?.Nombre;
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(emailCliente))
                             {
                                 await emailService.SendEmailAsync(
-                                    infoRecurso.correo,
+                                    emailCliente,
                                     "Confirmación de cita",
-                                    agendaService.mensajeEmailUsuario(nombreCliente, infoRecurso.nombre, dto.FechaIni, logo),
+                                    agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
                                     isHtml: true
                                 );
                             }
-                        }
-                        else
-                        {
-                            var Recurso = ContextBD.Recursos
-                                            .Include(u => u.sedeNavigation)
-                                            .Where(e => e.estado == Estados.Activo)
-                                            .FirstOrDefault();
-                            if (Recurso != null)
-                            {
-                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
-                            }
-                        }
-
-                        if (!string.IsNullOrEmpty(emailCliente))
-                        {
-                            await emailService.SendEmailAsync(
-                                emailCliente,
-                                "Confirmación de cita",
-                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
-                                isHtml: true
-                            );
                         }
 
                         return Ok(new
@@ -385,20 +394,25 @@ namespace Agendamiento.API.Controllers
                              b.diasSemana != null &&
                              b.diasSemana.Split(',').Contains(diaSemana.ToString()))
 
-                            //||
-
-                            //(b.tipoBloqueo == 2 &&
-                            // b.fechaInicio.HasValue && b.fechaFin.HasValue &&
-                            // fechaSolo >= b.fechaInicio.Value.Date &&
-                            // fechaSolo <= b.fechaFin.Value.Date &&
-                            // b.diasSemana != null &&
-                            // b.diasSemana.Split(',').Contains(diaSemana.ToString()))
-
                             ||
 
                             (b.tipoBloqueo == 2 &&
                              b.fechaInicio.HasValue &&
                              fechaSolo >= b.fechaInicio.Value.Date)
+
+                            ||
+
+                            (b.tipoBloqueo == 3 &&
+                             b.diasSemana != null &&
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+
+                            ||
+
+                            (b.tipoBloqueo == 4 &&
+                             b.fechaInicio.HasValue &&
+                             b.fechaFin.HasValue &&
+                             fechaSolo >= b.fechaInicio.Value.Date &&
+                             fechaSolo <= b.fechaFin.Value.Date)
                         )
                     )
                     .ToList();
@@ -491,6 +505,18 @@ namespace Agendamiento.API.Controllers
                              b.motivo != par.valor &&
                              b.fechaInicio.HasValue &&
                              fechaSolo == b.fechaInicio.Value.Date)
+
+                             ||
+
+                            (b.tipoBloqueo == 3)
+
+                             ||
+
+                            (b.tipoBloqueo == 4 &&
+                             b.fechaInicio.HasValue &&
+                             b.fechaFin.HasValue &&
+                             fechaSolo >= b.fechaInicio.Value.Date &&
+                             fechaSolo <= b.fechaFin.Value.Date)
                         )
                     )
                     .ToList();
@@ -554,11 +580,25 @@ namespace Agendamiento.API.Controllers
                         (
                             (b.tipoBloqueo == 1 &&
                              b.diasSemana != null &&
-                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()) &&
+                             b.estado == Estados.Activo)
                             ||
                             (b.tipoBloqueo == 2 &&
                              b.fechaInicio.HasValue &&
-                             fechaSolo == b.fechaInicio.Value.Date)
+                             fechaSolo == b.fechaInicio.Value.Date &&
+                             b.estado == Estados.Activo)
+                            ||
+                            (b.tipoBloqueo == 3 &&
+                             b.diasSemana != null &&
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()) &&
+                             b.estado == Estados.Activo)
+                            ||
+                            (b.tipoBloqueo == 4 &&
+                             b.fechaInicio.HasValue &&
+                             b.fechaFin.HasValue &&
+                             fechaSolo >= b.fechaInicio.Value.Date &&
+                             fechaSolo <= b.fechaFin.Value.Date &&
+                             b.estado == Estados.Activo)
                         )
                     )
                     .ToList();
