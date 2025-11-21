@@ -175,23 +175,27 @@ namespace Informes.API.Servicios
                     NuevaPagina();
                 }
 
-                gfx.DrawString($"Nombre: {r.nombre}", fontBold, XBrushes.Black, new XRect(45, y, pagina.Width, 20), XStringFormats.TopLeft);
-                y += 20;
+                if (r.totalServicios > 0)
+                {
 
-                gfx.DrawString($"Total servicios: {r.totalServicios}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
-                y += 20;
+                    gfx.DrawString($"Nombre: {r.nombre}", fontBold, XBrushes.Black, new XRect(45, y, pagina.Width, 20), XStringFormats.TopLeft);
+                    y += 20;
 
-                //gfx.DrawString($"Porcentaje aplicar: {r.porcentaje}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
-                //y += 20;
+                    gfx.DrawString($"Total servicios: {r.totalServicios}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
+                    y += 20;
 
-                gfx.DrawString($"Total ingreso: {r.totalPlata}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
-                y += 20;
+                    //gfx.DrawString($"Porcentaje aplicar: {r.porcentaje}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
+                    //y += 20;
 
-                gfx.DrawString($"Total barbero: {r.totalEmpleado}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
-                y += 20;
+                    gfx.DrawString($"Total ingreso: {r.totalPlata}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
+                    y += 20;
 
-                gfx.DrawString($"Total barberia: {r.totalBarber}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
-                y += 20;
+                    gfx.DrawString($"Total barbero: {r.totalEmpleado}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
+                    y += 20;
+
+                    gfx.DrawString($"Total barberia: {r.totalBarber}", font, XBrushes.Black, new XRect(50, y, pagina.Width, 20), XStringFormats.TopLeft);
+                    y += 20;
+                }
 
                 if (r.obsequios is IEnumerable<dynamic> obsequios && obsequios.Any())
                 {
