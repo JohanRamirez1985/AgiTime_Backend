@@ -151,6 +151,7 @@ namespace Agendamiento.API.Controllers
                                         .AsEnumerable()
                                         .Where(b => b.usuario == dto.recurso &&
                                             b.tipoBloqueo == 3 &&
+                                            b.estado == Estados.Activo &&
                                             b.diasSemana != null &&
                                             (
                                                 diaSemana == 7 &&
