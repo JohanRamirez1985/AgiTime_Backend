@@ -35,7 +35,7 @@ namespace Informes.API.Servicios
                     var img = XImage.FromStream(() => msImg);
 
                     double logoWidth = 120;
-                    double logoHeight = 60;
+                    double logoHeight = 200;
                     double logoX = (pagina.Width - logoWidth) / 2;
 
                     gfx.DrawImage(img, logoX, y, logoWidth, logoHeight);
@@ -143,7 +143,7 @@ namespace Informes.API.Servicios
                     var img = XImage.FromStream(() => msImg);
 
                     double logoWidth = 120;
-                    double logoHeight = 60;
+                    double logoHeight = 200;
                     double logoX = (pagina.Width - logoWidth) / 2;
 
                     gfx.DrawImage(img, logoX, y, logoWidth, logoHeight);
