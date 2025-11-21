@@ -6,7 +6,7 @@ namespace Informes.API.Servicios
 {
     public class InformeService
     {
-        public async Task<byte[]> GenerarInformeDiario(List<dynamic> resumenUsuarios, string nombreEmpresa, string? rutaLogo = null)
+        public async Task<byte[]> GenerarInformeDiario(List<dynamic> resumenUsuarios, string fecha, string nombreEmpresa, string? rutaLogo = null)
         {
             using var stream = new MemoryStream();
             var doc = new PdfDocument();
@@ -54,6 +54,10 @@ namespace Informes.API.Servicios
 
             gfx.DrawString("Resumen diario", fontBold, XBrushes.Black,
                 new XRect(0, y, pagina.Width, 25), XStringFormats.TopCenter);
+            y += 40;
+
+            gfx.DrawString("Fecha: " + fecha, fontBold, XBrushes.Black,
+               new XRect(0, y, pagina.Width, 25), XStringFormats.TopLeft);
             y += 40;
 
             foreach (var r in resumenUsuarios)
@@ -110,7 +114,7 @@ namespace Informes.API.Servicios
             return stream.ToArray();
         }
 
-        public async Task<byte[]> GenerarInformeSemanal(List<dynamic> resumenUsuarios, string nombreEmpresa, string? rutaLogo = null)
+        public async Task<byte[]> GenerarInformeSemanal(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, string? rutaLogo = null)
         {
             using var stream = new MemoryStream();
             var doc = new PdfDocument();
@@ -158,6 +162,10 @@ namespace Informes.API.Servicios
 
             gfx.DrawString("Resumen semanal", fontBold, XBrushes.Black,
                 new XRect(0, y, pagina.Width, 25), XStringFormats.TopCenter);
+            y += 40;
+
+            gfx.DrawString("Semana del: " + fechaIni + " al " + fechaFin, fontBold, XBrushes.Black,
+              new XRect(0, y, pagina.Width, 25), XStringFormats.TopLeft);
             y += 40;
 
             foreach (var r in resumenUsuarios)

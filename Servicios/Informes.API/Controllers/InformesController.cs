@@ -171,7 +171,7 @@ namespace Informes.API.Controllers
 
                 if (resumenUsuarios.Count > 0)
                 {
-                    var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, nombreEmpresa, logo);
+                    var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, fecha.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
 
                     return File(pdfBytes, "application/pdf", $"Resumen_Diario_{DateTime.Now:yyyyMMdd}.pdf");
                 }
@@ -315,7 +315,7 @@ namespace Informes.API.Controllers
                     resumenUsuarios.Add(resultado);
                 }
 
-                var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, nombreEmpresa, logo);
+                var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
 
                 return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
 
