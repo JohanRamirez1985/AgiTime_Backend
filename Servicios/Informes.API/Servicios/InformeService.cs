@@ -57,7 +57,7 @@ namespace Informes.API.Servicios
             y += 40;
 
             gfx.DrawString("Fecha: " + fecha, fontBold, XBrushes.Black,
-               new XRect(0, y, pagina.Width, 25), XStringFormats.TopLeft);
+               new XRect(45, y, pagina.Width, 25), XStringFormats.TopLeft);
             y += 40;
 
             foreach (var r in resumenUsuarios)
@@ -165,7 +165,7 @@ namespace Informes.API.Servicios
             y += 40;
 
             gfx.DrawString("Semana del: " + fechaIni + " al " + fechaFin, fontBold, XBrushes.Black,
-              new XRect(0, y, pagina.Width, 25), XStringFormats.TopLeft);
+              new XRect(45, y, pagina.Width, 25), XStringFormats.TopLeft);
             y += 40;
 
             foreach (var r in resumenUsuarios)
