@@ -198,7 +198,7 @@ namespace Informes.API.Controllers
         }
 
         [HttpGet("informacionSemanal")]
-        public async Task<IActionResult> InformacionSemanal([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp)
+        public async Task<IActionResult> InformacionSemanal([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp, int? usuario = null)
         {
             string nombreBase = string.Empty;
             string nombreEmpresa = string.Empty;
@@ -207,6 +207,7 @@ namespace Informes.API.Controllers
             decimal? porcentajeBarber = 0;
             int total = 0;
             decimal valorDescuentoPorCorte = 0;
+            List<Usuario> usuarios;
 
             var resumenUsuarios = new List<object>();
 
@@ -233,9 +234,18 @@ namespace Informes.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var usuarios = ContextBD.Usuarios
-                                .Where(u => u.idRols.Any(r => r.id == 3))
+                if (usuario != null)
+                {
+                    usuarios = ContextBD.Usuarios
+                                .Where(u => u.id == usuario)
                                 .ToList();
+                }
+                else
+                {
+                    usuarios = ContextBD.Usuarios
+                                    .Where(u => u.idRols.Any(r => r.id == 3))
+                                    .ToList();
+                }
 
                 foreach (Usuario u in usuarios)
                 {
@@ -270,7 +280,17 @@ namespace Informes.API.Controllers
                     var val3 = ContextBD.Parametros.Where(p => p.tipo == "Valor_Corte_3" && p.estado == true).FirstOrDefault();
                     var val4 = ContextBD.Parametros.Where(p => p.tipo == "Valor_Corte_4" && p.estado == true).FirstOrDefault();
 
+                    var antiguo = ContextBD.Parametros.Where(p => p.tipo == "Antiguo" && p.estado == true).FirstOrDefault();
+                    
                     total = pagas.Count;
+
+                    foreach (var item in pagas)
+                    {
+                        if (item.servicio.Equals("Corte VIP"))
+                        {
+                            total++;
+                        }
+                    }
 
                     //porcentaje = total <= int.Parse(can1.valor)
                     //            ? u.porcentaje
@@ -281,14 +301,26 @@ namespace Informes.API.Controllers
                     //                    : 0;
                     //porcentajeBarber = 100 - porcentaje;
 
-                    if (total <= int.Parse(can1.valor))
-                        valorDescuentoPorCorte = decimal.Parse(val1.valor);
-                    else if (total >= int.Parse(can2.valor) && total < int.Parse(can3.valor))
-                        valorDescuentoPorCorte = decimal.Parse(val2.valor);
-                    else if (total >= int.Parse(can3.valor) && total < int.Parse(can4.valor))
-                        valorDescuentoPorCorte = decimal.Parse(val3.valor);
-                    else if (total >= int.Parse(can4.valor))
+                    bool esAntiguo = antiguo.valor
+                                            .Split(',')
+                                            .Any(x => x.Trim() == u.id.ToString());
+
+                    if(esAntiguo)
+                    {
                         valorDescuentoPorCorte = decimal.Parse(val4.valor);
+                    }
+                    else
+                    {
+                        if (total <= int.Parse(can1.valor))
+                            valorDescuentoPorCorte = decimal.Parse(val1.valor);
+                        else if (total >= int.Parse(can2.valor) && total < int.Parse(can3.valor))
+                            valorDescuentoPorCorte = decimal.Parse(val2.valor);
+                        else if (total >= int.Parse(can3.valor) && total < int.Parse(can4.valor))
+                            valorDescuentoPorCorte = decimal.Parse(val3.valor);
+                        else if (total >= int.Parse(can4.valor))
+                            valorDescuentoPorCorte = decimal.Parse(val4.valor);
+                    }
+                    
 
                     decimal? totalPlata = pagas.Sum(s => s.valor);
                     decimal totalDescuento = total * valorDescuentoPorCorte;
@@ -310,15 +342,22 @@ namespace Informes.API.Controllers
                         descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList(),
                         totaldescanso = noPagas.Count,
                         totalPlataDescanso = noPagas.Sum(s => s.valor),
+                        totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valor) + noPagas.Sum(s => s.valor),
                     };
 
                     resumenUsuarios.Add(resultado);
                 }
 
-                var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
-
-                return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
-
+                if (usuario != null)
+                {
+                    var pdfBytes = await informeService.GenerarInformeSemanalBarber(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
+                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_Barbero_{DateTime.Now:yyyyMMdd}.pdf");
+                }
+                else
+                {
+                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
+                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
+                }
             }
             catch (Exception ex)
             {
