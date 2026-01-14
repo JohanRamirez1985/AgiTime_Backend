@@ -7,6 +7,7 @@ using Compartido.Metodos;
 using Informes.API.Servicios;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 using System.Globalization;
 
@@ -165,7 +166,7 @@ namespace Informes.API.Controllers
                         descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList()
                     };
 
-                    if (resultado.totalServicios > 0)
+                    if (pagas.Count > 0 || obsequios.Count > 0 || noPagas.Count > 0)
                         resumenUsuarios.Add(resultado);
                 }
 
@@ -209,6 +210,17 @@ namespace Informes.API.Controllers
             decimal valorDescuentoPorCorte = 0;
             List<Usuario> usuarios;
             List<int> listaBarberos = new();
+
+            int can1 = 0;
+            int can2 = 0;
+            int can3 = 0;
+            int can4 = 0;
+            decimal val1 = 0;
+            decimal val2 = 0;
+            decimal val3 = 0;
+            decimal val4 = 0;
+            decimal inasistencia = 0;
+            bool esAntiguo = false;
 
             var resumenUsuarios = new List<object>();
 
@@ -281,19 +293,33 @@ namespace Informes.API.Controllers
 
                     var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
 
-                    int can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
-                    int can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
-                    int can3 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_3"));
-                    int can4 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_4"));
-
-                    decimal val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
-                    decimal val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_2"));
-                    decimal val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_3"));
-                    decimal val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_4"));
+                    can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
+                    can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
+                    can3 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_3"));
+                    can4 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_4"));
 
                     var antiguo = ContextBD.Parametros.Where(p => p.tipo == "Antiguo" && p.estado == true).FirstOrDefault();
+                    esAntiguo = antiguo.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
 
-                    decimal inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
+                    switch (u.sede)
+                    {
+                        case 1:
+                            val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
+                            val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_2"));
+                            val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_3"));
+                            val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_4"));
+                            break;
+
+                        case 2:
+                            val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_1"));
+                            val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_2"));
+                            val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_3"));
+                            val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_4"));
+                            break;
+
+                        default:
+                            break;
+                    }
 
                     total = pagas.Count;
 
@@ -314,9 +340,8 @@ namespace Informes.API.Controllers
                     //                    : 0;
                     //porcentajeBarber = 100 - porcentaje;
 
-                    bool esAntiguo = antiguo.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
-
                     bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
+                    inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
 
                     if (validaBarberos)
                     {
