@@ -129,7 +129,9 @@ namespace Informes.API.Controllers
                 else
                 {
                     usuarios = ContextBD.Usuarios
-                                    .Where(u => u.idRols.Any(r => r.id == 3))
+                                    .Where(u =>
+                                        u.recurso == true &&
+                                        u.idRols.Any(r => r.id == 2 || r.id == 3))
                                     .ToList();
                 }
 
@@ -264,7 +266,9 @@ namespace Informes.API.Controllers
                 else
                 {
                     usuarios = ContextBD.Usuarios
-                                    .Where(u => u.idRols.Any(r => r.id == 3))
+                                     .Where(u =>
+                                        u.recurso == true &&
+                                        u.idRols.Any(r => r.id == 2 || r.id == 3))
                                     .ToList();
                 }
 
