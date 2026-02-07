@@ -1,6 +1,7 @@
 ﻿using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 using System.Globalization;
+using System.IO;
 using System.Net.Http;
 
 namespace Informes.API.Servicios
@@ -310,170 +311,264 @@ namespace Informes.API.Servicios
 
         public async Task<byte[]> GenerarInformeSemanal(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, string? rutaLogo = null)
         {
-            using var stream = new MemoryStream();
-            var doc = new PdfDocument();
-
-            PdfPage pagina = doc.AddPage();
-            XGraphics gfx = XGraphics.FromPdfPage(pagina);
-
-            var font = new XFont("OpenSans", 9, XFontStyle.Regular);
-            var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
-            var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
-
-            double y = 0;
-
-            // =========================
-            // CONFIG TABLA
-            // =========================
-            double tableLeft = 40;
-            double tableRight = pagina.Width - 40;
-
-            double colNombre = 40;
-            double colServicios = 140;
-            double colIngreso = 190;
-            double colEmpleado = 250;
-            double colBarberia = 310;
-            double colObsequio = 370;
-            double colDescanso = 440;
-            double colTotal = 510;
-            double filaAlto = 18;
-
-            // =========================
-            // LÍNEAS
-            // =========================
-            var lineLight = new XPen(XColors.LightGray, 0.8);
-            var lineDark = new XPen(XColors.Black, 1.2);
-
-            // =========================
-            // UTILIDADES
-            // =========================
-            string Moneda(decimal valor) =>
-                valor.ToString("C0", new CultureInfo("es-CO"));
-
-            void NuevaPagina()
+            try
             {
-                pagina = doc.AddPage();
-                gfx = XGraphics.FromPdfPage(pagina);
-                DibujarEncabezado();
-                DibujarEncabezadoTabla();
-            }
+                using var stream = new MemoryStream();
+                var doc = new PdfDocument();
 
-            void ValidarSalto(double espacio)
-            {
-                if (y + espacio > pagina.Height - 40)
+                PdfPage pagina = doc.AddPage();
+                XGraphics gfx = XGraphics.FromPdfPage(pagina);
+
+                var font = new XFont("OpenSans", 9, XFontStyle.Regular);
+                var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
+                var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+
+                double y = 0;
+
+                // =========================
+                // CONFIG TABLA
+                // =========================
+                double tableLeft = 40;
+                double tableRight = pagina.Width - 40;
+
+                double colNombre = 40;
+                double colServicios = 140;
+                double colIngreso = 190;
+                double colBarberia = 250;
+                double colEmpleado = 310;
+                double colObsequio = 370;
+                double colDescanso = 440;
+                double colTotal = 510;
+                double filaAlto = 18;
+
+                // =========================
+                // LÍNEAS
+                // =========================
+                var lineLight = new XPen(XColors.LightGray, 0.8);
+                var lineDark = new XPen(XColors.Black, 1.2);
+
+                // =========================
+                // UTILIDADES
+                // =========================
+                string Moneda(decimal valor) =>
+                    valor.ToString("C0", new CultureInfo("es-CO"));
+
+                void NuevaPagina()
                 {
-                    NuevaPagina();
+                    pagina = doc.AddPage();
+                    gfx = XGraphics.FromPdfPage(pagina);
+                    DibujarEncabezado();
+                    DibujarEncabezadoTabla();
                 }
-            }
 
-            void DibujarEncabezado()
-            {
-                double headerHeight = 90;
-
-                if (!string.IsNullOrEmpty(rutaLogo))
+                void ValidarSalto(double espacio)
                 {
-                    try
+                    if (y + espacio > pagina.Height - 40)
                     {
-                        using var http = new HttpClient();
-                        var imgBytes = http.GetByteArrayAsync(rutaLogo).Result;
-                        using var msImg = new MemoryStream(imgBytes);
-                        var img = XImage.FromStream(() => msImg);
-
-                        gfx.DrawImage(img, tableLeft, 20, 60, 60);
+                        NuevaPagina();
                     }
-                    catch { }
                 }
 
-                gfx.DrawString(nombreEmpresa, fontTitle, XBrushes.DarkBlue,
-                    new XRect(0, 20, pagina.Width, 25), XStringFormats.TopCenter);
-
-                gfx.DrawString($"Resumen semanal {fechaIni} al {fechaFin}",
-                    fontBold, XBrushes.Black,
-                    new XRect(0, 45, pagina.Width, 20), XStringFormats.TopCenter);
-
-                //gfx.DrawLine(lineLight, tableLeft, 80, tableRight, 80);
-                y = headerHeight;
-            }
-
-            void DibujarEncabezadoTabla()
-            {
-                var center = new XStringFormat
+                void DibujarEncabezado()
                 {
-                    Alignment = XStringAlignment.Center,
-                    LineAlignment = XLineAlignment.Center
-                };
+                    double headerHeight = 90;
 
-                gfx.DrawString("Barbero", fontBold, XBrushes.Black, colNombre, y);
-                gfx.DrawString("Servicios", fontBold, XBrushes.Black, colServicios, y);
-                gfx.DrawString("Ingreso", fontBold, XBrushes.Black, colIngreso, y);
-                gfx.DrawString("Empleado", fontBold, XBrushes.Black, colEmpleado, y);
-                gfx.DrawString("Barbería", fontBold, XBrushes.Black, colBarberia, y);
-                gfx.DrawString("Obsequios", fontBold, XBrushes.Black, colObsequio, y);
-                gfx.DrawString("Descanso", fontBold, XBrushes.Black, colDescanso, y);
-                gfx.DrawString("Total", fontBold, XBrushes.Black, colTotal, y);
+                    if (!string.IsNullOrEmpty(rutaLogo))
+                    {
+                        try
+                        {
+                            using var http = new HttpClient();
+                            var imgBytes = http.GetByteArrayAsync(rutaLogo).Result;
+                            using var msImg = new MemoryStream(imgBytes);
+                            var img = XImage.FromStream(() => msImg);
 
-                y += filaAlto;
-                //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
-                y += 5;
-            }
+                            gfx.DrawImage(img, tableLeft, 20, 60, 60);
+                        }
+                        catch { }
+                    }
 
-            // =========================
-            // INICIO DOCUMENTO
-            // =========================
-            DibujarEncabezado();
-            DibujarEncabezadoTabla();
+                    gfx.DrawString(nombreEmpresa, fontTitle, XBrushes.DarkBlue,
+                        new XRect(0, 20, pagina.Width, 25), XStringFormats.TopCenter);
 
-            decimal totalGeneral = 0;
+                    gfx.DrawString($"Resumen semanal {fechaIni} al {fechaFin}",
+                        fontBold, XBrushes.Black,
+                        new XRect(0, 45, pagina.Width, 20), XStringFormats.TopCenter);
 
-            foreach (var r in resumenUsuarios)
-            {
-                if (r.totalServicios > 0)
+                    //gfx.DrawLine(lineLight, tableLeft, 80, tableRight, 80);
+                    y = headerHeight;
+                }
+
+                void DibujarEncabezadoTabla()
                 {
-                    ValidarSalto(filaAlto + 5);
+                    var center = new XStringFormat
+                    {
+                        Alignment = XStringAlignment.Center,
+                        LineAlignment = XLineAlignment.Center
+                    };
 
-                    int totalServicios = r.totalServicios ?? 0;
-                    decimal ingreso = r.totalPlata ?? 0;
-                    decimal empleado = r.totalEmpleado ?? 0;
-                    decimal barberia = r.totalBarber ?? 0;
-                    decimal obsequio = r.totalPlataObsequios ?? 0;
-                    decimal descanso = r.totalPlataDescanso ?? 0;
-                    decimal totalBarbero = r.totalIngresoBarber ?? 0;
-
-                    totalGeneral += totalBarbero;
-
-                    gfx.DrawString(r.nombre, font, XBrushes.Black, colNombre, y);
-                    gfx.DrawString(totalServicios.ToString(), font, XBrushes.Black, colServicios, y);
-                    gfx.DrawString(Moneda(ingreso), font, XBrushes.Black, colIngreso, y);
-                    gfx.DrawString(Moneda(empleado), font, XBrushes.Black, colEmpleado, y);
-                    gfx.DrawString(Moneda(barberia), font, XBrushes.Black, colBarberia, y);
-                    gfx.DrawString("(" + r.totalObsequios + ") " + Moneda(obsequio), font, XBrushes.Black, colObsequio, y);
-                    gfx.DrawString("(" + r.totaldescanso + ") " + Moneda(descanso), font, XBrushes.Black, colDescanso, y);
-                    gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black, colTotal, y);
+                    gfx.DrawString("Barbero", fontBold, XBrushes.Black, colNombre, y);
+                    gfx.DrawString("Servicios", fontBold, XBrushes.Black, colServicios, y);
+                    gfx.DrawString("Ingreso", fontBold, XBrushes.Black, colIngreso, y);
+                    gfx.DrawString("Barbería", fontBold, XBrushes.Black, colBarberia, y);
+                    gfx.DrawString("Empleado", fontBold, XBrushes.Black, colEmpleado, y);
+                    gfx.DrawString("Obsequios", fontBold, XBrushes.Black, colObsequio, y);
+                    gfx.DrawString("Descanso", fontBold, XBrushes.Black, colDescanso, y);
+                    gfx.DrawString("Total", fontBold, XBrushes.Black, colTotal, y);
 
                     y += filaAlto;
                     //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
-                    y += 3;
+                    y += 5;
                 }
+
+                // =========================
+                // INICIO DOCUMENTO
+                // =========================
+                DibujarEncabezado();
+                DibujarEncabezadoTabla();
+
+                decimal totalGeneral = 0;
+                decimal totalGeneralIngreso = 0;
+                decimal totalGeneralBarberia = 0;
+                decimal totalGeneralEmpleado = 0;
+
+                foreach (var r in resumenUsuarios)
+                {
+                    if (r.totalServicios > 0)
+                    {
+                        ValidarSalto(filaAlto + 5);
+
+                        int totalServicios = r.totalServicios ?? 0;
+                        decimal ingreso = r.totalPlata ?? 0;
+                        decimal empleado = r.totalEmpleado ?? 0;
+                        decimal barberia = r.totalBarber ?? 0;
+                        decimal obsequio = r.totalPlataObsequios ?? 0;
+                        decimal descanso = r.totalPlataDescanso ?? 0;
+                        decimal totalBarbero = r.totalIngresoBarber ?? 0;
+
+                        totalGeneral += totalBarbero;
+                        totalGeneralIngreso += ingreso;
+                        totalGeneralBarberia += barberia;
+                        totalGeneralEmpleado += empleado;
+
+                        gfx.DrawString(r.nombre, font, XBrushes.Black, colNombre, y);
+                        gfx.DrawString(totalServicios.ToString(), font, XBrushes.Black, colServicios, y);
+                        gfx.DrawString(Moneda(ingreso), font, XBrushes.Black, colIngreso, y);
+                        gfx.DrawString(Moneda(barberia), font, XBrushes.Black, colBarberia, y);
+                        gfx.DrawString(Moneda(empleado), font, XBrushes.Black, colEmpleado, y);
+                        gfx.DrawString("(" + r.totalObsequios + ") " + Moneda(obsequio), font, XBrushes.Black, colObsequio, y);
+                        gfx.DrawString("(" + r.totaldescanso + ") " + Moneda(descanso), font, XBrushes.Black, colDescanso, y);
+                        gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black, colTotal, y);
+
+                        y += filaAlto;
+                        //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
+                        y += 3;
+                    }
+                }
+                // =========================
+                // TOTAL GENERAL
+                // =========================
+                ValidarSalto(40);
+
+                gfx.DrawLine(lineDark, tableLeft, y, tableRight, y);
+                y += 10;
+
+                gfx.DrawString("Total General Semanal", fontBold, XBrushes.Black, colNombre, y);
+                gfx.DrawString("", font, XBrushes.Black, colServicios, y);
+                gfx.DrawString(Moneda(totalGeneralIngreso), font, XBrushes.Black, colIngreso, y);
+                gfx.DrawString(Moneda(totalGeneralBarberia), font, XBrushes.Black, colBarberia, y);
+                gfx.DrawString(Moneda(totalGeneralEmpleado), font, XBrushes.Black, colEmpleado, y);
+                gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
+                gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
+                gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black, colTotal, y);
+
+                //gfx.DrawString("TOTAL GENERAL SEMANAL", fontBold, XBrushes.Black,
+                //    colIngreso, y);
+                //gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black,
+                //    colTotal, y);
+
+                var totalesPorSede = resumenUsuarios
+                    .GroupBy(r => r.sede)
+                    .Select(g => new
+                    {
+                        sede = g.Key,
+                        total = g.Sum(x => (int)(x.totalServicios ?? 0))
+                    })
+                .ToList();
+
+                var totalesPorSedeBarberia = resumenUsuarios
+                    .GroupBy(r => r.sede)
+                    .Select(g => new
+                    {
+                        sede = g.Key,
+                        total = g.Sum(x => (decimal)(x.totalBarber ?? 0))
+                    })
+                .ToList();
+
+                ValidarSalto(40);
+
+                // =========================
+                // TOTAL SEDE
+                // =========================
+                //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
+                y += 20;
+
+                foreach (var sede in totalesPorSede)
+                {
+                    ValidarSalto(filaAlto);
+
+                    //gfx.DrawString($"Total Servicio Sede {sede.sede}", fontBold, XBrushes.Black,
+                    //    colServicios, y);
+
+                    //gfx.DrawString(Moneda(sede.total), fontBold, XBrushes.Black,
+                    //    colTotal, y);
+
+                    gfx.DrawString("Total Servicio Sede", fontBold, XBrushes.Black, colNombre, y);
+                    gfx.DrawString("", font, XBrushes.Black, colServicios, y);
+                    gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colIngreso, y);
+                    gfx.DrawString(sede.total.ToString(), fontBold, XBrushes.Black, colBarberia, y);
+                    gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
+                    gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
+                    gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
+                    gfx.DrawString("", fontBold, XBrushes.Black, colTotal, y);
+
+                    y += filaAlto;
+                }
+
+                ValidarSalto(40);
+
+                foreach (var sede in totalesPorSedeBarberia)
+                {
+                    ValidarSalto(filaAlto);
+
+                    //gfx.DrawString($"Total Servicio Sede {sede.sede}", fontBold, XBrushes.Black,
+                    //    colServicios, y);
+
+                    //gfx.DrawString(Moneda(sede.total), fontBold, XBrushes.Black,
+                    //    colTotal, y);
+
+                    gfx.DrawString("Total Barberia Sede", fontBold, XBrushes.Black, colNombre, y);
+                    gfx.DrawString("", font, XBrushes.Black, colServicios, y);
+                    gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colIngreso, y);
+                    gfx.DrawString(Moneda(sede.total), fontBold, XBrushes.Black, colBarberia, y);
+                    gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
+                    gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
+                    gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
+                    gfx.DrawString("", fontBold, XBrushes.Black, colTotal, y);
+
+                    y += filaAlto;
+                }
+
+                // =========================
+                // GUARDAR
+                // =========================
+                doc.Save(stream, false);
+                return stream.ToArray();
             }
-
-            // =========================
-            // TOTAL GENERAL
-            // =========================
-            ValidarSalto(40);
-
-            gfx.DrawLine(lineDark, tableLeft, y, tableRight, y);
-            y += 10;
-
-            gfx.DrawString("TOTAL GENERAL SEMANAL", fontBold, XBrushes.Black,
-                colIngreso, y);
-            gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black,
-                colTotal, y);
-
-            // =========================
-            // GUARDAR
-            // =========================
-            doc.Save(stream, false);
-            return stream.ToArray();
+            catch(Exception e)
+            {
+                var error = e.Message;
+                return null;
+            }
 
             ///*REPORTE ANTERIOR*/
             //using var stream = new MemoryStream();
