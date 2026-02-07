@@ -132,6 +132,7 @@ namespace Informes.API.Controllers
                                     .Where(u =>
                                         u.recurso == true &&
                                         u.idRols.Any(r => r.id == 2 || r.id == 3))
+                                    .OrderBy(u => u.sede)
                                     .ToList();
                 }
 
@@ -260,16 +261,19 @@ namespace Informes.API.Controllers
                 if (usuario != null)
                 {
                     usuarios = ContextBD.Usuarios
-                                .Where(u => u.id == usuario)
-                                .ToList();
+                        .Include(u => u.sedeNavigation)
+                        .Where(u => u.id == usuario)
+                    .ToList();
                 }
                 else
                 {
                     usuarios = ContextBD.Usuarios
-                                     .Where(u =>
-                                        u.recurso == true &&
-                                        u.idRols.Any(r => r.id == 2 || r.id == 3))
-                                    .ToList();
+                        .Include(u => u.sedeNavigation)
+                        .Where(u =>
+                        u.recurso == true &&
+                        u.idRols.Any(r => r.id == 2 || r.id == 3))
+                        .OrderBy(u => u.sede)
+                    .ToList();
                 }
 
                 foreach (Usuario u in usuarios)
@@ -391,6 +395,7 @@ namespace Informes.API.Controllers
                         totaldescanso = noPagas.Count,
                         totalPlataDescanso = noPagas.Sum(s => s.valor),
                         totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valor) + noPagas.Sum(s => s.valor),
+                        sede = u.sedeNavigation.Nombre
                     };
 
                     resumenUsuarios.Add(resultado);
