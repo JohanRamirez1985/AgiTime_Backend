@@ -394,7 +394,6 @@ namespace Informes.API.Servicios
                         fontBold, XBrushes.Black,
                         new XRect(0, 45, pagina.Width, 20), XStringFormats.TopCenter);
 
-                    //gfx.DrawLine(lineLight, tableLeft, 80, tableRight, 80);
                     y = headerHeight;
                 }
 
@@ -416,7 +415,6 @@ namespace Informes.API.Servicios
                     gfx.DrawString("Total", fontBold, XBrushes.Black, colTotal, y);
 
                     y += filaAlto;
-                    //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
                     y += 5;
                 }
 
@@ -460,7 +458,6 @@ namespace Informes.API.Servicios
                         gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black, colTotal, y);
 
                         y += filaAlto;
-                        //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
                         y += 3;
                     }
                 }
@@ -481,26 +478,13 @@ namespace Informes.API.Servicios
                 gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
                 gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black, colTotal, y);
 
-                //gfx.DrawString("TOTAL GENERAL SEMANAL", fontBold, XBrushes.Black,
-                //    colIngreso, y);
-                //gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black,
-                //    colTotal, y);
-
                 var totalesPorSede = resumenUsuarios
                     .GroupBy(r => r.sede)
                     .Select(g => new
                     {
                         sede = g.Key,
-                        total = g.Sum(x => (int)(x.totalServicios ?? 0))
-                    })
-                .ToList();
-
-                var totalesPorSedeBarberia = resumenUsuarios
-                    .GroupBy(r => r.sede)
-                    .Select(g => new
-                    {
-                        sede = g.Key,
-                        total = g.Sum(x => (decimal)(x.totalBarber ?? 0))
+                        totalSer = g.Sum(x => (int)(x.totalServicios ?? 0)),
+                        totalBar = g.Sum(x => (decimal)(x.totalBarber ?? 0))
                     })
                 .ToList();
 
@@ -509,47 +493,16 @@ namespace Informes.API.Servicios
                 // =========================
                 // TOTAL SEDE
                 // =========================
-                //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
                 y += 20;
 
                 foreach (var sede in totalesPorSede)
                 {
                     ValidarSalto(filaAlto);
 
-                    //gfx.DrawString($"Total Servicio Sede {sede.sede}", fontBold, XBrushes.Black,
-                    //    colServicios, y);
-
-                    //gfx.DrawString(Moneda(sede.total), fontBold, XBrushes.Black,
-                    //    colTotal, y);
-
-                    gfx.DrawString("Total Servicio Sede", fontBold, XBrushes.Black, colNombre, y);
-                    gfx.DrawString("", font, XBrushes.Black, colServicios, y);
-                    gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colIngreso, y);
-                    gfx.DrawString(sede.total.ToString(), fontBold, XBrushes.Black, colBarberia, y);
-                    gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
-                    gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
-                    gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
-                    gfx.DrawString("", fontBold, XBrushes.Black, colTotal, y);
-
-                    y += filaAlto;
-                }
-
-                ValidarSalto(40);
-
-                foreach (var sede in totalesPorSedeBarberia)
-                {
-                    ValidarSalto(filaAlto);
-
-                    //gfx.DrawString($"Total Servicio Sede {sede.sede}", fontBold, XBrushes.Black,
-                    //    colServicios, y);
-
-                    //gfx.DrawString(Moneda(sede.total), fontBold, XBrushes.Black,
-                    //    colTotal, y);
-
-                    gfx.DrawString("Total Barberia Sede", fontBold, XBrushes.Black, colNombre, y);
-                    gfx.DrawString("", font, XBrushes.Black, colServicios, y);
-                    gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colIngreso, y);
-                    gfx.DrawString(Moneda(sede.total), fontBold, XBrushes.Black, colBarberia, y);
+                    gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colNombre, y);
+                    gfx.DrawString(sede.totalSer.ToString(), font, XBrushes.Black, colServicios, y);
+                    gfx.DrawString("", fontBold, XBrushes.Black, colIngreso, y);
+                    gfx.DrawString(Moneda(sede.totalBar), fontBold, XBrushes.Black, colBarberia, y);
                     gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
                     gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
                     gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
