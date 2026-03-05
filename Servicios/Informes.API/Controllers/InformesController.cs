@@ -375,7 +375,7 @@ namespace Informes.API.Controllers
                         {
                             if (esBarberoGeneral) 
                             {
-                                valorDescuentoPorCorte = valGeneral
+                                valorDescuentoPorCorte = valGeneral;
                             }
                             else
                             {
