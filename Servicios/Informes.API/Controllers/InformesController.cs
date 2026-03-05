@@ -223,7 +223,10 @@ namespace Informes.API.Controllers
             decimal val3 = 0;
             decimal val4 = 0;
             decimal inasistencia = 0;
+            decimal valAntiguo = 0;
+            decimal valGeneral = 0;
             bool esAntiguo = false;
+            bool esBarberoGeneral = false;
 
             var resumenUsuarios = new List<object>();
 
@@ -309,6 +312,13 @@ namespace Informes.API.Controllers
                     var antiguo = ContextBD.Parametros.Where(p => p.tipo == "Antiguo" && p.estado == true).FirstOrDefault();
                     esAntiguo = antiguo.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
 
+                    valAntiguo = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Antiguo"));
+
+                    var BarberoGeneral = ContextBD.Parametros.Where(p => p.tipo == "Barbero_General" && p.estado == true).FirstOrDefault();
+                    esBarberoGeneral = BarberoGeneral.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
+
+                    valGeneral = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_General"));
+
                     switch (u.sede)
                     {
                         case 1:
@@ -359,18 +369,25 @@ namespace Informes.API.Controllers
                     {
                         if (esAntiguo)
                         {
-                            valorDescuentoPorCorte = val4;
+                            valorDescuentoPorCorte = valAntiguo;
                         }
                         else
                         {
-                            if (total <= can1)
-                                valorDescuentoPorCorte = val1;
-                            else if (total >= can2 && total < can3)
-                                valorDescuentoPorCorte = val2;
-                            else if (total >= can3 && total < can4)
-                                valorDescuentoPorCorte = val3;
-                            else if (total >= can4)
-                                valorDescuentoPorCorte = val4;
+                            if (esBarberoGeneral) 
+                            {
+                                valorDescuentoPorCorte = valGeneral
+                            }
+                            else
+                            {
+                                if (total <= can1)
+                                    valorDescuentoPorCorte = val1;
+                                else if (total >= can2 && total < can3)
+                                    valorDescuentoPorCorte = val2;
+                                else if (total >= can3 && total < can4)
+                                    valorDescuentoPorCorte = val3;
+                                else if (total >= can4)
+                                    valorDescuentoPorCorte = val4;
+                            }
                         }
                     }
 
