@@ -202,7 +202,7 @@ namespace Informes.API.Controllers
         }
 
         [HttpGet("informacionSemanal")]
-        public async Task<IActionResult> InformacionSemanal([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp, int? usuario = null, string? barberos = null)
+        public async Task<IActionResult> InformacionSemanal([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp, int? usuario = null, string? barberos = null, bool personal = false)
         {
             string nombreBase = string.Empty;
             string nombreEmpresa = string.Empty;
@@ -418,7 +418,7 @@ namespace Informes.API.Controllers
                     resumenUsuarios.Add(resultado);
                 }
 
-                if (usuario != null)
+                if (usuario != null && !personal)
                 {
                     var pdfBytes = await informeService.GenerarInformeSemanalBarber(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
                     return File(pdfBytes, "application/pdf", $"Resumen_Semanal_Barbero_{DateTime.Now:yyyyMMdd}.pdf");
