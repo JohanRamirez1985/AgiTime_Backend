@@ -156,7 +156,7 @@ namespace Informes.API.Controllers
                                .ToList();
 
                     var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
-                    var obsequios = info.Where(i => i.pagoServicio == false).ToList();
+                    var obsequios = info.Where(i => i.pagoCita == true && i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
 
                     var resultado = new
@@ -299,7 +299,7 @@ namespace Informes.API.Controllers
                                .ToList();
 
                     var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
-                    var obsequios = info.Where(i => i.pagoServicio == false).ToList();
+                    var obsequios = info.Where(i => i.pagoCita == true && i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
 
                     var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
