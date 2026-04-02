@@ -444,7 +444,7 @@ namespace Compartido.Data
                         r => r.HasOne<Usuario>().WithMany().HasForeignKey("idUsuario").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_UsuarioRol_Usuarios"),
                         j =>
                         {
-                            j.HasKey("idUsuario", "idRol").HasName("PK__UsuarioR__179F515182DEE9FE");
+                            j.HasKey("idUsuario", "idRol").HasName("PK__UsuarioR__179F51515880FECF");
 
                             j.ToTable("UsuarioRol");
                         });

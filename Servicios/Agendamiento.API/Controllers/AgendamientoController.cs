@@ -190,6 +190,7 @@ namespace Agendamiento.API.Controllers
                             valor = dto.Valor,
                             estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
                             pago = pago,
+                            bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
                             fechaCreacion = dto.FechaCreacion,
                             usuarioCreacion = dto.UsuarioCreacion
                         };
@@ -1139,7 +1140,10 @@ namespace Agendamiento.API.Controllers
                     });
                 }
                 if (dto.Asistencia)
+                {
                     citaId.estado = Estados.Asistio;
+                    citaId.bono = dto.Bono;
+                }
                 else
                     citaId.estado = Estados.Inasistencia;
 
