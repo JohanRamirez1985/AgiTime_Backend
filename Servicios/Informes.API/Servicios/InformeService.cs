@@ -16,6 +16,7 @@ namespace Informes.API.Servicios
             PdfPage pagina = doc.AddPage();
             XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
+            var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
             var font = new XFont("OpenSans", 9, XFontStyle.Regular);
             var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
             var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
@@ -131,7 +132,9 @@ namespace Informes.API.Servicios
                 {
                     gfx.DrawString($"• {s.servicio}", font, XBrushes.Black,
                         colDetalle, y);
-                    gfx.DrawString(Moneda((decimal)s.valor), font,
+                    var esBono = s.bono is bool b && b;
+                    var valorTexto = Moneda((decimal)s.valor) + (esBono ? " *" : "");
+                    gfx.DrawString(valorTexto, font,
                         XBrushes.Black, colValor, y);
                     y += filaAlto;
                 }
@@ -195,6 +198,9 @@ namespace Informes.API.Servicios
                 colDetalle, y);
             gfx.DrawString(Moneda(totalGeneralDia), fontBold, XBrushes.Black,
                 colValor, y);
+            y += 10;
+            gfx.DrawString($"(*) Indica que parte del servicio fue cubierto mediante bono.", fontSmall, XBrushes.Black,
+                    colNombre, y);
 
             // =========================
             // GUARDAR
@@ -319,6 +325,7 @@ namespace Informes.API.Servicios
                 PdfPage pagina = doc.AddPage();
                 XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
+                var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
                 var font = new XFont("OpenSans", 9, XFontStyle.Regular);
                 var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
                 var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
@@ -442,14 +449,17 @@ namespace Informes.API.Servicios
                         decimal obsequio = r.totalPlataObsequios ?? 0;
                         decimal descanso = r.totalPlataDescanso ?? 0;
                         decimal totalBarbero = r.totalIngresoBarber ?? 0;
+                        decimal totalBonos = r.totalBonos ?? 0;
 
                         totalGeneral += totalBarbero;
                         totalGeneralIngreso += ingreso;
                         totalGeneralBarberia += barberia;
                         totalGeneralEmpleado += empleado;
 
+                        var valorTexto = totalBonos > 0 ? totalServicios.ToString() + " (" + totalBonos.ToString() + ")*" : totalServicios.ToString();
+
                         gfx.DrawString(r.nombre, font, XBrushes.Black, colNombre, y);
-                        gfx.DrawString(totalServicios.ToString(), font, XBrushes.Black, colServicios, y);
+                        gfx.DrawString(valorTexto, font, XBrushes.Black, colServicios, y);
                         gfx.DrawString(Moneda(ingreso), font, XBrushes.Black, colIngreso, y);
                         gfx.DrawString(Moneda(barberia), font, XBrushes.Black, colBarberia, y);
                         gfx.DrawString(Moneda(empleado), font, XBrushes.Black, colEmpleado, y);
@@ -510,6 +520,10 @@ namespace Informes.API.Servicios
 
                     y += filaAlto;
                 }
+
+                y += 10;
+                gfx.DrawString($"(*) Cantidad de servicios que fueron cubiertos mediante bono.", fontSmall, XBrushes.Black,
+                        colNombre, y);
 
                 // =========================
                 // GUARDAR
@@ -644,6 +658,7 @@ namespace Informes.API.Servicios
             PdfPage pagina = doc.AddPage();
             XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
+            var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
             var font = new XFont("OpenSans", 9, XFontStyle.Regular);
             var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
             var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
@@ -747,15 +762,19 @@ namespace Informes.API.Servicios
             {
                 ValidarSalto(filaAlto + 5);
 
+                int totalServicios = r.totalServicios ?? 0;
                 decimal servicios = r.totalEmpleado ?? 0;
                 decimal obsequios = r.totalPlataObsequios ?? 0;
                 decimal descanso = r.totalPlataDescanso ?? 0;
                 decimal totalBarbero = r.totalIngresoBarber ?? 0;
+                decimal totalBonos = r.totalBonos ?? 0;
 
                 totalGeneral += totalBarbero;
 
+                var valorTexto = totalBonos > 0 ? totalServicios.ToString() + " (" + totalBonos.ToString() + ")*" : totalServicios.ToString();
+
                 gfx.DrawString(r.nombre, font, XBrushes.Black, colNombre, y);
-                gfx.DrawString(r.totalServicios.ToString(), font, XBrushes.Black, colTotalServicio, y);
+                gfx.DrawString(valorTexto, font, XBrushes.Black, colTotalServicio, y);
                 gfx.DrawString(Moneda(servicios), font, XBrushes.Black, colServicios, y);
                 gfx.DrawString(Moneda(obsequios), font, XBrushes.Black, colObsequios, y);
                 gfx.DrawString(Moneda(descanso), font, XBrushes.Black, colDescanso, y);
@@ -778,6 +797,10 @@ namespace Informes.API.Servicios
                 colServicios, y);
             gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black,
                 colTotal, y);
+
+            y += 10;
+            gfx.DrawString($"(*) Cantidad de servicios que fueron cubiertos mediante bono.", fontSmall, XBrushes.Black,
+                    colNombre, y);
 
             // =========================
             // GUARDAR PDF
