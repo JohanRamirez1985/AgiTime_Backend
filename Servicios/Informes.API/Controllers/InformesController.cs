@@ -96,6 +96,7 @@ namespace Informes.API.Controllers
             string logo = string.Empty;
             List<Usuario> usuarios;
             var resumenUsuarios = new List<object>();
+            decimal bono = 0;
 
             try
             {
@@ -136,6 +137,10 @@ namespace Informes.API.Controllers
                                     .ToList();
                 }
 
+                var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
+
+                bono = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Bono"));
+
                 foreach (Usuario u in usuarios)
                 {
                     var info = (from c in ContextBD.Citas
@@ -151,7 +156,8 @@ namespace Informes.API.Controllers
                                     servicio = s.nombre,
                                     pagoCita = c.pago,
                                     pagoServicio = s.esPago,
-                                    valor = s.nombre == "Otro" ? c.valor : s.valor
+                                    valor = s.nombre == "Otro" ? c.valor : s.valor - (c.bono.GetValueOrDefault() ? bono : 0),
+                                    bono = c.bono
                                 })
                                .ToList();
 
@@ -163,7 +169,7 @@ namespace Informes.API.Controllers
                     {
                         nombre = u.nombre,
                         totalServicios = pagas.Count,
-                        servicios = pagas.Select(s => new { s.servicio, s.valor }).ToList(),
+                        servicios = pagas.Select(s => new { s.servicio, s.valor,s.bono }).ToList(),
                         totalPlata = pagas.Sum(s => s.valor),
                         obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
                         descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList()
@@ -227,6 +233,8 @@ namespace Informes.API.Controllers
             decimal valGeneral = 0;
             bool esAntiguo = false;
             bool esBarberoGeneral = false;
+            decimal bono = 0;
+            decimal descuentoBono = 0;
 
             var resumenUsuarios = new List<object>();
 
@@ -279,6 +287,11 @@ namespace Informes.API.Controllers
                     .ToList();
                 }
 
+                var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
+
+                bono = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Bono"));
+                descuentoBono = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Descuento_Bono"));
+
                 foreach (Usuario u in usuarios)
                 {
                     var info = (from c in ContextBD.Citas
@@ -294,15 +307,15 @@ namespace Informes.API.Controllers
                                     servicio = s.nombre,
                                     pagoCita = c.pago,
                                     pagoServicio = s.esPago,
-                                    valor = s.nombre == "Otro" ? c.valor : s.valor
+                                    valor = s.nombre == "Otro" ? c.valor : s.valor - (c.bono.GetValueOrDefault() ? bono : 0),
+                                    bono = c.bono
                                 })
                                .ToList();
 
                     var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
                     var obsequios = info.Where(i => i.pagoCita == true && i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
-
-                    var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
+                    var bonos = info.Where(i => i.bono == true).ToList();
 
                     can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
                     can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
@@ -392,7 +405,7 @@ namespace Informes.API.Controllers
                     }
 
                     decimal? totalPlata = pagas.Sum(s => s.valor);
-                    decimal totalDescuento = total * valorDescuentoPorCorte;
+                    decimal totalDescuento = total * valorDescuentoPorCorte - (bonos.Count * descuentoBono);
                     decimal? totalEmpleado = totalPlata - totalDescuento;
 
                     var resultado = new
@@ -412,7 +425,8 @@ namespace Informes.API.Controllers
                         totaldescanso = noPagas.Count,
                         totalPlataDescanso = noPagas.Sum(s => s.valor),
                         totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valor) + noPagas.Sum(s => s.valor),
-                        sede = u.sedeNavigation.Nombre
+                        sede = u.sedeNavigation.Nombre,
+                        totalBonos = bonos.Count
                     };
 
                     resumenUsuarios.Add(resultado);
