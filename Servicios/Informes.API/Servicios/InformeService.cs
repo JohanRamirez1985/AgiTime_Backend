@@ -171,14 +171,14 @@ namespace Informes.API.Servicios
                     }
                 }
 
-                decimal totalBarbero = r.totalPlata ?? 0;
+                decimal totalBarbero = (r.totalPlata ?? 0) + (r.totalPlataObsequios ?? 0) + (r.totalPlataDescanso ?? 0);
                 totalGeneralDia += totalBarbero;
 
                 // ===== Línea limpia antes del total =====
                 //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
                 y += 5;
 
-                gfx.DrawString("Total barbero (Solo servicios)", fontBold, XBrushes.Black,
+                gfx.DrawString("Total barbero", fontBold, XBrushes.Black,
                     colDetalle, y);
                 gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black,
                     colValor, y);
@@ -494,7 +494,8 @@ namespace Informes.API.Servicios
                     {
                         sede = g.Key,
                         totalSer = g.Sum(x => (int)(x.totalServicios ?? 0)),
-                        totalBar = g.Sum(x => (decimal)(x.totalBarber ?? 0))
+                        totalBar = g.Sum(x => (decimal)(x.totalBarber ?? 0)),
+                        totalBon = g.Sum(x => (decimal)(x.totalBonos ?? 0))
                     })
                 .ToList();
 
@@ -510,7 +511,7 @@ namespace Informes.API.Servicios
                     ValidarSalto(filaAlto);
 
                     gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colNombre, y);
-                    gfx.DrawString(sede.totalSer.ToString(), font, XBrushes.Black, colServicios, y);
+                    gfx.DrawString(sede.totalSer.ToString() + " (" + sede.totalBon.ToString() + ")*", font, XBrushes.Black, colServicios, y);
                     gfx.DrawString("", fontBold, XBrushes.Black, colIngreso, y);
                     gfx.DrawString(Moneda(sede.totalBar), fontBold, XBrushes.Black, colBarberia, y);
                     gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
