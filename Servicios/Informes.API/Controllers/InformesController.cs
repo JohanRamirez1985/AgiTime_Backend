@@ -172,7 +172,9 @@ namespace Informes.API.Controllers
                         servicios = pagas.Select(s => new { s.servicio, s.valor,s.bono }).ToList(),
                         totalPlata = pagas.Sum(s => s.valor),
                         obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
-                        descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList()
+                        totalPlataObsequios = obsequios.Sum(s => s.valor),
+                        descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList(),
+                        totalPlataDescanso = noPagas.Sum(s => s.valor)
                     };
 
                     if (pagas.Count > 0 || obsequios.Count > 0 || noPagas.Count > 0)
