@@ -8,6 +8,7 @@ namespace Compartido.Data.Modelos
         public Cita()
         {
             CitaServicios = new HashSet<CitaServicio>();
+            LiquidacionCita = new HashSet<LiquidacionCitum>();
         }
 
         public int id { get; set; }
@@ -20,11 +21,13 @@ namespace Compartido.Data.Modelos
         public string estado { get; set; }
         public bool? pago { get; set; }
         public bool? bono { get; set; }
+        public bool? liquidado { get; set; }
         public DateTime fechaCreacion { get; set; }
         public string usuarioCreacion { get; set; }
         public DateTime? fechaCancelacion { get; set; }
         public string usuarioCancelacion { get; set; }
 
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
+        public virtual ICollection<LiquidacionCitum> LiquidacionCita { get; set; }
     }
 }
