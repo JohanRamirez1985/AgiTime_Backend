@@ -48,6 +48,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -191,6 +201,7 @@ namespace Agendamiento.API.Controllers
                             estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
                             pago = pago,
                             bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
+                            liquidado = false,
                             fechaCreacion = dto.FechaCreacion,
                             usuarioCreacion = dto.UsuarioCreacion
                         };
@@ -305,6 +316,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -365,6 +386,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultadoValida.Exito)
@@ -470,6 +501,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -551,6 +592,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -726,6 +777,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -804,6 +865,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -960,6 +1031,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1050,6 +1131,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+
+                }
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1111,6 +1202,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1176,6 +1277,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1239,6 +1350,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1299,6 +1420,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -1361,6 +1492,16 @@ namespace Agendamiento.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
