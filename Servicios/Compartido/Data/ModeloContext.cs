@@ -27,6 +27,7 @@ namespace Compartido.Data
         public virtual DbSet<Funcionalidade> Funcionalidades { get; set; }
         public virtual DbSet<FuncionalidadesSet> FuncionalidadesSets { get; set; }
         public virtual DbSet<Genero> Generos { get; set; }
+        public virtual DbSet<LiquidacionCitum> LiquidacionCita { get; set; }
         public virtual DbSet<Log> Logs { get; set; }
         public virtual DbSet<Parametro> Parametros { get; set; }
         public virtual DbSet<Producto> Productos { get; set; }
@@ -230,6 +231,38 @@ namespace Compartido.Data
                     .IsRequired()
                     .HasMaxLength(50)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<LiquidacionCitum>(entity =>
+            {
+                entity.Property(e => e.fechaCita).HasColumnType("datetime");
+
+                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
+
+                entity.Property(e => e.sede)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.tipo)
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.usuarioCreacion)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.valorBarberia).HasColumnType("decimal(18, 0)");
+
+                entity.Property(e => e.valorBarbero).HasColumnType("decimal(18, 0)");
+
+                entity.Property(e => e.valorServicio).HasColumnType("decimal(18, 0)");
+
+                entity.HasOne(d => d.citaNavigation)
+                    .WithMany(p => p.LiquidacionCita)
+                    .HasForeignKey(d => d.cita)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_LiquidacionCita_Citas");
             });
 
             modelBuilder.Entity<Log>(entity =>

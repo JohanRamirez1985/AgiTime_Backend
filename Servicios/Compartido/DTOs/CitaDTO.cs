@@ -23,8 +23,8 @@ namespace Compartido.DTOs
         public int empresa { get; set; }
         public bool Asistencia { get; set; }
         public bool Bono { get; set; }
-        public string? NombreCliente { get; set; }
-        public string? NombreServicio { get; set; }
+        public string NombreCliente { get; set; }
+        public string NombreServicio { get; set; }
         public List<CitaServiciosDTO> servicios { get; set; } = new();
         public List<ServicioDTO> infoServicios { get; set; } = new();
         public ClienteDTO clienteInfo { get; set; }

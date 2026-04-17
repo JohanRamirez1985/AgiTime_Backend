@@ -6,6 +6,7 @@ using Compartido.DTOs;
 using Compartido.Metodos;
 using Informes.API.Servicios;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -37,6 +38,16 @@ namespace Informes.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultadoValida.Exito)
@@ -101,6 +112,16 @@ namespace Informes.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultadoValida.Exito)
@@ -215,8 +236,8 @@ namespace Informes.API.Controllers
             string nombreBase = string.Empty;
             string nombreEmpresa = string.Empty;
             string logo = string.Empty;
-            decimal? porcentaje = 0;
-            decimal? porcentajeBarber = 0;
+            //decimal? porcentaje = 0;
+            //decimal? porcentajeBarber = 0;
             int total = 0;
             decimal valorDescuentoPorCorte = 0;
             List<Usuario> usuarios;
@@ -244,6 +265,16 @@ namespace Informes.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
                 var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultadoValida.Exito)
@@ -491,6 +522,182 @@ namespace Informes.API.Controllers
             }
         }
 
+        [HttpPost("liquidacionSemanal")]
+        public IActionResult LiquidacionSemanal([FromBody] LiquidacionDTO dto)
+        {
+            string nombreBase = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string logo = string.Empty;
+            decimal? valorDescuentoPorCorte = 0;
+            decimal bono = 0;
+            decimal descuentoBono = 0;
+            List<Usuario> usuarios;
+            List<int> listaBarberos = new();
+            bool hayDatos = false;
+            var resumenUsuarios = new List<object>();
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                if (!string.IsNullOrWhiteSpace(dto.barberos))
+                {
+                    listaBarberos = dto.barberos
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => int.Parse(x))
+                        .ToList();
+                }
+
+
+                usuarios = ContextBD.Usuarios
+                    .Include(u => u.sedeNavigation)
+                    .Where(u =>
+                    u.recurso == true &&
+                    u.idRols.Any(r => r.id == 2 || r.id == 3))
+                    .OrderBy(u => u.sede)
+                .ToList();
+
+                var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
+
+                bono = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Bono"));
+                descuentoBono = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Descuento_Bono"));
+
+                foreach (Usuario u in usuarios)
+                {
+                    var info = (from c in ContextBD.Citas
+                                join sc in ContextBD.CitaServicios on c.id equals sc.cita
+                                join s in ContextBD.Servicios on sc.servicio equals s.id
+                                where c.fechaInicio >= dto.fechaIni && c.fechaInicio <= dto.fechaFin
+                                && c.recurso == u.id
+                                && c.estado == Estados.Asistio
+                                && c.liquidado != true
+                                select new InfoCitaDTO
+                                {
+                                    idCita = c.id,
+                                    fechaIni = c.fechaInicio,
+                                    servicio = s.nombre,
+                                    pagoCita = c.pago ?? false,
+                                    pagoServicio = s.esPago ?? false,
+                                    valor = s.nombre == "Otro" ? (c.valor ?? 0) : (s.valor ?? 0) - (c.bono.GetValueOrDefault() ? bono : 0),
+                                    bono = c.bono ?? false
+                                })
+                               .ToList();
+
+                    if (!info.Any())
+                        continue;
+
+                    hayDatos = true;
+
+                    var citasIds = info.Select(i => i.idCita).ToList();
+
+                    var citas = ContextBD.Citas
+                        .Where(c => citasIds.Contains(c.id))
+                        .ToList();
+
+                    foreach (var cita in citas)
+                    {
+                        cita.liquidado = true;
+                    }
+
+                    valorDescuentoPorCorte = GetValorDescuento(info, parametros, listaBarberos, u.id, u.sede);
+
+                    foreach (var item in info)
+                    {
+                        string tipo;
+                        decimal valorBarberia;
+                        decimal valorBarbero;
+
+                        if (item.pagoCita == true && item.pagoServicio == true)
+                            tipo = "Normal";
+                        else if (item.pagoCita == true && item.pagoServicio == false)
+                            tipo = "Obsequio";
+                        else
+                            tipo = "Descanso";
+
+                        valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
+                        valorBarbero = item.valor - valorBarberia;
+
+                        var liquidacion = new LiquidacionCitum
+                        {
+                            cita = item.idCita,
+                            tipo = tipo,
+                            valorServicio = item.valor,
+                            valorBarberia = valorBarberia,
+                            valorBarbero = valorBarbero,
+                            bono = item.bono,
+                            fechaCita = item.fechaIni,
+                            sede = u.sedeNavigation.Nombre,
+                            numero = item.servicio.Equals("Corte VIP") ? 2 : 1,
+                            fechaCreacion = dto.fechaCreacion,
+                            usuarioCreacion = dto.usuarioCreacion
+                        };
+
+                        ContextBD.LiquidacionCita.Add(liquidacion);
+                    }
+                }
+
+                if (hayDatos)
+                {
+                    ContextBD.SaveChanges();
+
+                    return Ok(new
+                    {
+                        mensaje = "Liquidación registrada exitosamente",
+                        exito = true
+                    });
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay usuarios para liquidar en el rango de fechas seleccionado",
+                        exito = true
+                    });
+                }
+
+                    
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
         private decimal GetDecimal(Parametro? parametro)
         {
             if (parametro == null)
@@ -511,6 +718,145 @@ namespace Informes.API.Controllers
                 return resultado;
 
             return 0;
+        }
+        
+        private decimal GetValorDescuento(List<InfoCitaDTO> info,List<Parametro> parametros,List<int> listaBarberos,int id,int sede)
+        {
+            int total = 0;
+            int can1 = 0;
+            int can2 = 0;
+            int can3 = 0;
+            int can4 = 0;
+            decimal val1 = 0;
+            decimal val2 = 0;
+            decimal val3 = 0;
+            decimal val4 = 0;
+            decimal inasistencia = 0;
+            decimal inasistencia_trailer = 0;
+            decimal valAntiguo = 0;
+            decimal valGeneral = 0;
+            bool esAntiguo = false;
+            bool esBarberoGeneral = false;
+            decimal valorDescuentoPorCorte = 0;       
+
+            var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
+
+            can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
+            can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
+            can3 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_3"));
+            can4 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_4"));
+
+            var antiguo = parametros.FirstOrDefault(p => p.tipo == "Antiguo" && p.estado);
+            esAntiguo = antiguo?.valor?
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Any(x => x.Trim() == id.ToString()) ?? false;
+
+            valAntiguo = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Antiguo"));
+
+            var barberoGeneral = parametros.FirstOrDefault(p => p.tipo == "Barbero_General" && p.estado);
+            esBarberoGeneral = barberoGeneral?.valor?
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Any(x => x.Trim() == id.ToString()) ?? false;
+
+            valGeneral = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_General"));
+
+            switch (sede)
+            {
+                case 1:
+                    val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
+                    val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_2"));
+                    val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_3"));
+                    val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_4"));
+                    break;
+
+                case 2:
+                case 3:
+                    val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_1"));
+                    val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_2"));
+                    val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_3"));
+                    val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_4"));
+                    break;
+
+                default:
+                    break;
+            }
+
+            total = pagas.Count;
+
+            foreach (var item in pagas)
+            {
+                if (item.servicio.Equals("Corte VIP"))
+                {
+                    total++;
+                }
+            }
+
+            bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(id);
+            inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
+            inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
+
+            if (validaBarberos)
+            {
+                switch (sede)
+                {
+                    case 1:
+                        valorDescuentoPorCorte = inasistencia;
+                        break;
+
+                    case 2:
+                    case 3:
+                        valorDescuentoPorCorte = inasistencia_trailer;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                if (esAntiguo)
+                {
+                    valorDescuentoPorCorte = valAntiguo;
+                }
+                else
+                {
+                    if (esBarberoGeneral)
+                    {
+                        valorDescuentoPorCorte = valGeneral;
+                    }
+                    else
+                    {
+                        switch (sede)
+                        {
+                            case 1:
+                                if (total <= can1)
+                                    valorDescuentoPorCorte = val1;
+                                else if (total >= can2 && total < can3)
+                                    valorDescuentoPorCorte = val2;
+                                else if (total >= can3)
+                                    valorDescuentoPorCorte = val3;
+                                break;
+
+                            case 2:
+                            case 3:
+                                if (total <= can1)
+                                    valorDescuentoPorCorte = val1;
+                                else if (total >= can2 && total < can3)
+                                    valorDescuentoPorCorte = val2;
+                                else if (total >= can3 && total < can4)
+                                    valorDescuentoPorCorte = val3;
+                                else if (total >= can4)
+                                    valorDescuentoPorCorte = val4;
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return valorDescuentoPorCorte;
         }
     }
 }
