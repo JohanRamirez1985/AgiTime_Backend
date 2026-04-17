@@ -532,7 +532,7 @@ namespace Informes.API.Controllers
             decimal descuentoBono = 0;
             List<Usuario> usuarios;
             List<int> listaBarberos = new();
-
+            bool hayDatos = false;
             var resumenUsuarios = new List<object>();
 
             try
@@ -611,6 +611,11 @@ namespace Informes.API.Controllers
                                 })
                                .ToList();
 
+                    if (!info.Any())
+                        continue;
+
+                    hayDatos = true;
+
                     var citasIds = info.Select(i => i.idCita).ToList();
 
                     var citas = ContextBD.Citas
@@ -657,13 +662,26 @@ namespace Informes.API.Controllers
                     }
                 }
 
-                ContextBD.SaveChanges();
-
-                return Ok(new
+                if (hayDatos)
                 {
-                    mensaje = "Liquidacion registrada exitosamente",
-                    exito = true
-                });
+                    ContextBD.SaveChanges();
+
+                    return Ok(new
+                    {
+                        mensaje = "Liquidación registrada exitosamente",
+                        exito = true
+                    });
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay usuarios para liquidar en el rango de fechas seleccionado",
+                        exito = true
+                    });
+                }
+
+                    
             }
             catch (Exception ex)
             {
