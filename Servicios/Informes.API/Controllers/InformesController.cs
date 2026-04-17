@@ -642,8 +642,8 @@ namespace Informes.API.Controllers
                         else
                             tipo = "Descanso";
 
-                        valorBarberia = item.valor - (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
-                        valorBarbero = item.valor - valorBarberia;
+                        valorBarbero = item.valor - (valorDescuentoPorCorte ?? 0);
+                        valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
 
                         var liquidacion = new LiquidacionCitum
                         {
