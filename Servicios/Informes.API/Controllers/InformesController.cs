@@ -642,9 +642,9 @@ namespace Informes.API.Controllers
                         else
                             tipo = "Descanso";
 
-                        valorBarbero = item.valor - (valorDescuentoPorCorte ?? 0);
                         valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
-
+                        valorBarbero = item.valor - valorBarberia;
+                        
                         var liquidacion = new LiquidacionCitum
                         {
                             cita = item.idCita,
@@ -779,6 +779,14 @@ namespace Informes.API.Controllers
             }
 
             total = pagas.Count;
+
+            foreach (var item in pagas)
+            {
+                if (item.servicio.Equals("Corte VIP"))
+                {
+                    total++;
+                }
+            }
 
             bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(id);
             inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
