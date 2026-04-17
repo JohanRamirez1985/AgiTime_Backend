@@ -6,6 +6,7 @@ using Compartido.DTOs;
 using Compartido.Metodos;
 using Informes.API.Servicios;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -644,7 +645,7 @@ namespace Informes.API.Controllers
 
                         valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
                         valorBarbero = item.valor - valorBarberia;
-                        
+
                         var liquidacion = new LiquidacionCitum
                         {
                             cita = item.idCita,
@@ -654,6 +655,8 @@ namespace Informes.API.Controllers
                             valorBarbero = valorBarbero,
                             bono = item.bono,
                             fechaCita = item.fechaIni,
+                            sede = u.sedeNavigation.Nombre,
+                            numero = item.servicio.Equals("Corte VIP") ? 2 : 1,
                             fechaCreacion = dto.fechaCreacion,
                             usuarioCreacion = dto.usuarioCreacion
                         };
