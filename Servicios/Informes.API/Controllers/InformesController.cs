@@ -650,9 +650,6 @@ namespace Informes.API.Controllers
                             tipo = item.pagoCita == true ? "Obsequio" : "Descanso";
                         }
 
-                        valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
-                        valorBarbero = item.valor - valorBarberia;
-
                         var liquidacion = new LiquidacionCitum
                         {
                             cita = item.idCita,
