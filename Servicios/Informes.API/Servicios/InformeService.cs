@@ -435,6 +435,8 @@ namespace Informes.API.Servicios
                 decimal totalGeneralIngreso = 0;
                 decimal totalGeneralBarberia = 0;
                 decimal totalGeneralEmpleado = 0;
+                decimal totalGeneralObsequio = 0;
+                decimal totalGeneralDescanso = 0;
 
                 foreach (var r in resumenUsuarios)
                 {
@@ -455,6 +457,8 @@ namespace Informes.API.Servicios
                         totalGeneralIngreso += ingreso;
                         totalGeneralBarberia += barberia;
                         totalGeneralEmpleado += empleado;
+                        totalGeneralObsequio += obsequio;
+                        totalGeneralDescanso += descanso;
 
                         var valorTexto = totalBonos > 0 ? totalServicios.ToString() + " (" + totalBonos.ToString() + ")*" : totalServicios.ToString();
 
@@ -484,8 +488,8 @@ namespace Informes.API.Servicios
                 gfx.DrawString(Moneda(totalGeneralIngreso), font, XBrushes.Black, colIngreso, y);
                 gfx.DrawString(Moneda(totalGeneralBarberia), font, XBrushes.Black, colBarberia, y);
                 gfx.DrawString(Moneda(totalGeneralEmpleado), font, XBrushes.Black, colEmpleado, y);
-                gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
-                gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
+                gfx.DrawString(Moneda(totalGeneralObsequio), font, XBrushes.Black, colObsequio, y);
+                gfx.DrawString(Moneda(totalGeneralDescanso), font, XBrushes.Black, colDescanso, y);
                 gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black, colTotal, y);
 
                 var totalesPorSede = resumenUsuarios
