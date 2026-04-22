@@ -637,11 +637,18 @@ namespace Informes.API.Controllers
                         decimal valorBarbero;
 
                         if (item.pagoCita == true && item.pagoServicio == true)
+                        {
                             tipo = "Normal";
-                        else if (item.pagoCita == true && item.pagoServicio == false)
-                            tipo = "Obsequio";
+                            valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
+                            valorBarbero = item.valor - valorBarberia;
+                        }
                         else
-                            tipo = "Descanso";
+                        {
+                            valorBarberia = 0;
+                            valorBarbero = item.valor;
+
+                            tipo = item.pagoCita == true ? "Obsequio" : "Descanso";
+                        }
 
                         valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
                         valorBarbero = item.valor - valorBarberia;
@@ -655,7 +662,6 @@ namespace Informes.API.Controllers
                             valorBarbero = valorBarbero,
                             bono = item.bono,
                             fechaCita = item.fechaIni,
-                            sede = u.sedeNavigation.Nombre,
                             numero = item.servicio.Equals("Corte VIP") ? 2 : 1,
                             fechaCreacion = dto.fechaCreacion,
                             usuarioCreacion = dto.usuarioCreacion
@@ -685,6 +691,136 @@ namespace Informes.API.Controllers
                 }
 
                     
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("informacionLiquidacion")]
+        public async Task<IActionResult> InformacionLiquidacion([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp, int? usuario = null, bool personal = false)
+        {
+            string nombreBase = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string logo = string.Empty;
+            int total = 0;
+            List<Usuario> usuarios;
+            var resumenUsuarios = new List<object>();
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                if (usuario != null)
+                {
+                    usuarios = ContextBD.Usuarios
+                        .Include(u => u.sedeNavigation)
+                        .Where(u => u.id == usuario)
+                    .ToList();
+                }
+                else
+                {
+                    usuarios = ContextBD.Usuarios
+                        .Include(u => u.sedeNavigation)
+                        .Where(u =>
+                        u.recurso == true &&
+                        u.idRols.Any(r => r.id == 2 || r.id == 3))
+                        .OrderBy(u => u.sede)
+                    .ToList();
+                }
+
+                foreach (Usuario u in usuarios)
+                {
+                    var info = (from c in ContextBD.Citas
+                                join l in ContextBD.LiquidacionCita on c.id equals l.cita
+                                where l.fechaCita >= fechaInicio && l.fechaCita <= fechaFin
+                                && c.recurso == u.id
+                                select new
+                                {
+                                    tipo = l.tipo,
+                                    valorServicio = l.valorServicio,
+                                    valorBarberia = l.valorBarberia,
+                                    valorBarbero = l.valorBarbero,
+                                    bono = l.bono,
+                                    numero = l.numero
+                                }).ToList();
+
+                    var pagas = info.Where(i => i.tipo == "Normal").ToList();
+                    var obsequios = info.Where(i => i.tipo == "Obsequio").ToList();
+                    var noPagas = info.Where(i => i.tipo == "Descanso").ToList();
+                    var bonos = info.Where(i => i.bono == true).ToList();
+
+                    total = info.Where(i => i.tipo == "Normal").Sum(i => i.numero ?? 0);
+
+                    decimal? totalPlata = pagas.Sum(s => s.valorServicio);
+                    decimal? totalDescuento = pagas.Sum(s => s.valorBarberia);
+                    decimal? totalEmpleado = pagas.Sum(s => s.valorBarbero);
+
+                    var resultado = new
+                    {
+                        nombre = u.nombre,
+                        totalServicios = total,
+                        totalPlata = totalPlata,
+                        totalEmpleado = totalEmpleado,
+                        totalBarber = totalDescuento,
+                        totalObsequios = obsequios.Count,
+                        totalPlataObsequios = obsequios.Sum(s => s.valorBarbero),
+                        totaldescanso = noPagas.Count,
+                        totalPlataDescanso = noPagas.Sum(s => s.valorBarbero),
+                        totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valorBarbero) + noPagas.Sum(s => s.valorBarbero),
+                        sede = u.sedeNavigation.Nombre,
+                        totalBonos = bonos.Count
+                    };
+
+                    resumenUsuarios.Add(resultado);
+                }
+
+                if (usuario != null && !personal)
+                {
+                    var pdfBytes = await informeService.GenerarInformeSemanalBarber(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
+                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_Barbero_{DateTime.Now:yyyyMMdd}.pdf");
+                }
+                else
+                {
+                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
+                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
+                }
             }
             catch (Exception ex)
             {
