@@ -514,8 +514,10 @@ namespace Informes.API.Servicios
                 {
                     ValidarSalto(filaAlto);
 
+                    var valorTexto = sede.totalBon > 0 ? sede.totalSer.ToString() + " (" + sede.totalBon.ToString() + ")*" : sede.totalSer.ToString();
+
                     gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colNombre, y);
-                    gfx.DrawString(sede.totalSer.ToString() + " (" + sede.totalBon.ToString() + ")*", font, XBrushes.Black, colServicios, y);
+                    gfx.DrawString(valorTexto, font, XBrushes.Black, colServicios, y);
                     gfx.DrawString("", fontBold, XBrushes.Black, colIngreso, y);
                     gfx.DrawString(Moneda(sede.totalBar), fontBold, XBrushes.Black, colBarberia, y);
                     gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
