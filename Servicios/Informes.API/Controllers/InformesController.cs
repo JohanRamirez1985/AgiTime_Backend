@@ -660,6 +660,7 @@ namespace Informes.API.Controllers
                             bono = item.bono,
                             fechaCita = item.fechaIni,
                             numero = item.servicio.Equals("Corte VIP") ? 2 : 1,
+                            sede = u.sedeNavigation.Nombre,
                             fechaCreacion = dto.fechaCreacion,
                             usuarioCreacion = dto.usuarioCreacion
                         };
@@ -762,6 +763,22 @@ namespace Informes.API.Controllers
                     .ToList();
                 }
 
+                var idsUsuarios = usuarios.Select(u => u.id).ToList();
+                
+                var totalesPorSede = (from c in ContextBD.Citas
+                                   join l in ContextBD.LiquidacionCita on c.id equals l.cita
+                                   where l.fechaCita >= fechaInicio && l.fechaCita <= fechaFin
+                                   && idsUsuarios.Contains(c.recurso)
+                                   && l.tipo == "Normal"
+                                   group l by l.sede into g
+                                   select new TotalSedeDTO
+                                   {
+                                       Sede = g.Key,
+                                       TotalSer = g.Sum(x => x.numero),
+                                       TotalBar = g.Sum(x => (decimal)x.valorBarberia),
+                                       TotalBon = g.Count(x => x.bono == true)
+                                   }).ToList();
+
                 foreach (Usuario u in usuarios)
                 {
                     var info = (from c in ContextBD.Citas
@@ -775,7 +792,8 @@ namespace Informes.API.Controllers
                                     valorBarberia = l.valorBarberia,
                                     valorBarbero = l.valorBarbero,
                                     bono = l.bono,
-                                    numero = l.numero
+                                    numero = l.numero,
+                                    sede = l.sede
                                 }).ToList();
 
                     var pagas = info.Where(i => i.tipo == "Normal").ToList();
@@ -815,7 +833,7 @@ namespace Informes.API.Controllers
                 }
                 else
                 {
-                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
+                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo, totalesPorSede);
                     return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
                 }
             }
