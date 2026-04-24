@@ -1,4 +1,5 @@
-﻿using PdfSharpCore.Drawing;
+﻿using Compartido.DTOs;
+using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 using System.Globalization;
 using System.IO;
@@ -315,7 +316,7 @@ namespace Informes.API.Servicios
             //return stream.ToArray();
         }
 
-        public async Task<byte[]> GenerarInformeSemanal(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, string? rutaLogo = null)
+        public async Task<byte[]> GenerarInformeSemanal(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, string? rutaLogo = null, List<TotalSedeDTO>? totalesSede = null)
         {
             try
             {
@@ -492,16 +493,25 @@ namespace Informes.API.Servicios
                 gfx.DrawString(Moneda(totalGeneralDescanso), font, XBrushes.Black, colDescanso, y);
                 gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black, colTotal, y);
 
-                var totalesPorSede = resumenUsuarios
+                List<TotalSedeDTO> totalesPorSede;
+
+                if (totalesSede?.Any() == true)
+                {
+                    totalesPorSede = totalesSede;
+                }
+                else
+                {
+                    totalesPorSede = resumenUsuarios
                     .GroupBy(r => r.sede)
-                    .Select(g => new
+                    .Select(g => new TotalSedeDTO
                     {
-                        sede = g.Key,
-                        totalSer = g.Sum(x => (int)(x.totalServicios ?? 0)),
-                        totalBar = g.Sum(x => (decimal)(x.totalBarber ?? 0)),
-                        totalBon = g.Sum(x => (decimal)(x.totalBonos ?? 0))
+                        Sede = g.Key,
+                        TotalSer = g.Sum(x => (int)(x.totalServicios ?? 0)),
+                        TotalBar = g.Sum(x => (decimal)(x.totalBarber ?? 0)),
+                        TotalBon = g.Sum(x => (x.totalBonos ?? 0))
                     })
-                .ToList();
+                    .ToList();
+                }
 
                 ValidarSalto(40);
 
@@ -514,12 +524,12 @@ namespace Informes.API.Servicios
                 {
                     ValidarSalto(filaAlto);
 
-                    var valorTexto = sede.totalBon > 0 ? sede.totalSer.ToString() + " (" + sede.totalBon.ToString() + ")*" : sede.totalSer.ToString();
+                    var valorTexto = sede.TotalBon > 0 ? sede.TotalSer.ToString() + " (" + sede.TotalBon.ToString() + ")*" : sede.TotalSer.ToString();
 
-                    gfx.DrawString(sede.sede, fontBold, XBrushes.Black, colNombre, y);
+                    gfx.DrawString(sede.Sede, fontBold, XBrushes.Black, colNombre, y);
                     gfx.DrawString(valorTexto, font, XBrushes.Black, colServicios, y);
                     gfx.DrawString("", fontBold, XBrushes.Black, colIngreso, y);
-                    gfx.DrawString(Moneda(sede.totalBar), fontBold, XBrushes.Black, colBarberia, y);
+                    gfx.DrawString(Moneda(sede.TotalBar), fontBold, XBrushes.Black, colBarberia, y);
                     gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
                     gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
                     gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
