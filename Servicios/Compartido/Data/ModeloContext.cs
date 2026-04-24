@@ -239,6 +239,10 @@ namespace Compartido.Data
 
                 entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
 
+                entity.Property(e => e.sede)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.tipo)
                     .IsRequired()
                     .HasMaxLength(20)

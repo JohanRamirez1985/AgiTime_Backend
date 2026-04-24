@@ -14,6 +14,7 @@ namespace Compartido.Data.Modelos
         public decimal? valorBarbero { get; set; }
         public int? numero { get; set; }
         public bool? bono { get; set; }
+        public string sede { get; set; }
         public DateTime fechaCreacion { get; set; }
         public string usuarioCreacion { get; set; }
 
