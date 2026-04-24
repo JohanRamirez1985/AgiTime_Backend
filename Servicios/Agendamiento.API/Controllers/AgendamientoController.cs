@@ -628,30 +628,27 @@ namespace Agendamiento.API.Controllers
                 var fechaSolo = dto.FechaIni.Date;
 
                 var bloqueos = ContextBD.BloqueosHorarios
+                    .Where(b => b.usuario == dto.recurso && b.estado == Estados.Activo)
                     .AsEnumerable()
-                    .Where(b => b.usuario == dto.recurso &&
+                    .Where(b =>
                         (
                             (b.tipoBloqueo == 1 &&
                              b.diasSemana != null &&
-                             b.diasSemana.Split(',').Contains(diaSemana.ToString()) &&
-                             b.estado == Estados.Activo)
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
                             ||
                             (b.tipoBloqueo == 2 &&
                              b.fechaInicio.HasValue &&
-                             fechaSolo == b.fechaInicio.Value.Date &&
-                             b.estado == Estados.Activo)
+                             fechaSolo == b.fechaInicio.Value.Date)
                             ||
                             (b.tipoBloqueo == 3 &&
                              b.diasSemana != null &&
-                             b.diasSemana.Split(',').Contains(diaSemana.ToString()) &&
-                             b.estado == Estados.Activo)
+                             b.diasSemana.Split(',').Contains(diaSemana.ToString()))
                             ||
                             (b.tipoBloqueo == 4 &&
                              b.fechaInicio.HasValue &&
                              b.fechaFin.HasValue &&
                              fechaSolo >= b.fechaInicio.Value.Date &&
-                             fechaSolo <= b.fechaFin.Value.Date &&
-                             b.estado == Estados.Activo)
+                             fechaSolo <= b.fechaFin.Value.Date)
                         )
                     )
                     .ToList();
@@ -682,7 +679,7 @@ namespace Agendamiento.API.Controllers
                     var listaCitas = ContextBD.Citas
                                 .Where(e => e.fechaInicio >= dto.FechaIni
                                          && e.fechaFin <= dto.FechaFin
-                                         && e.recurso == dto.recurso
+                                         && (dto.recurso <= 0 || e.recurso == dto.recurso)
                                          && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                                 .ToList();
 
@@ -718,41 +715,6 @@ namespace Agendamiento.API.Controllers
                     diaCompletoBloqueado,
                     horasOcupadas = listaOrdenada
                 });
-
-                //var lista = ContextBD.Citas
-                //                     .Where(e => e.fechaInicio >= dto.FechaIni
-                //                            && e.fechaFin <= dto.FechaFin
-                //                            && e.recurso == dto.recurso
-                //                            && (e.estado == Estados.Activo || e.estado == Estados.Asistio || e.estado == Estados.Inasistencia))
-                //                     .OrderBy(o => o.fechaInicio)
-                //                     .ToList();
-
-                //if (lista == null || lista.Count == 0)
-                //{
-                //    return Ok(new
-                //    {
-                //        mensaje = "No hay citas registradas",
-                //        exito = false
-                //    });
-                //}
-                //else
-                //{
-                //    foreach (var item in lista)
-                //    {
-                //        int cantidad = item.hora / 30;
-                //        for (int i = 0; i < cantidad; i++)
-                //        {
-                //            DateTime horaActual = item.fechaInicio.AddMinutes(i * 30);
-                //            horasGeneradas.Add(horaActual.ToString("hh:mm tt", new CultureInfo("en-US")));
-                //        }
-                //    }
-                //}
-
-                //return Ok(new
-                //{
-                //    exito = true,
-                //    datos = horasGeneradas
-                //});
             }
             catch (Exception ex)
             {
@@ -1062,7 +1024,7 @@ namespace Agendamiento.API.Controllers
                 var lista = ContextBD.Citas
                     .Where(e => e.fechaInicio >= dto.FechaIni
                                 && e.fechaFin <= dto.FechaFin
-                                && e.recurso == dto.recurso
+                                && (dto.recurso <= 0 || e.recurso == dto.recurso)
                                 && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                     .Select(c => new
                     {
@@ -1097,7 +1059,7 @@ namespace Agendamiento.API.Controllers
                     .OrderBy(o => o.fechaInicio)
                     .ToList();
 
-                if (lista == null || lista.Count == 0)
+                if (!lista.Any())
                 {
                     return Ok(new
                     {
