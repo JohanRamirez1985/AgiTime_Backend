@@ -962,21 +962,12 @@ namespace Informes.API.Controllers
                         switch (sede)
                         {
                             case 1:
-                                //if (total <= can1)
-                                //    valorDescuentoPorCorte = val1;
-                                //else if (total >= can2 && total < can3)
-                                //    valorDescuentoPorCorte = val2;
-                                //else if (total >= can3)
-                                //    valorDescuentoPorCorte = val3;
-                                //break;
                                 if (total <= can1)
                                     valorDescuentoPorCorte = val1;
                                 else if (total >= can2 && total < can3)
                                     valorDescuentoPorCorte = val2;
-                                else if (total >= can3 && total < can4)
+                                else if (total >= can3)
                                     valorDescuentoPorCorte = val3;
-                                else if (total >= can4)
-                                    valorDescuentoPorCorte = val4;
                                 break;
 
                             case 2:
