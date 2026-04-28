@@ -35,6 +35,8 @@ namespace Compartido.Data
         public virtual DbSet<Rol> Rols { get; set; }
         public virtual DbSet<Sede> Sedes { get; set; }
         public virtual DbSet<Servicio> Servicios { get; set; }
+        public virtual DbSet<ServiciosParametro> ServiciosParametros { get; set; }
+        public virtual DbSet<ServiciosRecurso> ServiciosRecursos { get; set; }
         public virtual DbSet<TipoDocumento> TipoDocumentos { get; set; }
         public virtual DbSet<Usuario> Usuarios { get; set; }
         public virtual DbSet<VentaDetalle> VentaDetalles { get; set; }
@@ -42,6 +44,11 @@ namespace Compartido.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Agendum>(entity =>
+            {
+                entity.Property(e => e.valor).HasColumnType("time(0)");
+            });
+
             modelBuilder.Entity<BloqueosHorario>(entity =>
             {
                 entity.ToTable("BloqueosHorario");
@@ -392,6 +399,22 @@ namespace Compartido.Data
                     .HasForeignKey(d => d.sede)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Servicios_Sede");
+            });
+
+            modelBuilder.Entity<ServiciosParametro>(entity =>
+            {
+                entity.HasOne(d => d.servicioNavigation)
+                    .WithMany(p => p.ServiciosParametros)
+                    .HasForeignKey(d => d.servicio)
+                    .HasConstraintName("FK_ServiciosParametros_Servicios");
+            });
+
+            modelBuilder.Entity<ServiciosRecurso>(entity =>
+            {
+                entity.HasOne(d => d.servicioNavigation)
+                    .WithMany(p => p.ServiciosRecursos)
+                    .HasForeignKey(d => d.servicio)
+                    .HasConstraintName("FK_ServiciosRecursos_Servicios");
             });
 
             modelBuilder.Entity<TipoDocumento>(entity =>

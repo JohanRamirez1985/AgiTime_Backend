@@ -637,7 +637,37 @@ namespace Parametros.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Servicios.Where(s => s.estado == Estados.Activo).OrderBy(o => o.orden).ToList();
+                List<object> lista;
+
+                if (empresa.servicio)
+                {
+                    lista = (from s in ContextBD.Servicios
+                             join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
+                             join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio
+                             join u in ContextBD.Usuarios on sr.recurso equals u.id
+                             where s.estado == Estados.Activo
+                             orderby s.orden
+                             select new
+                             {
+                                 s.id,
+                                 s.nombre,
+                                 s.valor,
+                                 s.tiempo,
+                                 s.sede,
+                                 recurso = u.id,
+                                 nombre_recurso = u.nombre,
+                                 sp.alterno,
+                                 sp.cliente
+                             }).Cast<object>().ToList();
+                }
+                else
+                {
+                    lista = ContextBD.Servicios
+                            .Where(s => s.estado == Estados.Activo)
+                            .OrderBy(o => o.orden)
+                            .Cast<object>()
+                            .ToList();
+                }
 
                 if (lista == null || lista.Count == 0)
                 {

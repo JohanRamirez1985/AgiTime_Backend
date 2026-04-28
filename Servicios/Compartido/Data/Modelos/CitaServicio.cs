@@ -8,6 +8,7 @@ namespace Compartido.Data.Modelos
         public int id { get; set; }
         public int cita { get; set; }
         public int servicio { get; set; }
+        public int? recurso { get; set; }
 
         public virtual Cita citaNavigation { get; set; }
         public virtual Servicio servicioNavigation { get; set; }
