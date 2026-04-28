@@ -20,6 +20,7 @@ namespace Compartido.Data
         public virtual DbSet<Agendum> Agenda { get; set; }
         public virtual DbSet<BloqueosHorario> BloqueosHorarios { get; set; }
         public virtual DbSet<Cita> Citas { get; set; }
+        public virtual DbSet<CitaPadre> CitaPadres { get; set; }
         public virtual DbSet<CitaServicio> CitaServicios { get; set; }
         public virtual DbSet<Ciudad> Ciudads { get; set; }
         public virtual DbSet<Cliente> Clientes { get; set; }
@@ -29,6 +30,7 @@ namespace Compartido.Data
         public virtual DbSet<Genero> Generos { get; set; }
         public virtual DbSet<LiquidacionCitum> LiquidacionCita { get; set; }
         public virtual DbSet<Log> Logs { get; set; }
+        public virtual DbSet<Padre> Padres { get; set; }
         public virtual DbSet<Parametro> Parametros { get; set; }
         public virtual DbSet<Producto> Productos { get; set; }
         public virtual DbSet<Recurso> Recursos { get; set; }
@@ -112,6 +114,23 @@ namespace Compartido.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
+            });
+
+            modelBuilder.Entity<CitaPadre>(entity =>
+            {
+                entity.ToTable("CitaPadre");
+
+                entity.HasOne(d => d.citaNavigation)
+                    .WithMany(p => p.CitaPadres)
+                    .HasForeignKey(d => d.cita)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CitaPadre_Citas");
+
+                entity.HasOne(d => d.padreNavigation)
+                    .WithMany(p => p.CitaPadres)
+                    .HasForeignKey(d => d.padre)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CitaPadre_Padre");
             });
 
             modelBuilder.Entity<CitaServicio>(entity =>
@@ -277,6 +296,13 @@ namespace Compartido.Data
                 entity.Property(e => e.Level).HasMaxLength(50);
 
                 entity.Property(e => e.Timestamp).HasColumnType("datetime");
+            });
+
+            modelBuilder.Entity<Padre>(entity =>
+            {
+                entity.ToTable("Padre");
+
+                entity.Property(e => e.fechaCita).HasColumnType("datetime");
             });
 
             modelBuilder.Entity<Parametro>(entity =>
