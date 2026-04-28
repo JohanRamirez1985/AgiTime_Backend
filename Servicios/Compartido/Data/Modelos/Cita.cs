@@ -7,6 +7,7 @@ namespace Compartido.Data.Modelos
     {
         public Cita()
         {
+            CitaPadres = new HashSet<CitaPadre>();
             CitaServicios = new HashSet<CitaServicio>();
             LiquidacionCita = new HashSet<LiquidacionCitum>();
         }
@@ -27,6 +28,7 @@ namespace Compartido.Data.Modelos
         public DateTime? fechaCancelacion { get; set; }
         public string usuarioCancelacion { get; set; }
 
+        public virtual ICollection<CitaPadre> CitaPadres { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
         public virtual ICollection<LiquidacionCitum> LiquidacionCita { get; set; }
     }
