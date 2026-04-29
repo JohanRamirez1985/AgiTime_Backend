@@ -1307,12 +1307,12 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                if (empresa.servicio)
-                {
+                //if (empresa.servicio)
+                //{
                     
-                }
-                else
-                {
+                //}
+                //else
+                //{
                     var lista = ContextBD.Citas
                         .Where(e => e.fechaInicio >= dto.FechaIni
                                     && e.fechaFin <= dto.FechaFin
@@ -1350,7 +1350,7 @@ namespace Agendamiento.API.Controllers
                         })
                         .OrderBy(o => o.fechaInicio)
                         .ToList();
-                }
+                //}
 
                 if (!lista.Any())
                 {
