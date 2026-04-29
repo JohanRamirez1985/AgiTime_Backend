@@ -915,8 +915,10 @@ namespace Agendamiento.API.Controllers
                 if (!diaCompletoBloqueado)
                 {
                     var recursos = empresa.servicio
-                                ? dto.profesional.Select(x => x.recurso).ToList()
-                                : new List<int> { dto.recurso };
+                                    ? dto.profesional.Split(',')
+                                             .Select(x => int.Parse(x.Trim()))
+                                             .ToList()
+                                    : new List<int> { dto.recurso };
 
                     var listaCitas = ContextBD.Citas
                         .Where(e => e.fechaInicio >= dto.FechaIni
@@ -1029,23 +1031,47 @@ namespace Agendamiento.API.Controllers
 
                 var tiempo = ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda" && p.estado == true).FirstOrDefault();
 
+                //var listaCitas = ContextBD.Citas
+                //            .Where(e => e.fechaInicio >= dto.FechaIni
+                //                     && e.fechaFin <= dto.FechaFin
+                //                     && e.recurso == dto.recurso
+                //                     && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                //            .ToList();
+
+                //foreach (var item in listaCitas)
+                //{
+                //    int cantidad = item.hora / int.Parse(tiempo.valor);
+                //    for (int i = 0; i < cantidad; i++)
+                //    {
+                //        DateTime horaActual = item.fechaInicio.AddMinutes(i * int.Parse(tiempo.valor));
+                //        horasOcupadas.Add(horaActual.ToString("HH:mm"));
+                //    }
+                //}
+
+                var recursos = empresa.servicio
+                                ? dto.profesional.Split(',')
+                                            .Select(x => int.Parse(x.Trim()))
+                                            .ToList()
+                                : new List<int> { dto.recurso };
+
                 var listaCitas = ContextBD.Citas
-                            .Where(e => e.fechaInicio >= dto.FechaIni
-                                     && e.fechaFin <= dto.FechaFin
-                                     && e.recurso == dto.recurso
-                                     && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
-                            .ToList();
+                    .Where(e => e.fechaInicio >= dto.FechaIni
+                             && e.fechaFin <= dto.FechaFin
+                             && recursos.Contains(e.recurso)
+                             && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                    .ToList();
 
                 foreach (var item in listaCitas)
                 {
                     int cantidad = item.hora / int.Parse(tiempo.valor);
+
                     for (int i = 0; i < cantidad; i++)
                     {
                         DateTime horaActual = item.fechaInicio.AddMinutes(i * int.Parse(tiempo.valor));
                         horasOcupadas.Add(horaActual.ToString("HH:mm"));
                     }
                 }
-                
+
                 if (horasOcupadas.Count == 0)
                 {
                     return Ok(new
@@ -1281,43 +1307,50 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var lista = ContextBD.Citas
-                    .Where(e => e.fechaInicio >= dto.FechaIni
-                                && e.fechaFin <= dto.FechaFin
-                                && e.recurso == dto.recurso
-                                && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
-                    .Select(c => new
-                    {
-                        c.id,
-                        c.fechaInicio,
-                        c.estado,
-                        Cliente = ContextBD.Clientes
-                            .Where(cl => cl.id == c.cliente)
-                            .Select(cl => new
-                            {
-                                NombreCliente = cl.nombre,
-                                TelefonoCliente = cl.telefono
-                            })
-                            .FirstOrDefault(),
-                        Servicios = c.CitaServicios.Select(cs => new
+                if (empresa.servicio)
+                {
+                    
+                }
+                else
+                {
+                    var lista = ContextBD.Citas
+                        .Where(e => e.fechaInicio >= dto.FechaIni
+                                    && e.fechaFin <= dto.FechaFin
+                                    && e.recurso == dto.recurso
+                                    && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                        .Select(c => new
                         {
-                            Id = cs.servicioNavigation.id,
-                            Nombre = cs.servicioNavigation.nombre,
-                            Valor = cs.servicioNavigation.nombre == "Otro" ? c.valor : cs.servicioNavigation.valor
-                        }).ToList()
-                    })
-                    .AsEnumerable()
-                    .Select(c => new
-                    {
-                        c.id,
-                        c.fechaInicio,
-                        c.estado,
-                        nombreCliente = c.Cliente?.NombreCliente,
-                        telefonoCliente = c.Cliente?.TelefonoCliente,
-                        servicios = c.Servicios
-                    })
-                    .OrderBy(o => o.fechaInicio)
-                    .ToList();
+                            c.id,
+                            c.fechaInicio,
+                            c.estado,
+                            Cliente = ContextBD.Clientes
+                                .Where(cl => cl.id == c.cliente)
+                                .Select(cl => new
+                                {
+                                    NombreCliente = cl.nombre,
+                                    TelefonoCliente = cl.telefono
+                                })
+                                .FirstOrDefault(),
+                            Servicios = c.CitaServicios.Select(cs => new
+                            {
+                                Id = cs.servicioNavigation.id,
+                                Nombre = cs.servicioNavigation.nombre,
+                                Valor = cs.servicioNavigation.nombre == "Otro" ? c.valor : cs.servicioNavigation.valor
+                            }).ToList()
+                        })
+                        .AsEnumerable()
+                        .Select(c => new
+                        {
+                            c.id,
+                            c.fechaInicio,
+                            c.estado,
+                            nombreCliente = c.Cliente?.NombreCliente,
+                            telefonoCliente = c.Cliente?.TelefonoCliente,
+                            servicios = c.Servicios
+                        })
+                        .OrderBy(o => o.fechaInicio)
+                        .ToList();
+                }
 
                 if (!lista.Any())
                 {
