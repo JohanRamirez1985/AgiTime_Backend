@@ -329,11 +329,6 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    //var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
-                    //                                       && c.recurso == dto.recurso
-                    //                                       && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
-                    //                                       ).FirstOrDefault();
-
                     var validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
                     if (!validacion.Exito)
@@ -427,9 +422,9 @@ namespace Agendamiento.API.Controllers
                                 hora = detalleCita.Hora,
                                 fechaFin = detalleCita.FechaIni.AddMinutes(detalleCita.Hora),
                                 recurso = detalleCita.recurso,
-                                cliente = detalleCita.clienteInfo != null ? idCliente : null,
+                                cliente = dto.clienteInfo != null ? idCliente : null,
                                 valor = detalleCita.Valor,
-                                estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                                estado = empresa.servicio == true ? Estados.Activo : dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
                                 pago = pago,
                                 bono = dto.UsuarioCreacion == "Usuario" ? detalleCita.Bono : null,
                                 liquidado = false,
