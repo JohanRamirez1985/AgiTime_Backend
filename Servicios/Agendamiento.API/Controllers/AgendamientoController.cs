@@ -449,12 +449,16 @@ namespace Agendamiento.API.Controllers
                             ContextBD.CitaServicios.Add(nuevoServicio);
                         }
 
-                        ContextBD.SaveChanges();
+                        var citaPadre = new CitaPadre
+                        {
+                            cita = nuevaCita.id,
+                            padre = nuevoPadre.id,
+                        };
 
-                        transaction.Commit();
+                        ContextBD.CitaPadres.Add(citaPadre);
                     }
-
-
+                    ContextBD.SaveChanges();
+                    transaction.Commit();
 
                     if (dto.UsuarioCreacion != "Usuario")
                     {
