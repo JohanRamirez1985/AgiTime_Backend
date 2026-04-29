@@ -1271,6 +1271,7 @@ namespace Agendamiento.API.Controllers
         public IActionResult ObtenerCitasRecurso([FromQuery] CitaDTO dto)
         {
             string nombreBase = string.Empty;
+            IEnumerable<object> lista;
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
@@ -1302,13 +1303,62 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                //if (empresa.servicio)
-                //{
-                    
-                //}
-                //else
-                //{
-                    var lista = ContextBD.Citas
+                if (empresa.servicio)
+                {
+                    lista = ContextBD.Padres
+                        .Where(p => p.CitaPadres.Any(cp =>
+                            cp.citaNavigation.fechaInicio >= dto.FechaIni &&
+                            cp.citaNavigation.fechaFin <= dto.FechaFin &&
+                            (cp.citaNavigation.estado == Estados.Activo ||
+                             cp.citaNavigation.estado == Estados.Asistio)))
+                        .Select(p => new
+                        {
+                            Padre = p.id,
+
+                            Citas = p.CitaPadres
+                                .Where(cp =>
+                                    cp.citaNavigation.fechaInicio >= dto.FechaIni &&
+                                    cp.citaNavigation.fechaFin <= dto.FechaFin &&
+                                    (cp.citaNavigation.estado == Estados.Activo ||
+                                     cp.citaNavigation.estado == Estados.Asistio))
+                                .Select(cp => new
+                                {
+                                    cp.citaNavigation.id,
+                                    cp.citaNavigation.fechaInicio,
+                                    cp.citaNavigation.estado,
+                                    cp.citaNavigation.recurso,
+
+                                    NombreRecurso = ContextBD.Usuarios
+                                            .Where(u => u.id == cp.citaNavigation.recurso)
+                                            .Select(u => u.nombre)
+                                            .FirstOrDefault(),
+
+                                    Cliente = ContextBD.Clientes
+                                            .Where(cl => cl.id == cp.citaNavigation.cliente)
+                                            .Select(cl => new
+                                            {
+                                                NombreCliente = cl.nombre,
+                                                TelefonoCliente = cl.telefono
+                                            })
+                                            .FirstOrDefault(),
+
+                                    Servicios = cp.citaNavigation.CitaServicios
+                                        .Select(cs => new
+                                        {
+                                            Id = cs.servicioNavigation.id,
+                                            Nombre = cs.servicioNavigation.nombre,
+                                            Valor = cs.servicioNavigation.nombre == "Otro"
+                                                ? cp.citaNavigation.valor
+                                                : cs.servicioNavigation.valor
+                                        }).ToList()
+                                }).ToList()
+                        })
+                        .OrderBy(o => o.Padre)
+                        .ToList();
+                }
+                else
+                {
+                    lista = ContextBD.Citas
                         .Where(e => e.fechaInicio >= dto.FechaIni
                                     && e.fechaFin <= dto.FechaFin
                                     && e.recurso == dto.recurso
@@ -1345,7 +1395,7 @@ namespace Agendamiento.API.Controllers
                         })
                         .OrderBy(o => o.fechaInicio)
                         .ToList();
-                //}
+                }
 
                 if (!lista.Any())
                 {
