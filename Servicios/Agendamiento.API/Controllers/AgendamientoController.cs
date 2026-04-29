@@ -331,7 +331,7 @@ namespace Agendamiento.API.Controllers
                 {
                     var validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
-                    if (!validacion.Exito)
+                    if (validacion.Exito)
                     {
                         if (dto.clienteInfo != null)
                         {
