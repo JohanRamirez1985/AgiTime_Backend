@@ -421,7 +421,7 @@ namespace Agendamiento.API.Controllers
                     {
                         var nuevaCita = new Cita
                         {
-                            fechaInicio = dto.FechaIni,
+                            fechaInicio = detalleCita.FechaIni,
                             hora = detalleCita.Hora,
                             fechaFin = detalleCita.FechaIni.AddMinutes(detalleCita.Hora),
                             recurso = detalleCita.recurso,
