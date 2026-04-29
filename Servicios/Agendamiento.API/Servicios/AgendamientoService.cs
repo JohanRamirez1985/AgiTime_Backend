@@ -1,4 +1,8 @@
-﻿using Compartido.Data.Modelos;
+﻿using Compartido.Constantes;
+using Compartido.Data;
+using Compartido.Data.Modelos;
+using Compartido.DTOs;
+using Compartido.Metodos;
 
 namespace Agendamiento.API.Servicios
 {
@@ -116,6 +120,46 @@ namespace Agendamiento.API.Servicios
             </html>";
 
             return mensaje;
+        }
+
+        public ResultadoValidacion ValidarDisponibilidad(ModeloContext ContextBD, List<CitaDTO> citas)
+        {
+            foreach (var detalleCita in citas)
+            {
+                var fechaInicio = detalleCita.FechaIni;
+                var fechaFin = detalleCita.FechaIni.AddMinutes(detalleCita.Hora);
+
+                var validaHora = ContextBD.Citas
+                    .Where(c =>
+                        c.recurso == detalleCita.recurso &&
+                        (c.estado == Estados.Activo ||
+                         c.estado == Estados.Asistio ||
+                         c.estado == Estados.Inasistencia) &&
+
+                        fechaInicio < c.fechaFin &&
+                        fechaFin > c.fechaInicio
+                    )
+                    .FirstOrDefault();
+
+                if (validaHora != null)
+                {
+                    var nombreUsuario = ContextBD.Usuarios
+                        .Where(u => u.id == detalleCita.recurso)
+                        .Select(u => u.nombre)
+                        .FirstOrDefault();
+
+                    return new ResultadoValidacion
+                    {
+                        Exito = false,
+                        Mensaje = $"El usuario {nombreUsuario} ya está ocupado en ese horario"
+                    };
+                }
+            }
+
+            return new ResultadoValidacion
+            {
+                Exito = true
+            };
         }
     }
 }
