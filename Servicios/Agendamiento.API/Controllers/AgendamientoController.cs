@@ -860,6 +860,9 @@ namespace Agendamiento.API.Controllers
 
                 var fechaSolo = dto.FechaIni.Date;
 
+                if (empresa.id == 8)
+                    dto.recurso = 8;
+
                 var bloqueos = ContextBD.BloqueosHorarios
                     .Where(b => b.usuario == dto.recurso && b.estado == Estados.Activo)
                     .AsEnumerable()
