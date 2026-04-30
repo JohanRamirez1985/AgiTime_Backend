@@ -8,6 +8,8 @@ namespace Compartido.Data.Modelos
         public Servicio()
         {
             CitaServicios = new HashSet<CitaServicio>();
+            ServiciosParametros = new HashSet<ServiciosParametro>();
+            ServiciosRecursos = new HashSet<ServiciosRecurso>();
         }
 
         public int id { get; set; }
@@ -22,5 +24,7 @@ namespace Compartido.Data.Modelos
 
         public virtual Sede sedeNavigation { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
+        public virtual ICollection<ServiciosParametro> ServiciosParametros { get; set; }
+        public virtual ICollection<ServiciosRecurso> ServiciosRecursos { get; set; }
     }
 }

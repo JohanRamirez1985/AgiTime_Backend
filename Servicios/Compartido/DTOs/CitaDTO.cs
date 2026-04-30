@@ -28,5 +28,6 @@ namespace Compartido.DTOs
         public List<CitaServiciosDTO> servicios { get; set; } = new();
         public List<ServicioDTO> infoServicios { get; set; } = new();
         public ClienteDTO clienteInfo { get; set; }
+        public string profesional { get; set; }
     }
 }

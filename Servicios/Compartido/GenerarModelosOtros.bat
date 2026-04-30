@@ -25,6 +25,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --force ^
 --table Agenda ^
 --table BloqueosHorario ^
+--table CitaPadre ^
 --table Citas ^
 --table CitaServicios ^
 --table Ciudad ^
@@ -35,12 +36,15 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Genero ^
 --table LiquidacionCita ^
 --table Logs ^
+--table Padre ^
 --table Parametros ^
 --table Producto ^
 --table Recursos ^
 --table Rol ^
 --table Sede ^
 --table Servicios ^
+--table ServiciosParametros ^
+--table ServiciosRecursos ^
 --table TipoDocumento ^
 --table UsuarioRol ^
 --table Usuarios ^

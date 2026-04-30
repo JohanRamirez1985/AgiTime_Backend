@@ -20,6 +20,7 @@ namespace Compartido.Data
         public virtual DbSet<Agendum> Agenda { get; set; }
         public virtual DbSet<BloqueosHorario> BloqueosHorarios { get; set; }
         public virtual DbSet<Cita> Citas { get; set; }
+        public virtual DbSet<CitaPadre> CitaPadres { get; set; }
         public virtual DbSet<CitaServicio> CitaServicios { get; set; }
         public virtual DbSet<Ciudad> Ciudads { get; set; }
         public virtual DbSet<Cliente> Clientes { get; set; }
@@ -29,12 +30,15 @@ namespace Compartido.Data
         public virtual DbSet<Genero> Generos { get; set; }
         public virtual DbSet<LiquidacionCitum> LiquidacionCita { get; set; }
         public virtual DbSet<Log> Logs { get; set; }
+        public virtual DbSet<Padre> Padres { get; set; }
         public virtual DbSet<Parametro> Parametros { get; set; }
         public virtual DbSet<Producto> Productos { get; set; }
         public virtual DbSet<Recurso> Recursos { get; set; }
         public virtual DbSet<Rol> Rols { get; set; }
         public virtual DbSet<Sede> Sedes { get; set; }
         public virtual DbSet<Servicio> Servicios { get; set; }
+        public virtual DbSet<ServiciosParametro> ServiciosParametros { get; set; }
+        public virtual DbSet<ServiciosRecurso> ServiciosRecursos { get; set; }
         public virtual DbSet<TipoDocumento> TipoDocumentos { get; set; }
         public virtual DbSet<Usuario> Usuarios { get; set; }
         public virtual DbSet<VentaDetalle> VentaDetalles { get; set; }
@@ -42,6 +46,11 @@ namespace Compartido.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Agendum>(entity =>
+            {
+                entity.Property(e => e.valor).HasColumnType("time(0)");
+            });
+
             modelBuilder.Entity<BloqueosHorario>(entity =>
             {
                 entity.ToTable("BloqueosHorario");
@@ -105,6 +114,23 @@ namespace Compartido.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
+            });
+
+            modelBuilder.Entity<CitaPadre>(entity =>
+            {
+                entity.ToTable("CitaPadre");
+
+                entity.HasOne(d => d.citaNavigation)
+                    .WithMany(p => p.CitaPadres)
+                    .HasForeignKey(d => d.cita)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CitaPadre_Citas");
+
+                entity.HasOne(d => d.padreNavigation)
+                    .WithMany(p => p.CitaPadres)
+                    .HasForeignKey(d => d.padre)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CitaPadre_Padre");
             });
 
             modelBuilder.Entity<CitaServicio>(entity =>
@@ -272,6 +298,13 @@ namespace Compartido.Data
                 entity.Property(e => e.Timestamp).HasColumnType("datetime");
             });
 
+            modelBuilder.Entity<Padre>(entity =>
+            {
+                entity.ToTable("Padre");
+
+                entity.Property(e => e.fechaCita).HasColumnType("datetime");
+            });
+
             modelBuilder.Entity<Parametro>(entity =>
             {
                 entity.Property(e => e.tipo)
@@ -392,6 +425,22 @@ namespace Compartido.Data
                     .HasForeignKey(d => d.sede)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Servicios_Sede");
+            });
+
+            modelBuilder.Entity<ServiciosParametro>(entity =>
+            {
+                entity.HasOne(d => d.servicioNavigation)
+                    .WithMany(p => p.ServiciosParametros)
+                    .HasForeignKey(d => d.servicio)
+                    .HasConstraintName("FK_ServiciosParametros_Servicios");
+            });
+
+            modelBuilder.Entity<ServiciosRecurso>(entity =>
+            {
+                entity.HasOne(d => d.servicioNavigation)
+                    .WithMany(p => p.ServiciosRecursos)
+                    .HasForeignKey(d => d.servicio)
+                    .HasConstraintName("FK_ServiciosRecursos_Servicios");
             });
 
             modelBuilder.Entity<TipoDocumento>(entity =>
