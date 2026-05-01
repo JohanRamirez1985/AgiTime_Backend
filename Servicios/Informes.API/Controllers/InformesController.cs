@@ -577,7 +577,6 @@ namespace Informes.API.Controllers
                         .ToList();
                 }
 
-
                 usuarios = ContextBD.Usuarios
                     .Include(u => u.sedeNavigation)
                     .Where(u =>

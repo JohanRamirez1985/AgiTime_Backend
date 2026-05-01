@@ -1462,20 +1462,39 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
-
-                if (citaId == null)
+                if (empresa.servicio)
                 {
-                    return Ok(new
-                    {
-                        mensaje = "Cita no encontrada",
-                        exito = false
-                    });
-                }
+                    var citas = (from cp in ContextBD.CitaPadres
+                                 join c in ContextBD.Citas on cp.cita equals c.id
+                                 where cp.padre == dto.Id
+                                       && c.estado == Estados.Activo
+                                 select c
+                                ).ToList();
 
-                citaId.fechaCancelacion = dto.FechaCancelacion;
-                citaId.usuarioCancelacion = dto.UsuarioCancelacion;
-                citaId.estado = Estados.Cancelada;
+                    foreach (var cita in citas)
+                    {
+                        cita.fechaCancelacion = dto.FechaCancelacion;
+                        cita.usuarioCancelacion = dto.UsuarioCancelacion;
+                        cita.estado = Estados.Cancelada;
+                    }
+                }
+                else
+                {
+                    var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
+
+                    if (citaId == null)
+                    {
+                        return Ok(new
+                        {
+                            mensaje = "Cita no encontrada",
+                            exito = false
+                        });
+                    }
+
+                    citaId.fechaCancelacion = dto.FechaCancelacion;
+                    citaId.usuarioCancelacion = dto.UsuarioCancelacion;
+                    citaId.estado = Estados.Cancelada;
+                }
 
                 ContextBD.SaveChanges();
 
@@ -1533,30 +1552,92 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
+                if (empresa.servicio)
+                {
+                    var citas = (from cp in ContextBD.CitaPadres
+                                 join c in ContextBD.Citas on cp.cita equals c.id
+                                 where cp.padre == dto.Id
+                                       && c.estado == Estados.Activo
+                                 select c
+                                ).ToList();
 
-                if (citaId == null)
-                {
-                    return Ok(new
+                    foreach (var cita in citas)
                     {
-                        mensaje = "Cita no encontrada",
-                        exito = false
-                    });
-                }
-                if (dto.Asistencia)
-                {
-                    citaId.estado = Estados.Asistio;
-                    citaId.bono = dto.Bono;
+                        if (dto.Asistencia)
+                        {
+                            var servicios = (
+                            from cs in ContextBD.CitaServicios
+                            join s in ContextBD.Servicios on cs.servicio equals s.id
+                            join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
+                            join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio
+                            join u in ContextBD.Usuarios on sr.recurso equals u.id
+                            join se in ContextBD.Sedes on u.sede equals se.id
+                            where cs.cita == cita.id
+                            select new
+                            {
+                                ServicioValor = s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
+                                Porcentaje = (sp.porcentaje ?? 0),
+                                Sede = se.Nombre
+                            }
+                            ).ToList();
+
+                            foreach (var servicio in servicios)
+                            {
+                                decimal valorTrabajador = servicio.ServicioValor * (servicio.Porcentaje / 100m);
+
+                                decimal valorEmpresa = servicio.ServicioValor - valorTrabajador;
+
+                                var liquidacion = new LiquidacionCitum
+                                {
+                                    cita = cita.id,
+                                    valorServicio = servicio.ServicioValor,
+                                    valorBarbero = valorTrabajador,
+                                    valorBarberia = valorEmpresa,
+                                    sede = servicio.Sede,
+                                    fechaCita = cita.fechaInicio,
+                                    bono = cita.bono,
+                                    fechaCreacion = dto.FechaCreacion,
+                                    usuarioCreacion = dto.UsuarioCreacion,
+                                    tipo = "Normal"
+                                };
+
+                                ContextBD.LiquidacionCita.Add(liquidacion);
+                            }
+
+                            cita.liquidado = true;
+                            cita.estado = Estados.Asistio;
+                        }
+                        else
+                            cita.estado = Estados.Inasistencia;
+                    }
+                    ContextBD.SaveChanges();
                 }
                 else
-                    citaId.estado = Estados.Inasistencia;
+                {
+                    var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
 
+                    if (citaId == null)
+                    {
+                        return Ok(new
+                        {
+                            mensaje = "Cita no encontrada",
+                            exito = false
+                        });
+                    }
+                    if (dto.Asistencia)
+                    {
+                        citaId.estado = Estados.Asistio;
+                        citaId.bono = dto.Bono;
+                    }
+                    else
+                        citaId.estado = Estados.Inasistencia;
 
-                ContextBD.SaveChanges();
+                    ContextBD.SaveChanges();
+                }
 
                 return Ok(new
                 {
-                    mensaje = "Cita validada exitosamente",
+                    mensaje = "Cita confirmada exitosamente",
                     exito = true
                 });
 
