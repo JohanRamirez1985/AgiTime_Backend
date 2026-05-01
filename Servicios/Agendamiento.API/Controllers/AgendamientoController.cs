@@ -1536,21 +1536,64 @@ namespace Agendamiento.API.Controllers
                 if (empresa.servicio)
                 {
                     var citas = (from cp in ContextBD.CitaPadres
-                                join c in ContextBD.Citas on cp.cita equals c.id
-                                where cp.padre == dto.Id
-                                select c
+                                 join c in ContextBD.Citas on cp.cita equals c.id
+                                 where cp.padre == dto.Id
+                                       && c.estado == Estados.Activo
+                                 select c
                                 ).ToList();
 
                     foreach (var cita in citas)
                     {
-                        cita.estado = Estados.Asistio;
-                    }
+                        if (dto.Asistencia)
+                        {
+                            var servicios = (
+                            from cs in ContextBD.CitaServicios
+                            join s in ContextBD.Servicios on cs.servicio equals s.id
+                            join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
+                            join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio
+                            join u in ContextBD.Usuarios on sr.recurso equals u.id
+                            join se in ContextBD.Sedes on u.sede equals se.id
+                            where cs.cita == cita.id
+                            select new
+                            {
+                                ServicioValor = s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
+                                Porcentaje = (sp.porcentaje ?? 0),
+                                Sede = se.Nombre
+                            }
+                            ).ToList();
 
+                            foreach (var servicio in servicios)
+                            {
+                                decimal valorTrabajador = servicio.ServicioValor * (servicio.Porcentaje / 100m);
+
+                                decimal valorEmpresa = servicio.ServicioValor - valorTrabajador;
+
+                                var liquidacion = new LiquidacionCitum
+                                {
+                                    cita = cita.id,
+                                    valorServicio = servicio.ServicioValor,
+                                    valorBarbero = valorTrabajador,
+                                    valorBarberia = valorEmpresa,
+                                    sede = servicio.Sede,
+                                    fechaCita = cita.fechaInicio,
+                                    bono = cita.bono,
+                                    fechaCreacion = dto.FechaCreacion,
+                                    usuarioCreacion = dto.UsuarioCreacion
+                                };
+
+                                ContextBD.LiquidacionCita.Add(liquidacion);
+                            }
+
+                            cita.liquidado = true;
+                            cita.estado = Estados.Asistio;
+                        }
+                        else
+                            cita.estado = Estados.Inasistencia;
+                    }
                     ContextBD.SaveChanges();
                 }
                 else
                 {
-
                     var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
 
                     if (citaId == null)
