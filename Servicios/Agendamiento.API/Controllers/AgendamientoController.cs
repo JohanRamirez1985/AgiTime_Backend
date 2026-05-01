@@ -1462,20 +1462,39 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
-
-                if (citaId == null)
+                if (empresa.servicio)
                 {
-                    return Ok(new
-                    {
-                        mensaje = "Cita no encontrada",
-                        exito = false
-                    });
-                }
+                    var citas = (from cp in ContextBD.CitaPadres
+                                 join c in ContextBD.Citas on cp.cita equals c.id
+                                 where cp.padre == dto.Id
+                                       && c.estado == Estados.Activo
+                                 select c
+                                ).ToList();
 
-                citaId.fechaCancelacion = dto.FechaCancelacion;
-                citaId.usuarioCancelacion = dto.UsuarioCancelacion;
-                citaId.estado = Estados.Cancelada;
+                    foreach (var cita in citas)
+                    {
+                        cita.fechaCancelacion = dto.FechaCancelacion;
+                        cita.usuarioCancelacion = dto.UsuarioCancelacion;
+                        cita.estado = Estados.Cancelada;
+                    }
+                }
+                else
+                {
+                    var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
+
+                    if (citaId == null)
+                    {
+                        return Ok(new
+                        {
+                            mensaje = "Cita no encontrada",
+                            exito = false
+                        });
+                    }
+
+                    citaId.fechaCancelacion = dto.FechaCancelacion;
+                    citaId.usuarioCancelacion = dto.UsuarioCancelacion;
+                    citaId.estado = Estados.Cancelada;
+                }
 
                 ContextBD.SaveChanges();
 
