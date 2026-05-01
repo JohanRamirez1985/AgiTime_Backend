@@ -9,6 +9,7 @@ namespace Compartido.Data.Modelos
         public int? servicio { get; set; }
         public bool? alterno { get; set; }
         public bool? cliente { get; set; }
+        public decimal? porcentaje { get; set; }
 
         public virtual Servicio servicioNavigation { get; set; }
     }
