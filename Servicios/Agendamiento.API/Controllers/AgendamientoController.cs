@@ -1597,7 +1597,8 @@ namespace Agendamiento.API.Controllers
                                     fechaCita = cita.fechaInicio,
                                     bono = cita.bono,
                                     fechaCreacion = dto.FechaCreacion,
-                                    usuarioCreacion = dto.UsuarioCreacion
+                                    usuarioCreacion = dto.UsuarioCreacion,
+                                    tipo = "Normal"
                                 };
 
                                 ContextBD.LiquidacionCita.Add(liquidacion);
