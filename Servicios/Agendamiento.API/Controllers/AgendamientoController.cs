@@ -1533,30 +1533,48 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
+                if (empresa.servicio)
+                {
+                    var citas = (from cp in ContextBD.CitaPadres
+                                join c in ContextBD.Citas on cp.cita equals c.id
+                                where cp.padre == dto.Id
+                                select c
+                                ).ToList();
 
-                if (citaId == null)
-                {
-                    return Ok(new
+                    foreach (var cita in citas)
                     {
-                        mensaje = "Cita no encontrada",
-                        exito = false
-                    });
-                }
-                if (dto.Asistencia)
-                {
-                    citaId.estado = Estados.Asistio;
-                    citaId.bono = dto.Bono;
+                        cita.estado = Estados.Asistio;
+                    }
+
+                    ContextBD.SaveChanges();
                 }
                 else
-                    citaId.estado = Estados.Inasistencia;
+                {
 
+                    var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
 
-                ContextBD.SaveChanges();
+                    if (citaId == null)
+                    {
+                        return Ok(new
+                        {
+                            mensaje = "Cita no encontrada",
+                            exito = false
+                        });
+                    }
+                    if (dto.Asistencia)
+                    {
+                        citaId.estado = Estados.Asistio;
+                        citaId.bono = dto.Bono;
+                    }
+                    else
+                        citaId.estado = Estados.Inasistencia;
+
+                    ContextBD.SaveChanges();
+                }
 
                 return Ok(new
                 {
-                    mensaje = "Cita validada exitosamente",
+                    mensaje = "Cita confirmada exitosamente",
                     exito = true
                 });
 

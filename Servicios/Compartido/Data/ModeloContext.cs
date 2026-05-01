@@ -429,6 +429,8 @@ namespace Compartido.Data
 
             modelBuilder.Entity<ServiciosParametro>(entity =>
             {
+                entity.Property(e => e.porcentaje).HasColumnType("decimal(5, 0)");
+
                 entity.HasOne(d => d.servicioNavigation)
                     .WithMany(p => p.ServiciosParametros)
                     .HasForeignKey(d => d.servicio)
