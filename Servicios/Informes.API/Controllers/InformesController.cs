@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace Informes.API.Controllers
 {
@@ -32,7 +33,7 @@ namespace Informes.API.Controllers
         }
 
         [HttpGet("informacionDashboard")]
-        public IActionResult InformacionDashboard([FromQuery] DateTime fecha, int emp)
+        public async Task<IActionResult> InformacionDashboard([FromQuery] DateTime fechaIni, DateTime fechaFin, int emp)
         {
             string nombreBase = string.Empty;
             try
@@ -66,25 +67,61 @@ namespace Informes.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var info = (from c in ContextBD.Citas
-                            where c.fechaInicio >= fecha && c.fechaInicio < fecha.AddDays(1)
-                            join r in ContextBD.Recursos on c.recurso equals r.id into recursoJoin
-                            from r in recursoJoin.DefaultIfEmpty()
-                            join u in ContextBD.Usuarios.Where(x => x.recurso == true) on c.recurso equals u.id into usuarioJoin
-                            from u in usuarioJoin.DefaultIfEmpty()
-                            let nombreRecurso = r != null ? r.nombre : u.nombre
-                            group c by nombreRecurso into g
-                            select new
-                            {
-                                NombreRecurso = g.Key,
-                                TotalCitasConfirmadas = g.Count(x => x.estado == Estados.Asistio),
-                                TotalCitasNoConfirmadas = g.Count(x => x.estado == Estados.Activo)
-                            }).ToList();
+                var infoCitas = (from c in ContextBD.Citas
+                                 where c.fechaInicio >= fechaIni && c.fechaInicio <= fechaFin
+                                 join r in ContextBD.Recursos on c.recurso equals r.id into recursoJoin
+                                 from r in recursoJoin.DefaultIfEmpty()
+                                 join u in ContextBD.Usuarios.Where(x => x.recurso == true) on c.recurso equals u.id into usuarioJoin
+                                 from u in usuarioJoin.DefaultIfEmpty()
+                                 let nombreRecurso = r != null ? r.nombre : u.nombre
+                                 group c by nombreRecurso into g
+                                 select new
+                                 {
+                                     NombreRecurso = g.Key,
+                                     TotalCitasConfirmadas = g.Count(x => x.estado == Estados.Asistio),
+                                     TotalCitasNoConfirmadas = g.Count(x => x.estado == Estados.Activo)
+                                 }).ToList();
+
+                var totalIngresos = ContextBD.Citas
+                                    .Where(c => c.fechaInicio >= fechaIni
+                                             && c.fechaInicio <= fechaFin
+                                             && (c.estado == Estados.Asistio || c.estado == Estados.Activo))
+                                    .Sum(c => (decimal?)c.valor) ?? 0;
+
+                var porcentajeCitas = ObtenerPorcentajeOcupacion(fechaIni,fechaFin,ContextBD);
+
+                var porcentajeServicios = await (
+                                        from c in ContextBD.Citas
+                                        join cs in ContextBD.CitaServicios on c.id equals cs.cita
+                                        join s in ContextBD.Servicios on cs.servicio equals s.id
+                                        group s by new
+                                        {
+                                            s.id,
+                                            s.nombre
+                                        } into g
+                                        select new
+                                        {
+                                            idServicio = g.Key.id,
+                                            servicio = g.Key.nombre,
+                                            cantidad = g.Count()
+                                        }
+                                        )
+                                        .OrderByDescending(x => x.cantidad)
+                                        .ToListAsync();
+
+                var valorDiario = await ObtenerValorDiario(ContextBD);
 
                 return Ok(new
                 {
                     exito = true,
-                    datos = info
+                    datos = new
+                    {
+                        infoCitas,
+                        totalIngresos,
+                        porcentajeCitas,
+                        porcentajeServicios,
+                        valorDiario
+                    }
                 });
             }
             catch (Exception ex)
@@ -1007,6 +1044,87 @@ namespace Informes.API.Controllers
             }
 
             return valorDescuentoPorCorte;
+        }
+
+        private decimal ObtenerPorcentajeOcupacion(DateTime fechaInicial, DateTime fechaFinal, ModeloContext ContextBD)
+        {
+            var horariosAgenda = ContextBD.Agenda
+                .Where(a => a.estado)
+                .OrderBy(a => a.valor)
+                .Select(a => a.valor)
+                .ToList();
+
+            int totalDias = (fechaFinal.Date - fechaInicial.Date).Days + 1;
+
+            int totalDisponibles = horariosAgenda.Count * totalDias;
+
+            var citas = ContextBD.Citas
+                .Where(c =>
+                    c.fechaInicio >= fechaInicial &&
+                    c.fechaFin <= fechaFinal &&
+                    c.estado != Estados.Cancelada)
+                .ToList();
+
+            List<string> espaciosOcupados = new List<string>();
+
+            foreach (var cita in citas)
+            {
+                DateTime inicio = cita.fechaInicio;
+                DateTime fin = cita.fechaFin.Value;
+
+                while (inicio < fin)
+                {
+                    espaciosOcupados.Add(
+                        inicio.ToString("yyyy-MM-dd HH:mm")
+                    );
+
+                    inicio = inicio.AddMinutes(30);
+                }
+            }
+
+            int totalOcupados = espaciosOcupados
+                .Distinct()
+                .Count();
+
+            decimal porcentaje = totalDisponibles == 0
+                ? 0
+                : ((decimal)totalOcupados / totalDisponibles) * 100;
+
+            return Math.Round(porcentaje, 2);
+        }
+
+        public async Task<List<CitaDTO>> ObtenerValorDiario(ModeloContext ContextBD)
+        {
+            var hoy = DateTime.Today;
+
+            int diasdesdelunes = ((int)hoy.DayOfWeek == 0 ? 6 : (int)hoy.DayOfWeek - 1);
+
+            var lunes = hoy.AddDays(-diasdesdelunes).Date;
+
+            var domingo = lunes.AddDays(6).Date.AddDays(1).AddTicks(-1);
+
+            var porSemana = await ContextBD.Citas
+                .Where(c => c.fechaInicio > lunes && c.fechaInicio <= domingo)
+                .GroupBy(c => c.fechaInicio.Date).Select(g => new
+                {
+                    fecha = g.Key,
+                    total = g.Sum(x => x.valor)
+                })
+                .ToListAsync();
+
+            var ingresosSemana = Enumerable.Range(0, 7)
+                .Select(i =>
+                {
+                    var fecha = lunes.AddDays(i);
+
+                    return new CitaDTO
+                    {
+                        dia = fecha.ToString("dddd"),
+                        totalDia = porSemana.FirstOrDefault(x => x.fecha == fecha)?.total ?? 0
+                    };
+                }).ToList();
+
+            return ingresosSemana;
         }
     }
 }
