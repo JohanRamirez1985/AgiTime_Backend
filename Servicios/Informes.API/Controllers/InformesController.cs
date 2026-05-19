@@ -67,20 +67,20 @@ namespace Informes.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var infoCitas = (from c in ContextBD.Citas
-                                 where c.fechaInicio >= fechaIni && c.fechaInicio <= fechaFin
-                                 join r in ContextBD.Recursos on c.recurso equals r.id into recursoJoin
-                                 from r in recursoJoin.DefaultIfEmpty()
-                                 join u in ContextBD.Usuarios.Where(x => x.recurso == true) on c.recurso equals u.id into usuarioJoin
-                                 from u in usuarioJoin.DefaultIfEmpty()
-                                 let nombreRecurso = r != null ? r.nombre : u.nombre
-                                 group c by nombreRecurso into g
-                                 select new
-                                 {
-                                     NombreRecurso = g.Key,
-                                     TotalCitasConfirmadas = g.Count(x => x.estado == Estados.Asistio),
-                                     TotalCitasNoConfirmadas = g.Count(x => x.estado == Estados.Activo)
-                                 }).ToList();
+                var infoCitas = await (from c in ContextBD.Citas
+                                       where c.fechaInicio >= fechaIni && c.fechaInicio <= fechaFin
+                                       join r in ContextBD.Recursos on c.recurso equals r.id into recursoJoin
+                                       from r in recursoJoin.DefaultIfEmpty()
+                                       join u in ContextBD.Usuarios.Where(x => x.recurso == true) on c.recurso equals u.id into usuarioJoin
+                                       from u in usuarioJoin.DefaultIfEmpty()
+                                       let nombreRecurso = r != null ? r.nombre : u.nombre
+                                       group c by nombreRecurso into g
+                                       select new
+                                       {
+                                           NombreRecurso = g.Key,
+                                           TotalCitasConfirmadas = g.Count(x => x.estado == Estados.Asistio),
+                                           TotalCitasNoConfirmadas = g.Count(x => x.estado == Estados.Activo)
+                                       }).ToArrayAsync();
 
                 var totalIngresos = ContextBD.Citas
                                     .Where(c => c.fechaInicio >= fechaIni
@@ -1048,7 +1048,7 @@ namespace Informes.API.Controllers
 
         private decimal ObtenerPorcentajeOcupacion(DateTime fechaInicial, DateTime fechaFinal, ModeloContext ContextBD)
         {
-            var horariosAgenda = ContextBD.Agenda
+            /*var horariosAgenda = ContextBD.Agenda
                 .Where(a => a.estado)
                 .OrderBy(a => a.valor)
                 .Select(a => a.valor)
@@ -1090,6 +1090,110 @@ namespace Informes.API.Controllers
                 ? 0
                 : ((decimal)totalOcupados / totalDisponibles) * 100;
 
+            return Math.Round(porcentaje, 2);*/
+
+            int rango = Convert.ToInt32(ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda").Select(p => p.valor).FirstOrDefault());
+
+            var horariosAgenda = ContextBD.Agenda
+        .Where(a => a.estado)
+        .OrderBy(a => a.valor)
+        .Select(a => a.valor)
+        .ToList();
+
+            List<DateTime> espaciosDisponibles = new List<DateTime>();
+
+            DateTime fecha = fechaInicial.Date;
+
+            while (fecha <= fechaFinal.Date)
+            {
+                foreach (var hora in horariosAgenda)
+                {
+                    DateTime fechaHora = DateTime.Parse(
+                        $"{fecha:yyyy-MM-dd} {hora}"
+                    );
+
+                    espaciosDisponibles.Add(fechaHora);
+                }
+
+                fecha = fecha.AddDays(1);
+            }
+
+            var bloqueos = ContextBD.BloqueosHorarios
+                .Where(b => b.estado == "Activo")
+                .ToList();
+
+            List<DateTime> espaciosBloqueados = new List<DateTime>();
+
+            fecha = fechaInicial.Date;
+
+            while (fecha <= fechaFinal.Date)
+            {
+                int diaSemana = (int)fecha.DayOfWeek;
+
+                diaSemana = diaSemana == 0 ? 7 : diaSemana;
+
+                foreach (var bloqueo in bloqueos)
+                {
+                    if (string.IsNullOrWhiteSpace(bloqueo.diasSemana))
+                        continue;
+
+                    List<int> dias = bloqueo.diasSemana
+                        .Split(',')
+                        .Select(x => int.Parse(x.Trim()))
+                        .ToList();
+
+                    if (!dias.Contains(diaSemana))
+                        continue;
+
+                    DateTime horaInicio = fecha.Date + bloqueo.horaInicio;
+                    DateTime horaFin = fecha.Date + bloqueo.horaFin;
+
+                    while (horaInicio < horaFin)
+                    {
+                        espaciosBloqueados.Add(horaInicio);
+
+                        horaInicio = horaInicio.AddMinutes(rango);
+                    }
+                }
+
+                fecha = fecha.AddDays(1);
+            }
+
+            int totalDisponibles = espaciosDisponibles
+                .Except(espaciosBloqueados)
+                .Distinct()
+                .Count();
+
+            var citas = ContextBD.Citas
+                .Where(c =>
+                    c.fechaInicio >= fechaInicial &&
+                    c.fechaFin <= fechaFinal &&
+                    c.estado != Estados.Cancelada)
+                .ToList();
+
+            List<DateTime> espaciosOcupados = new List<DateTime>();
+
+            foreach (var cita in citas)
+            {
+                DateTime inicio = cita.fechaInicio;
+                DateTime fin = cita.fechaFin.Value;
+
+                while (inicio < fin)
+                {
+                    espaciosOcupados.Add(inicio);
+
+                    inicio = inicio.AddMinutes(rango);
+                }
+            }
+
+            int totalOcupados = espaciosOcupados
+                .Distinct()
+                .Count();
+
+            decimal porcentaje = totalDisponibles == 0
+                ? 0
+                : ((decimal)totalOcupados / totalDisponibles) * 100;
+
             return Math.Round(porcentaje, 2);
         }
 
@@ -1104,7 +1208,7 @@ namespace Informes.API.Controllers
             var domingo = lunes.AddDays(6).Date.AddDays(1).AddTicks(-1);
 
             var porSemana = await ContextBD.Citas
-                .Where(c => c.fechaInicio > lunes && c.fechaInicio <= domingo)
+                .Where(c => c.fechaInicio > lunes && c.fechaInicio <= domingo && c.estado == Estados.Asistio)
                 .GroupBy(c => c.fechaInicio.Date).Select(g => new
                 {
                     fecha = g.Key,
