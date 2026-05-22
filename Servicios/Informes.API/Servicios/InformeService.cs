@@ -117,7 +117,7 @@ namespace Informes.API.Servicios
                 // =========================
                 // BARBERO
                 // =========================
-                gfx.DrawString($"Barbero: {r.nombre}", fontBold, XBrushes.Black,
+                gfx.DrawString($"Colaborador: {r.nombre}", fontBold, XBrushes.Black,
                     colNombre, y);
                 y += filaAlto;
 
@@ -179,7 +179,7 @@ namespace Informes.API.Servicios
                 //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
                 y += 5;
 
-                gfx.DrawString("Total barbero", fontBold, XBrushes.Black,
+                gfx.DrawString("Total Colaborador", fontBold, XBrushes.Black,
                     colDetalle, y);
                 gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black,
                     colValor, y);
@@ -413,7 +413,7 @@ namespace Informes.API.Servicios
                         LineAlignment = XLineAlignment.Center
                     };
 
-                    gfx.DrawString("Barbero", fontBold, XBrushes.Black, colNombre, y);
+                    gfx.DrawString("Colaborador", fontBold, XBrushes.Black, colNombre, y);
                     gfx.DrawString("Servicios", fontBold, XBrushes.Black, colServicios, y);
                     gfx.DrawString("Ingreso", fontBold, XBrushes.Black, colIngreso, y);
                     gfx.DrawString("Barbería", fontBold, XBrushes.Black, colBarberia, y);
@@ -755,7 +755,7 @@ namespace Informes.API.Servicios
 
             void DibujarEncabezadoTabla()
             {
-                gfx.DrawString("Barbero", fontBold, XBrushes.Black, colNombre, y);
+                gfx.DrawString("Colaborador", fontBold, XBrushes.Black, colNombre, y);
                 gfx.DrawString("Total Servicios", fontBold, XBrushes.Black, colTotalServicio, y);
                 gfx.DrawString("Servicios", fontBold, XBrushes.Black, colServicios, y);
                 gfx.DrawString("Obsequios", fontBold, XBrushes.Black, colObsequios, y);
