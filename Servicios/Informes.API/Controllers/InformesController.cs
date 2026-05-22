@@ -538,13 +538,13 @@ namespace Informes.API.Controllers
 
                 if (usuario != null && !personal)
                 {
-                    var pdfBytes = await informeService.GenerarInformeSemanalBarber(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
-                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_Barbero_{DateTime.Now:yyyyMMdd}.pdf");
+                    var pdfBytes = await informeService.GenerarInformeSemanalBarber(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, emp, logo);
+                    return File(pdfBytes, "application/pdf", $"Resumen_Barbero_{DateTime.Now:yyyyMMdd}.pdf");
                 }
                 else
                 {
-                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
-                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
+                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, emp, logo);
+                    return File(pdfBytes, "application/pdf", $"Resumen_{DateTime.Now:yyyyMMdd}.pdf");
                 }
             }
             catch (Exception ex)
@@ -864,13 +864,13 @@ namespace Informes.API.Controllers
 
                 if (usuario != null && !personal)
                 {
-                    var pdfBytes = await informeService.GenerarInformeSemanalBarber(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
-                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_Barbero_{DateTime.Now:yyyyMMdd}.pdf");
+                    var pdfBytes = await informeService.GenerarInformeSemanalBarber(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, emp, logo);
+                    return File(pdfBytes, "application/pdf", $"Resumen_Barbero_{DateTime.Now:yyyyMMdd}.pdf");
                 }
                 else
                 {
-                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, logo, totalesPorSede);
-                    return File(pdfBytes, "application/pdf", $"Resumen_Semanal_{DateTime.Now:yyyyMMdd}.pdf");
+                    var pdfBytes = await informeService.GenerarInformeSemanal(resumenUsuarios, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, emp, logo, totalesPorSede);
+                    return File(pdfBytes, "application/pdf", $"Resumen_{DateTime.Now:yyyyMMdd}.pdf");
                 }
             }
             catch (Exception ex)
