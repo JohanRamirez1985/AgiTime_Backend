@@ -316,7 +316,7 @@ namespace Informes.API.Servicios
             //return stream.ToArray();
         }
 
-        public async Task<byte[]> GenerarInformeSemanal(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, string? rutaLogo = null, List<TotalSedeDTO>? totalesSede = null)
+        public async Task<byte[]> GenerarInformeSemanal(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, int cliente, string? rutaLogo = null, List<TotalSedeDTO>? totalesSede = null)
         {
             try
             {
@@ -338,16 +338,65 @@ namespace Informes.API.Servicios
                 // =========================
                 double tableLeft = 40;
                 double tableRight = pagina.Width - 40;
-
-                double colNombre = 40;
-                double colServicios = 140;
-                double colIngreso = 190;
-                double colBarberia = 250;
-                double colEmpleado = 310;
-                double colObsequio = 370;
-                double colDescanso = 440;
-                double colTotal = 510;
                 double filaAlto = 18;
+
+                // =========================
+                // CONFIG COLUMNAS
+                // =========================
+                bool mostrarIngreso = true;
+                bool mostrarBarberia = true;
+                bool mostrarEmpleado = true;
+                bool mostrarObsequio = true;
+                bool mostrarDescanso = true;
+                bool mostrarTotalSedes = true;
+                bool mostrarTotalBonos = true;
+
+                if ( cliente == 8)
+                {
+                    mostrarObsequio = false;
+                    mostrarDescanso = false;
+                    mostrarTotalSedes = false;
+                    mostrarTotalBonos = false;
+                }
+
+                // =========================
+                // COLUMNAS DINÁMICAS
+                // =========================
+                var columnas = new List<(string Nombre, double Width)>
+                {
+                    ("Colaborador", 100),
+                    ("Servicios", 50)
+                };
+
+                if (mostrarIngreso)
+                    columnas.Add(("Ingreso", 65));
+
+                if (mostrarBarberia)
+                    columnas.Add(("Negocio", 65));
+
+                if (mostrarEmpleado)
+                    columnas.Add(("Empleado", 65));
+
+                if (mostrarObsequio)
+                    columnas.Add(("Obsequios", 65));
+
+                if (mostrarDescanso)
+                    columnas.Add(("Descanso", 65));
+
+                columnas.Add(("Total", 65));
+
+                // =========================
+                // POSICIONES
+                // =========================
+                var posiciones = new Dictionary<string, double>();
+
+                double posicionActual = tableLeft;
+
+                foreach (var col in columnas)
+                {
+                    posiciones[col.Nombre] = posicionActual;
+                    posicionActual += col.Width;
+                }
 
                 // =========================
                 // LÍNEAS
@@ -398,7 +447,7 @@ namespace Informes.API.Servicios
                     gfx.DrawString(nombreEmpresa, fontTitle, XBrushes.DarkBlue,
                         new XRect(0, 20, pagina.Width, 25), XStringFormats.TopCenter);
 
-                    gfx.DrawString($"Resumen semanal {fechaIni} al {fechaFin}",
+                    gfx.DrawString($"Resumen {fechaIni} al {fechaFin}",
                         fontBold, XBrushes.Black,
                         new XRect(0, 45, pagina.Width, 20), XStringFormats.TopCenter);
 
@@ -407,20 +456,16 @@ namespace Informes.API.Servicios
 
                 void DibujarEncabezadoTabla()
                 {
-                    var center = new XStringFormat
+                    foreach (var col in columnas)
                     {
-                        Alignment = XStringAlignment.Center,
-                        LineAlignment = XLineAlignment.Center
-                    };
-
-                    gfx.DrawString("Colaborador", fontBold, XBrushes.Black, colNombre, y);
-                    gfx.DrawString("Servicios", fontBold, XBrushes.Black, colServicios, y);
-                    gfx.DrawString("Ingreso", fontBold, XBrushes.Black, colIngreso, y);
-                    gfx.DrawString("Barbería", fontBold, XBrushes.Black, colBarberia, y);
-                    gfx.DrawString("Empleado", fontBold, XBrushes.Black, colEmpleado, y);
-                    gfx.DrawString("Obsequios", fontBold, XBrushes.Black, colObsequio, y);
-                    gfx.DrawString("Descanso", fontBold, XBrushes.Black, colDescanso, y);
-                    gfx.DrawString("Total", fontBold, XBrushes.Black, colTotal, y);
+                        gfx.DrawString(
+                            col.Nombre,
+                            fontBold,
+                            XBrushes.Black,
+                            posiciones[col.Nombre],
+                            y
+                        );
+                    }
 
                     y += filaAlto;
                     y += 5;
@@ -432,6 +477,7 @@ namespace Informes.API.Servicios
                 DibujarEncabezado();
                 DibujarEncabezadoTabla();
 
+                int totalGeneralServicios = 0;
                 decimal totalGeneral = 0;
                 decimal totalGeneralIngreso = 0;
                 decimal totalGeneralBarberia = 0;
@@ -454,6 +500,7 @@ namespace Informes.API.Servicios
                         decimal totalBarbero = r.totalIngresoBarber ?? 0;
                         decimal totalBonos = r.totalBonos ?? 0;
 
+                        totalGeneralServicios += totalServicios;
                         totalGeneral += totalBarbero;
                         totalGeneralIngreso += ingreso;
                         totalGeneralBarberia += barberia;
@@ -463,14 +510,35 @@ namespace Informes.API.Servicios
 
                         var valorTexto = totalBonos > 0 ? totalServicios.ToString() + " (" + totalBonos.ToString() + ")*" : totalServicios.ToString();
 
-                        gfx.DrawString(r.nombre, font, XBrushes.Black, colNombre, y);
-                        gfx.DrawString(valorTexto, font, XBrushes.Black, colServicios, y);
-                        gfx.DrawString(Moneda(ingreso), font, XBrushes.Black, colIngreso, y);
-                        gfx.DrawString(Moneda(barberia), font, XBrushes.Black, colBarberia, y);
-                        gfx.DrawString(Moneda(empleado), font, XBrushes.Black, colEmpleado, y);
-                        gfx.DrawString("(" + r.totalObsequios + ") " + Moneda(obsequio), font, XBrushes.Black, colObsequio, y);
-                        gfx.DrawString("(" + r.totaldescanso + ") " + Moneda(descanso), font, XBrushes.Black, colDescanso, y);
-                        gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black, colTotal, y);
+                        gfx.DrawString(r.nombre,font,XBrushes.Black,posiciones["Colaborador"],y);
+                        gfx.DrawString(valorTexto,font,XBrushes.Black,posiciones["Servicios"],y);
+
+                        if (mostrarIngreso)
+                        {
+                            gfx.DrawString(Moneda(ingreso),font,XBrushes.Black,posiciones["Ingreso"],y);
+                        }
+
+                        if (mostrarBarberia)
+                        {
+                            gfx.DrawString(Moneda(barberia),font,XBrushes.Black,posiciones["Negocio"],y);
+                        }
+
+                        if (mostrarEmpleado)
+                        {
+                            gfx.DrawString(Moneda(empleado),font,XBrushes.Black,posiciones["Empleado"],y);
+                        }
+
+                        if (mostrarObsequio)
+                        {
+                            gfx.DrawString("(" + r.totalObsequios + ") " + Moneda(obsequio),font,XBrushes.Black,posiciones["Obsequios"],y);
+                        }
+
+                        if (mostrarDescanso)
+                        {
+                            gfx.DrawString("(" + r.totaldescanso + ") " + Moneda(descanso),font,XBrushes.Black,posiciones["Descanso"],y);
+                        }
+
+                        gfx.DrawString(Moneda(totalBarbero),fontBold,XBrushes.Black,posiciones["Total"],y);
 
                         y += filaAlto;
                         y += 3;
@@ -484,63 +552,90 @@ namespace Informes.API.Servicios
                 gfx.DrawLine(lineDark, tableLeft, y, tableRight, y);
                 y += 10;
 
-                gfx.DrawString("Total General Semanal", fontBold, XBrushes.Black, colNombre, y);
-                gfx.DrawString("", font, XBrushes.Black, colServicios, y);
-                gfx.DrawString(Moneda(totalGeneralIngreso), font, XBrushes.Black, colIngreso, y);
-                gfx.DrawString(Moneda(totalGeneralBarberia), font, XBrushes.Black, colBarberia, y);
-                gfx.DrawString(Moneda(totalGeneralEmpleado), font, XBrushes.Black, colEmpleado, y);
-                gfx.DrawString(Moneda(totalGeneralObsequio), font, XBrushes.Black, colObsequio, y);
-                gfx.DrawString(Moneda(totalGeneralDescanso), font, XBrushes.Black, colDescanso, y);
-                gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black, colTotal, y);
+                gfx.DrawString("Total General",fontBold,XBrushes.Black,posiciones["Colaborador"],y);
+                gfx.DrawString(totalGeneralServicios.ToString(), fontBold, XBrushes.Black, posiciones["Servicios"], y);
 
-                List<TotalSedeDTO> totalesPorSede;
-
-                if (totalesSede?.Any() == true)
+                if (mostrarIngreso)
                 {
-                    totalesPorSede = totalesSede;
+                    gfx.DrawString(Moneda(totalGeneralIngreso),font,XBrushes.Black,posiciones["Ingreso"],y);
                 }
-                else
+
+                if (mostrarBarberia)
                 {
-                    totalesPorSede = resumenUsuarios
-                    .GroupBy(r => r.sede)
-                    .Select(g => new TotalSedeDTO
+                    gfx.DrawString(Moneda(totalGeneralBarberia),font,XBrushes.Black,posiciones["Negocio"],y);
+                }
+
+                if (mostrarEmpleado)
+                {
+                    gfx.DrawString(Moneda(totalGeneralEmpleado),font,XBrushes.Black,posiciones["Empleado"],y);
+                }
+
+                if (mostrarObsequio)
+                {
+                    gfx.DrawString(Moneda(totalGeneralObsequio),font,XBrushes.Black,posiciones["Obsequios"],y);
+                }
+
+                if (mostrarDescanso)
+                {
+                    gfx.DrawString(Moneda(totalGeneralDescanso),font,XBrushes.Black,posiciones["Descanso"],y);
+                }
+
+                gfx.DrawString(Moneda(totalGeneral),fontBold,XBrushes.Black,posiciones["Total"],y);
+
+                if (mostrarTotalSedes)
+                {
+                    List<TotalSedeDTO> totalesPorSede;
+
+                    if (totalesSede?.Any() == true)
                     {
-                        Sede = g.Key,
-                        TotalSer = g.Sum(x => (int)(x.totalServicios ?? 0)),
-                        TotalBar = g.Sum(x => (decimal)(x.totalBarber ?? 0)),
-                        TotalBon = g.Sum(x => (x.totalBonos ?? 0))
-                    })
-                    .ToList();
+                        totalesPorSede = totalesSede;
+                    }
+                    else
+                    {
+                        totalesPorSede = resumenUsuarios
+                        .GroupBy(r => r.sede)
+                        .Select(g => new TotalSedeDTO
+                        {
+                            Sede = g.Key,
+                            TotalSer = g.Sum(x => (int)(x.totalServicios ?? 0)),
+                            TotalBar = g.Sum(x => (decimal)(x.totalBarber ?? 0)),
+                            TotalBon = g.Sum(x => (x.totalBonos ?? 0))
+                        })
+                        .ToList();
+                    }
+
+                    ValidarSalto(40);
+
+                    // =========================
+                    // TOTAL SEDE
+                    // =========================
+                    y += 20;
+
+
+                    foreach (var sede in totalesPorSede)
+                    {
+                        ValidarSalto(filaAlto);
+
+                        var valorTexto = sede.TotalBon > 0 ? sede.TotalSer.ToString() + " (" + sede.TotalBon.ToString() + ")*" : sede.TotalSer.ToString();
+
+                        gfx.DrawString(sede.Sede, fontBold, XBrushes.Black, posiciones["Colaborador"], y);
+
+                        gfx.DrawString(valorTexto, font, XBrushes.Black, posiciones["Servicios"], y);
+
+                        if (mostrarBarberia)
+                        {
+                            gfx.DrawString(Moneda(sede.TotalBar), fontBold, XBrushes.Black, posiciones["Negocio"], y);
+                        }
+
+                        y += filaAlto;
+                    }
                 }
 
-                ValidarSalto(40);
-
-                // =========================
-                // TOTAL SEDE
-                // =========================
-                y += 20;
-
-                foreach (var sede in totalesPorSede)
+                if (mostrarTotalBonos)
                 {
-                    ValidarSalto(filaAlto);
-
-                    var valorTexto = sede.TotalBon > 0 ? sede.TotalSer.ToString() + " (" + sede.TotalBon.ToString() + ")*" : sede.TotalSer.ToString();
-
-                    gfx.DrawString(sede.Sede, fontBold, XBrushes.Black, colNombre, y);
-                    gfx.DrawString(valorTexto, font, XBrushes.Black, colServicios, y);
-                    gfx.DrawString("", fontBold, XBrushes.Black, colIngreso, y);
-                    gfx.DrawString(Moneda(sede.TotalBar), fontBold, XBrushes.Black, colBarberia, y);
-                    gfx.DrawString("", font, XBrushes.Black, colEmpleado, y);
-                    gfx.DrawString("", font, XBrushes.Black, colObsequio, y);
-                    gfx.DrawString("", font, XBrushes.Black, colDescanso, y);
-                    gfx.DrawString("", fontBold, XBrushes.Black, colTotal, y);
-
-                    y += filaAlto;
+                    y += 10;
+                    gfx.DrawString($"(*) Cantidad de servicios que fueron cubiertos mediante bono.", fontSmall, XBrushes.Black, posiciones["Colaborador"], y);
                 }
-
-                y += 10;
-                gfx.DrawString($"(*) Cantidad de servicios que fueron cubiertos mediante bono.", fontSmall, XBrushes.Black,
-                        colNombre, y);
 
                 // =========================
                 // GUARDAR
@@ -667,7 +762,7 @@ namespace Informes.API.Servicios
             //return stream.ToArray();
         }
 
-        public async Task<byte[]> GenerarInformeSemanalBarber(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, string? rutaLogo = null)
+        public async Task<byte[]> GenerarInformeSemanalBarber(List<dynamic> resumenUsuarios, string fechaIni, string fechaFin, string nombreEmpresa, int cliente, string? rutaLogo = null)
         {
             using var stream = new MemoryStream();
             var doc = new PdfDocument();
@@ -687,14 +782,48 @@ namespace Informes.API.Servicios
             // =========================
             double tableLeft = 40;
             double tableRight = pagina.Width - 40;
+            double filaAlto = 18;
 
-            double colNombre = 45;
-            double colTotalServicio = 180;
-            double colServicios = 260;
-            double colObsequios = 330;
-            double colDescanso = 400;
-            double colTotal = 470;
-            double filaAlto = 20;
+            // =========================
+            // CONFIG COLUMNAS
+            // =========================
+            bool mostrarEmpleado = true;
+            bool mostrarObsequio = true;
+            bool mostrarDescanso = true;
+            bool mostrarTotalBonos = true;
+
+            // =========================
+            // COLUMNAS DINÁMICAS
+            // =========================
+            var columnas = new List<(string Nombre, double Width)>
+            {
+                ("Colaborador", 100),
+                ("Servicios", 50)
+            };
+
+            if (mostrarEmpleado)
+                columnas.Add(("Empleado", 90));
+
+            if (mostrarObsequio)
+                columnas.Add(("Obsequios", 90));
+
+            if (mostrarDescanso)
+                columnas.Add(("Descanso", 90));
+
+            columnas.Add(("Total", 90));
+
+            // =========================
+            // POSICIONES
+            // =========================
+            var posiciones = new Dictionary<string, double>();
+
+            double posicionActual = tableLeft;
+
+            foreach (var col in columnas)
+            {
+                posiciones[col.Nombre] = posicionActual;
+                posicionActual += col.Width;
+            }
 
             // =========================
             // LÍNEAS
@@ -745,7 +874,7 @@ namespace Informes.API.Servicios
                 gfx.DrawString(nombreEmpresa, fontTitle, XBrushes.DarkBlue,
                     new XRect(0, 20, pagina.Width, 25), XStringFormats.TopCenter);
 
-                gfx.DrawString($"Resumen semanal {fechaIni} al {fechaFin}",
+                gfx.DrawString($"Resumen {fechaIni} al {fechaFin}",
                     fontBold, XBrushes.Black,
                     new XRect(0, 45, pagina.Width, 20), XStringFormats.TopCenter);
 
@@ -755,15 +884,18 @@ namespace Informes.API.Servicios
 
             void DibujarEncabezadoTabla()
             {
-                gfx.DrawString("Colaborador", fontBold, XBrushes.Black, colNombre, y);
-                gfx.DrawString("Total Servicios", fontBold, XBrushes.Black, colTotalServicio, y);
-                gfx.DrawString("Servicios", fontBold, XBrushes.Black, colServicios, y);
-                gfx.DrawString("Obsequios", fontBold, XBrushes.Black, colObsequios, y);
-                gfx.DrawString("Descanso", fontBold, XBrushes.Black, colDescanso, y);
-                gfx.DrawString("Total", fontBold, XBrushes.Black, colTotal, y);
+                foreach (var col in columnas)
+                {
+                    gfx.DrawString(
+                        col.Nombre,
+                        fontBold,
+                        XBrushes.Black,
+                        posiciones[col.Nombre],
+                        y
+                    );
+                }
 
                 y += filaAlto;
-                //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
                 y += 5;
             }
 
@@ -790,15 +922,27 @@ namespace Informes.API.Servicios
 
                 var valorTexto = totalBonos > 0 ? totalServicios.ToString() + " (" + totalBonos.ToString() + ")*" : totalServicios.ToString();
 
-                gfx.DrawString(r.nombre, font, XBrushes.Black, colNombre, y);
-                gfx.DrawString(valorTexto, font, XBrushes.Black, colTotalServicio, y);
-                gfx.DrawString(Moneda(servicios), font, XBrushes.Black, colServicios, y);
-                gfx.DrawString(Moneda(obsequios), font, XBrushes.Black, colObsequios, y);
-                gfx.DrawString(Moneda(descanso), font, XBrushes.Black, colDescanso, y);
-                gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black, colTotal, y);
+                gfx.DrawString(r.nombre, font, XBrushes.Black, posiciones["Colaborador"], y);
+                gfx.DrawString(valorTexto, font, XBrushes.Black, posiciones["Servicios"], y);
+
+                if (mostrarEmpleado)
+                {
+                    gfx.DrawString(Moneda(servicios), font, XBrushes.Black, posiciones["Empleado"], y);
+                }
+
+                if (mostrarObsequio)
+                {
+                    gfx.DrawString(Moneda(obsequios), font, XBrushes.Black, posiciones["Obsequios"], y);
+                }
+
+                if (mostrarDescanso)
+                {
+                    gfx.DrawString(Moneda(descanso), font, XBrushes.Black, posiciones["Descanso"], y);
+                }
+
+                gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black, posiciones["Total"], y);
 
                 y += filaAlto;
-                //gfx.DrawLine(lineLight, tableLeft, y, tableRight, y);
                 y += 3;
             }
 
@@ -810,14 +954,15 @@ namespace Informes.API.Servicios
             gfx.DrawLine(lineDark, tableLeft, y, tableRight, y);
             y += 10;
 
-            gfx.DrawString("TOTAL GENERAL SEMANAL", fontBold, XBrushes.Black,
-                colServicios, y);
-            gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black,
-                colTotal, y);
+            gfx.DrawString("Total General", fontBold, XBrushes.Black, posiciones["Empleado"], y);
 
-            y += 10;
-            gfx.DrawString($"(*) Cantidad de servicios que fueron cubiertos mediante bono.", fontSmall, XBrushes.Black,
-                    colNombre, y);
+            gfx.DrawString(Moneda(totalGeneral), fontBold, XBrushes.Black, posiciones["Total"], y);
+
+            if (mostrarTotalBonos)
+            {
+                y += 10;
+                gfx.DrawString($"(*) Cantidad de servicios que fueron cubiertos mediante bono.", fontSmall, XBrushes.Black, posiciones["Colaborador"], y);
+            }
 
             // =========================
             // GUARDAR PDF
