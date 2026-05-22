@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 namespace Agendamiento.API.Controllers
 {
@@ -1998,6 +1999,231 @@ namespace Agendamiento.API.Controllers
                     exito = true,
                     datos = agendaDiaria
                 });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPut("editarCita")]
+        public async Task<IActionResult> EditarCita([FromBody] PadreDTO dto)
+        {
+            string nombreBase = string.Empty;
+            string logo = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string nombreSede = string.Empty;
+            int idCliente = 0;
+            string emailCliente = "";
+            string nombreCliente = "";
+            string telefonoCliente = "";
+            bool pago = true;
+            bool cliente = true;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, nombreBase);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+                using var transaction = ContextBD.Database.BeginTransaction();
+
+                try
+                {
+                    var cita = ContextBD.Padres.Where(p => p.id == dto.Id).FirstOrDefault();
+
+                    if (cita != null)
+                    {
+                        if (dto.clienteInfo != null)
+                        {
+                            var user = ContextBD.Clientes
+                                .FirstOrDefault(e => e.telefono == dto.clienteInfo.Telefono);
+
+                            if (user == null)
+                            {
+                                cliente = false;
+                            }
+                            else
+                            {
+                                idCliente = user.id;
+                                nombreCliente = user.nombre;
+                                emailCliente = user.correo;
+                                telefonoCliente = user.telefono;
+                            }
+                        }
+
+                        if (cliente)
+                        {
+
+                            var validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
+
+                            if (validacion.Exito)
+                            {
+                                cita.fechaCita = dto.FechaIni;
+
+                                var idsCitas = ContextBD.CitaPadres
+                                    .Where(cp => cp.padre == cita.id)
+                                    .Select(cp => cp.cita)
+                                    .ToList();
+
+                                var servicios = ContextBD.CitaServicios
+                                    .Where(cs => idsCitas.Contains(cs.cita));
+
+                                ContextBD.CitaServicios.RemoveRange(servicios);
+
+                                var relaciones = ContextBD.CitaPadres
+                                    .Where(cp => cp.padre == cita.id);
+
+                                ContextBD.CitaPadres.RemoveRange(relaciones);
+
+                                var citasEliminar = ContextBD.Citas
+                                    .Where(c => idsCitas.Contains(c.id));
+
+                                ContextBD.Citas.RemoveRange(citasEliminar);
+
+                                ContextBD.SaveChanges();
+
+                                foreach (var detalleCita in dto.Citas)
+                                {
+                                    var nuevaCita = new Cita
+                                    {
+                                        fechaInicio = detalleCita.FechaIni,
+                                        hora = detalleCita.Hora,
+                                        fechaFin = detalleCita.FechaIni.AddMinutes(detalleCita.Hora),
+                                        recurso = detalleCita.recurso,
+                                        cliente = idCliente,
+                                        valor = detalleCita.Valor,
+                                        estado = empresa.servicio == true ? Estados.Activo : dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                                        pago = pago,
+                                        bono = dto.UsuarioCreacion == "Usuario" ? detalleCita.Bono : null,
+                                        liquidado = false,
+                                        fechaCreacion = dto.FechaCreacion,
+                                        usuarioCreacion = dto.UsuarioCreacion
+                                    };
+
+                                    ContextBD.Citas.Add(nuevaCita);
+                                    ContextBD.SaveChanges();
+
+                                    foreach (var detalleServicio in detalleCita.servicios)
+                                    {
+                                        ContextBD.CitaServicios.Add(new CitaServicio
+                                        {
+                                            cita = nuevaCita.id,
+                                            servicio = detalleServicio.Servicio
+                                        });
+                                    }
+
+                                    ContextBD.CitaPadres.Add(new CitaPadre
+                                    {
+                                        cita = nuevaCita.id,
+                                        padre = cita.id
+                                    });
+                                }
+
+                                ContextBD.SaveChanges();
+                                transaction.Commit();
+
+                                //if (dto.UsuarioCreacion != "Usuario")
+                                //{
+                                //    var infoRecurso = ContextBD.Usuarios
+                                //                        .Include(u => u.sedeNavigation)
+                                //                        .Where(e => e.estado == Estados.Activo
+                                //                            && e.recurso == true
+                                //                            && e.id == 8)
+                                //                        .FirstOrDefault();
+
+                                //    if (infoRecurso != null)
+                                //    {
+                                //        nombreSede = infoRecurso.sedeNavigation?.Nombre;
+
+                                //        if (!string.IsNullOrEmpty(infoRecurso.correo))
+                                //        {
+                                //            await emailService.SendEmailAsync(
+                                //                infoRecurso.correo,
+                                //                "Confirmación de cita",
+                                //                agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
+                                //                isHtml: true
+                                //            );
+                                //        }
+                                //    }
+                                //}
+
+                                return Ok(new
+                                {
+                                    mensaje = "Cita editada exitosamente",
+                                    exito = true
+                                });
+                            }
+                            else
+                            {
+                                return Ok(new
+                                {
+                                    mensaje = validacion.Mensaje,
+                                    exito = false
+                                });
+                            }
+                        }
+                        else
+                        {
+                            return Ok(new
+                            {
+                                mensaje = "Cliente no encontrado",
+                                exito = false
+                            });
+                        }
+                    }
+                    else
+                    {
+                        return Ok(new
+                        {
+                            mensaje = "Cita no encontrada",
+                            exito = false
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                    return StatusCode(500, new
+                    {
+                        mensaje = "Ocurrió un error interno",
+                        exito = false
+                    });
+                }
             }
             catch (Exception ex)
             {
