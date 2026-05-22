@@ -92,17 +92,23 @@ namespace Informes.API.Controllers
 
                 var porcentajeServicios = await (
                                         from c in ContextBD.Citas
+                                        where c.fechaInicio >= fechaIni && c.fechaInicio <= fechaFin
                                         join cs in ContextBD.CitaServicios on c.id equals cs.cita
                                         join s in ContextBD.Servicios on cs.servicio equals s.id
-                                        group s by new
+                                        join se in ContextBD.Sedes on s.sede equals se.id
+                                        group new { s, se } by new
                                         {
                                             s.id,
-                                            s.nombre
+                                            s.nombre,
+                                            idSede = se.id,
+                                            nombreSede = se.Nombre
                                         } into g
                                         select new
                                         {
                                             idServicio = g.Key.id,
                                             servicio = g.Key.nombre,
+                                            idSede = g.Key.idSede,
+                                            sede = g.Key.nombreSede,
                                             cantidad = g.Count()
                                         }
                                         )
