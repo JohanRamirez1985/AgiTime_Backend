@@ -1203,38 +1203,66 @@ namespace Informes.API.Controllers
             return Math.Round(porcentaje, 2);
         }
 
-        public async Task<List<CitaDTO>> ObtenerValorDiario(ModeloContext ContextBD)
+        public async Task<object> ObtenerValorDiario(ModeloContext ContextBD)
         {
-            var hoy = DateTime.Today;
+            var zonaColombia = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
 
-            int diasdesdelunes = ((int)hoy.DayOfWeek == 0 ? 6 : (int)hoy.DayOfWeek - 1);
+            var ahoraColombia = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaColombia);
 
-            var lunes = hoy.AddDays(-diasdesdelunes).Date;
+            var hoy = ahoraColombia.Date;
 
-            var domingo = lunes.AddDays(6).Date.AddDays(1).AddTicks(-1);
+            int diasDesdeLunes = ((int)hoy.DayOfWeek == 0 ? 6 : (int)hoy.DayOfWeek - 1);
 
-            var porSemana = await ContextBD.Citas
-                .Where(c => c.fechaInicio > lunes && c.fechaInicio <= domingo && c.estado == Estados.Asistio)
-                .GroupBy(c => c.fechaInicio.Date).Select(g => new
+            var lunesActual = hoy.AddDays(-diasDesdeLunes);
+
+            var domingoActual = lunesActual.AddDays(7);
+
+            var lunesPasado = lunesActual.AddDays(-7);
+
+            var ingresos = await ContextBD.Citas
+                .Where(c =>
+                    c.fechaInicio >= lunesPasado &&
+                    c.fechaInicio < domingoActual &&
+                    c.estado == Estados.Asistio)
+                .GroupBy(c => c.fechaInicio.Date)
+                .Select(g => new
                 {
                     fecha = g.Key,
                     total = g.Sum(x => x.valor)
                 })
                 .ToListAsync();
 
-            var ingresosSemana = Enumerable.Range(0, 7)
+            var semanaActual = Enumerable.Range(0, 7)
                 .Select(i =>
                 {
-                    var fecha = lunes.AddDays(i);
+                    var fecha = lunesActual.AddDays(i);
 
                     return new CitaDTO
                     {
-                        dia = fecha.ToString("dddd"),
-                        totalDia = porSemana.FirstOrDefault(x => x.fecha == fecha)?.total ?? 0
+                        dia = fecha.ToString("dddd", new CultureInfo("es-CO")),
+                        totalDia = ingresos
+                            .FirstOrDefault(x => x.fecha == fecha)?.total ?? 0
                     };
                 }).ToList();
 
-            return ingresosSemana;
+            var semanaPasada = Enumerable.Range(0, 7)
+                .Select(i =>
+                {
+                    var fecha = lunesPasado.AddDays(i);
+
+                    return new CitaDTO
+                    {
+                        dia = fecha.ToString("dddd", new CultureInfo("es-CO")),
+                        totalDia = ingresos
+                            .FirstOrDefault(x => x.fecha == fecha)?.total ?? 0
+                    };
+                }).ToList();
+
+            return new
+            {
+                semanaActual,
+                semanaPasada
+            };
         }
     }
 }
