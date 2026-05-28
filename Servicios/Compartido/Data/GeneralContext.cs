@@ -18,6 +18,7 @@ namespace Compartido.Data
         }
 
         public virtual DbSet<Empresa> Empresas { get; set; }
+        public virtual DbSet<Parametro> Parametros { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,6 +47,19 @@ namespace Compartido.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.nombre)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Parametro>(entity =>
+            {
+                entity.Property(e => e.tipo)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.valor)
                     .IsRequired()
                     .HasMaxLength(100)
                     .IsUnicode(false);
