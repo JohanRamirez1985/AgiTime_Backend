@@ -803,5 +803,40 @@ namespace Parametros.API.Controllers
                 });
             }
         }
+
+        [HttpGet("parametrosGenerales")]
+        public IActionResult ObtenerParametrosGenerales()
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var lista = ContextGene.Parametros.Where(e => e.estado == true).OrderBy(o => o.tipo).ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay parametros registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }
