@@ -122,7 +122,7 @@ namespace Agendamiento.API.Servicios
             return mensaje;
         }
 
-        public ResultadoValidacion ValidarDisponibilidad(ModeloContext ContextBD, List<CitaDTO> citas)
+        public bool ValidarDisponibilidad(ModeloContext ContextBD, List<CitaDTO> citas)
         {
             foreach (var detalleCita in citas)
             {
@@ -148,18 +148,12 @@ namespace Agendamiento.API.Servicios
                         .Select(u => u.nombre)
                         .FirstOrDefault();
 
-                    return new ResultadoValidacion
-                    {
-                        Exito = false,
-                        Mensaje = $"El usuario {nombreUsuario} ya está ocupado en ese horario"
-                    };
+                    return false;
+                    //Mensaje = $"El usuario {nombreUsuario} ya está ocupado en ese horario"
                 }
             }
 
-            return new ResultadoValidacion
-            {
-                Exito = true
-            };
+            return true;
         }
     }
 }
