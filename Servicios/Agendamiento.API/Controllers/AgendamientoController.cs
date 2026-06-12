@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 namespace Agendamiento.API.Controllers
@@ -516,7 +517,7 @@ namespace Agendamiento.API.Controllers
                     {
                         return Ok(new
                         {
-                            mensaje = validacion.Mensaje,
+                            mensaje = "Los servicios seleccionados superan el tiempo disponible para usuario.",
                             exito = false
                         });
                     }
