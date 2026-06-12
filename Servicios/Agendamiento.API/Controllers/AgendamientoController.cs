@@ -293,6 +293,7 @@ namespace Agendamiento.API.Controllers
             string nombreCliente = "";
             string telefonoCliente = "";
             bool pago = true;
+            bool validacion = true;
 
             try
             {
@@ -330,9 +331,10 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
+                    if (dto.validaHorario)
+                        validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
-                    if (validacion.Exito)
+                    if (validacion)
                     {
                         if (dto.clienteInfo != null)
                         {

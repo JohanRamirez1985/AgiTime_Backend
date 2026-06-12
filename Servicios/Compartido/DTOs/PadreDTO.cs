@@ -15,6 +15,7 @@ namespace Compartido.DTOs
         public DateTime FechaCreacion { get; set; }
         public string UsuarioCancelacion { get; set; }
         public DateTime FechaCancelacion { get; set; }
+        public bool validaHorario { get; set; }
         public List<CitaDTO> Citas { get; set; } = new();
         public ClienteDTO clienteInfo { get; set; }
     }
