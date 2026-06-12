@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 namespace Agendamiento.API.Controllers
@@ -293,6 +294,7 @@ namespace Agendamiento.API.Controllers
             string nombreCliente = "";
             string telefonoCliente = "";
             bool pago = true;
+            bool validacion = true;
 
             try
             {
@@ -330,9 +332,10 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
+                    if (dto.validaHorario)
+                        validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
-                    if (validacion.Exito)
+                    if (validacion)
                     {
                         if (dto.clienteInfo != null)
                         {
@@ -514,7 +517,7 @@ namespace Agendamiento.API.Controllers
                     {
                         return Ok(new
                         {
-                            mensaje = validacion.Mensaje,
+                            mensaje = "Los servicios seleccionados superan el tiempo disponible del usuario.",
                             exito = false
                         });
                     }
@@ -2026,6 +2029,7 @@ namespace Agendamiento.API.Controllers
             string telefonoCliente = "";
             bool pago = true;
             bool cliente = true;
+            bool validacion = true;
 
             try
             {
@@ -2088,9 +2092,10 @@ namespace Agendamiento.API.Controllers
                         if (cliente)
                         {
 
-                            var validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
+                            if (dto.validaHorario)
+                                validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
-                            if (validacion.Exito)
+                            if (validacion)
                             {
                                 cita.fechaCita = dto.FechaIni;
 
@@ -2191,7 +2196,7 @@ namespace Agendamiento.API.Controllers
                             {
                                 return Ok(new
                                 {
-                                    mensaje = validacion.Mensaje,
+                                    mensaje = "Los servicios seleccionados superan el tiempo disponible del usuario.",
                                     exito = false
                                 });
                             }
