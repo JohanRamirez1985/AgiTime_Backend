@@ -407,7 +407,7 @@ namespace Informes.API.Controllers
                     var BarberoGeneral = ContextBD.Parametros.Where(p => p.tipo == "Barbero_General" && p.estado == true).FirstOrDefault();
                     esBarberoGeneral = BarberoGeneral.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
 
-                    valGeneral = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_General"));
+                    valGeneral = u.porcentaje ?? 0m;
 
                     switch (u.sede)
                     {
@@ -670,7 +670,7 @@ namespace Informes.API.Controllers
                         cita.liquidado = true;
                     }
 
-                    valorDescuentoPorCorte = GetValorDescuento(info, parametros, listaBarberos, u.id, u.sede);
+                    valorDescuentoPorCorte = GetValorDescuento(info, parametros, listaBarberos, u);
 
                     foreach (var item in info)
                     {
@@ -913,7 +913,7 @@ namespace Informes.API.Controllers
             return 0;
         }
         
-        private decimal GetValorDescuento(List<InfoCitaDTO> info,List<Parametro> parametros,List<int> listaBarberos,int id,int sede)
+        private decimal GetValorDescuento(List<InfoCitaDTO> info,List<Parametro> parametros,List<int> listaBarberos, Usuario u)
         {
             int total = 0;
             int can1 = 0;
@@ -942,18 +942,18 @@ namespace Informes.API.Controllers
             var antiguo = parametros.FirstOrDefault(p => p.tipo == "Antiguo" && p.estado);
             esAntiguo = antiguo?.valor?
                         .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Any(x => x.Trim() == id.ToString()) ?? false;
+                        .Any(x => x.Trim() == u.id.ToString()) ?? false;
 
             valAntiguo = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Antiguo"));
 
             var barberoGeneral = parametros.FirstOrDefault(p => p.tipo == "Barbero_General" && p.estado);
             esBarberoGeneral = barberoGeneral?.valor?
                         .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Any(x => x.Trim() == id.ToString()) ?? false;
+                        .Any(x => x.Trim() == u.id.ToString()) ?? false;
 
-            valGeneral = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_General"));
+            valGeneral = u.porcentaje ?? 0m;
 
-            switch (sede)
+            switch (u.sede)
             {
                 case 1:
                     val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
@@ -984,13 +984,13 @@ namespace Informes.API.Controllers
                 }
             }
 
-            bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(id);
+            bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
             inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
             inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
 
             if (validaBarberos)
             {
-                switch (sede)
+                switch (u.sede)
                 {
                     case 1:
                         valorDescuentoPorCorte = inasistencia;
@@ -1019,7 +1019,7 @@ namespace Informes.API.Controllers
                     }
                     else
                     {
-                        switch (sede)
+                        switch (u.sede)
                         {
                             case 1:
                                 if (total <= can1)
