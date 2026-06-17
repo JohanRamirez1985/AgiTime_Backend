@@ -480,6 +480,8 @@ namespace Compartido.Data
                     .HasMaxLength(100)
                     .IsUnicode(false);
 
+                entity.Property(e => e.incumplimiento).HasColumnType("decimal(18, 1)");
+
                 entity.Property(e => e.login)
                     .IsRequired()
                     .HasMaxLength(50)

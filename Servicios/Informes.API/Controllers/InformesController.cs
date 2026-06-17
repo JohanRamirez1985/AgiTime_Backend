@@ -294,8 +294,8 @@ namespace Informes.API.Controllers
             decimal val2 = 0;
             decimal val3 = 0;
             decimal val4 = 0;
-            decimal inasistencia = 0;
-            decimal inasistencia_trailer = 0;
+            //decimal inasistencia = 0;
+            //decimal inasistencia_trailer = 0;
             decimal valAntiguo = 0;
             decimal valGeneral = 0;
             bool esAntiguo = false;
@@ -450,25 +450,26 @@ namespace Informes.API.Controllers
                     //porcentajeBarber = 100 - porcentaje;
 
                     bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
-                    inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
-                    inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
+                    //inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
+                    //inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
 
                     if (validaBarberos)
                     {
-                        switch (u.sede)
-                        {
-                            case 1:
-                                valorDescuentoPorCorte = inasistencia;
-                                break;
+                        valorDescuentoPorCorte = u.incumplimiento ?? 0m;
+                        //switch (u.sede)
+                        //{
+                        //    case 1:
+                        //        valorDescuentoPorCorte = inasistencia;
+                        //        break;
 
-                            case 2:
-                            case 3:
-                                valorDescuentoPorCorte = inasistencia_trailer;
-                                break;
+                        //    case 2:
+                        //    case 3:
+                        //        valorDescuentoPorCorte = inasistencia_trailer;
+                        //        break;
 
-                            default:
-                                break;
-                        }
+                        //    default:
+                        //        break;
+                        //}
                     }
                     else 
                     {
@@ -501,10 +502,8 @@ namespace Informes.API.Controllers
                                             valorDescuentoPorCorte = val1;
                                         else if (total >= can2 && total < can3)
                                             valorDescuentoPorCorte = val2;
-                                        else if (total >= can3 && total < can4)
+                                        else if (total >= can3)
                                             valorDescuentoPorCorte = val3;
-                                        else if (total >= can4)
-                                            valorDescuentoPorCorte = val4;
                                         break;
 
                                     default:
@@ -924,8 +923,8 @@ namespace Informes.API.Controllers
             decimal val2 = 0;
             decimal val3 = 0;
             decimal val4 = 0;
-            decimal inasistencia = 0;
-            decimal inasistencia_trailer = 0;
+            //decimal inasistencia = 0;
+            //decimal inasistencia_trailer = 0;
             decimal valAntiguo = 0;
             decimal valGeneral = 0;
             bool esAntiguo = false;
@@ -985,25 +984,26 @@ namespace Informes.API.Controllers
             }
 
             bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
-            inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
-            inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
+            //inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
+            //inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
 
             if (validaBarberos)
             {
-                switch (u.sede)
-                {
-                    case 1:
-                        valorDescuentoPorCorte = inasistencia;
-                        break;
+                valorDescuentoPorCorte = u.incumplimiento ?? 0m;
+                //switch (u.sede)
+                //{
+                //    case 1:
+                //        valorDescuentoPorCorte = inasistencia;
+                //        break;
 
-                    case 2:
-                    case 3:
-                        valorDescuentoPorCorte = inasistencia_trailer;
-                        break;
+                //    case 2:
+                //    case 3:
+                //        valorDescuentoPorCorte = inasistencia_trailer;
+                //        break;
 
-                    default:
-                        break;
-                }
+                //    default:
+                //        break;
+                //}
             }
             else
             {
@@ -1036,10 +1036,8 @@ namespace Informes.API.Controllers
                                     valorDescuentoPorCorte = val1;
                                 else if (total >= can2 && total < can3)
                                     valorDescuentoPorCorte = val2;
-                                else if (total >= can3 && total < can4)
+                                else if (total >= can3)
                                     valorDescuentoPorCorte = val3;
-                                else if (total >= can4)
-                                    valorDescuentoPorCorte = val4;
                                 break;
 
                             default:
