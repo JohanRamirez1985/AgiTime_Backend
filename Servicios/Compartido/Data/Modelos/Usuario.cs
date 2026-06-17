@@ -28,6 +28,7 @@ namespace Compartido.Data.Modelos
         public bool recurso { get; set; }
         public string foto { get; set; }
         public decimal? porcentaje { get; set; }
+        public decimal? incumplimiento { get; set; }
 
         public virtual Genero generoNavigation { get; set; }
         public virtual Sede sedeNavigation { get; set; }
