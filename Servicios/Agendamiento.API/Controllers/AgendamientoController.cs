@@ -2242,5 +2242,155 @@ namespace Agendamiento.API.Controllers
                 });
             }
         }
+
+        [HttpGet("consultarAgendaCitas")]
+        public IActionResult consultarAgendaCitas([FromQuery] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            IEnumerable<object> lista;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                lista = ContextBD.Citas
+                .Where(e => e.fechaInicio >= dto.FechaIni
+                            && e.fechaFin <= dto.FechaFin
+                            && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                .Select(c => new
+                {
+                    c.id,
+                    c.fechaInicio,
+                    c.estado,
+
+                    Recurso = ContextBD.Usuarios
+                        .Where(u => u.id == c.recurso)
+                        .Select(u => new
+                        {
+                            u.id,
+                            u.nombre,
+                            SedeId = u.sede,
+                            SedeNombre = u.sedeNavigation.Nombre
+                        })
+                        .FirstOrDefault(),
+
+                    Cliente = ContextBD.Clientes
+                        .Where(cl => cl.id == c.cliente)
+                        .Select(cl => new
+                        {
+                            Nombre = cl.nombre,
+                            Telefono = cl.telefono
+                        })
+                        .FirstOrDefault(),
+
+                    Servicios = c.CitaServicios
+                        .Select(cs => new
+                        {
+                            Nombre = cs.servicioNavigation.nombre,
+                            Valor = cs.servicioNavigation.nombre == "Otro"
+                                ? c.valor
+                                : cs.servicioNavigation.valor
+                        })
+                        .ToList()
+                })
+                .AsEnumerable()
+                .Where(x => x.Recurso != null)
+                .GroupBy(x => new
+                {
+                    x.Recurso.SedeId,
+                    x.Recurso.SedeNombre
+                })
+                .Select(sede => new
+                {
+                    id = sede.Key.SedeId,
+                    nombre = sede.Key.SedeNombre,
+
+                    recursos = sede
+                        .GroupBy(r => new
+                        {
+                            r.Recurso.id,
+                            r.Recurso.nombre
+                        })
+                        .OrderBy(r => r.Key.nombre)
+                        .Select(recurso => new
+                        {
+                            id = recurso.Key.id,
+                            nombre = recurso.Key.nombre,
+
+                            citas = recurso
+                                .OrderBy(c => c.fechaInicio)
+                                .Select(c => new
+                                {
+                                    id = c.id,
+                                    hora = c.fechaInicio.ToString("HH:mm"),
+                                    cliente = c.Cliente?.Nombre,
+                                    telefono = c.Cliente?.Telefono,
+
+                                    servicio = string.Join(" + ",
+                                        c.Servicios
+                                            .Select(s => s.Nombre)
+                                            .Distinct()),
+
+                                    estado = c.estado.ToString()
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .OrderBy(s => s.nombre)
+                .ToList();
+
+                if (!lista.Any())
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay citas registradas",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }
