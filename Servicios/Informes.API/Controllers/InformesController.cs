@@ -394,42 +394,6 @@ namespace Informes.API.Controllers
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
                     var bonos = info.Where(i => i.bono == true).ToList();
 
-                    can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
-                    can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
-                    can3 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_3"));
-                    can4 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_4"));
-
-                    var antiguo = ContextBD.Parametros.Where(p => p.tipo == "Antiguo" && p.estado == true).FirstOrDefault();
-                    esAntiguo = antiguo.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
-
-                    valAntiguo = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Antiguo"));
-
-                    var BarberoGeneral = ContextBD.Parametros.Where(p => p.tipo == "Barbero_General" && p.estado == true).FirstOrDefault();
-                    esBarberoGeneral = BarberoGeneral.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
-
-                    valGeneral = u.porcentaje ?? 0m;
-
-                    switch (u.sede)
-                    {
-                        case 1:
-                            val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
-                            val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_2"));
-                            val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_3"));
-                            val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_4"));
-                            break;
-
-                        case 2:
-                        case 3:
-                            val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_1"));
-                            val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_2"));
-                            val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_3"));
-                            val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_4"));
-                            break;
-
-                        default:
-                            break;
-                    }
-
                     total = pagas.Count;
 
                     foreach (var item in pagas)
@@ -440,82 +404,121 @@ namespace Informes.API.Controllers
                         }
                     }
 
-                    //porcentaje = total <= int.Parse(can1.valor)
-                    //            ? u.porcentaje
-                    //            : (total > int.Parse(can1.valor) && total <= int.Parse(can2.valor))
-                    //                ? decimal.Parse(par1.valor)
-                    //                : (total > int.Parse(can2.valor))
-                    //                    ? decimal.Parse(par2.valor)
-                    //                    : 0;
-                    //porcentajeBarber = 100 - porcentaje;
-
-                    bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
-                    //inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
-                    //inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
-
-                    if (validaBarberos)
+                    if (u.id != 3 && u.id != 4)
                     {
-                        valorDescuentoPorCorte = u.incumplimiento ?? 0m;
-                        //switch (u.sede)
-                        //{
-                        //    case 1:
-                        //        valorDescuentoPorCorte = inasistencia;
-                        //        break;
+                        can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
+                        can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
+                        can3 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_3"));
+                        can4 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_4"));
 
-                        //    case 2:
-                        //    case 3:
-                        //        valorDescuentoPorCorte = inasistencia_trailer;
-                        //        break;
+                        var antiguo = ContextBD.Parametros.Where(p => p.tipo == "Antiguo" && p.estado == true).FirstOrDefault();
+                        esAntiguo = antiguo.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
 
-                        //    default:
-                        //        break;
-                        //}
-                    }
-                    else 
-                    {
-                        if (esAntiguo)
+                        valAntiguo = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Antiguo"));
+
+                        var BarberoGeneral = ContextBD.Parametros.Where(p => p.tipo == "Barbero_General" && p.estado == true).FirstOrDefault();
+                        esBarberoGeneral = BarberoGeneral.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
+
+                        valGeneral = u.porcentaje ?? 0m;
+
+                        switch (u.sede)
                         {
-                            valorDescuentoPorCorte = valAntiguo;
+                            case 1:
+                                val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
+                                val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_2"));
+                                val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_3"));
+                                val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_4"));
+                                break;
+
+                            case 2:
+                            case 3:
+                                val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_1"));
+                                val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_2"));
+                                val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_3"));
+                                val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_4"));
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        //porcentaje = total <= int.Parse(can1.valor)
+                        //            ? u.porcentaje
+                        //            : (total > int.Parse(can1.valor) && total <= int.Parse(can2.valor))
+                        //                ? decimal.Parse(par1.valor)
+                        //                : (total > int.Parse(can2.valor))
+                        //                    ? decimal.Parse(par2.valor)
+                        //                    : 0;
+                        //porcentajeBarber = 100 - porcentaje;
+
+                        bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
+                        //inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
+                        //inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
+
+                        if (validaBarberos)
+                        {
+                            valorDescuentoPorCorte = u.incumplimiento ?? 0m;
+                            //switch (u.sede)
+                            //{
+                            //    case 1:
+                            //        valorDescuentoPorCorte = inasistencia;
+                            //        break;
+
+                            //    case 2:
+                            //    case 3:
+                            //        valorDescuentoPorCorte = inasistencia_trailer;
+                            //        break;
+
+                            //    default:
+                            //        break;
+                            //}
                         }
                         else
                         {
-                            if (esBarberoGeneral) 
+                            if (esAntiguo)
                             {
-                                valorDescuentoPorCorte = valGeneral;
+                                valorDescuentoPorCorte = valAntiguo;
                             }
                             else
                             {
-                                switch (u.sede)
+                                if (esBarberoGeneral)
                                 {
-                                    case 1:
-                                        if (total <= can1)
-                                            valorDescuentoPorCorte = val1;
-                                        else if (total >= can2 && total < can3)
-                                            valorDescuentoPorCorte = val2;
-                                        else if (total >= can3)
-                                            valorDescuentoPorCorte = val3;
-                                        break;
+                                    valorDescuentoPorCorte = valGeneral;
+                                }
+                                else
+                                {
+                                    switch (u.sede)
+                                    {
+                                        case 1:
+                                            if (total <= can1)
+                                                valorDescuentoPorCorte = val1;
+                                            else if (total >= can2 && total < can3)
+                                                valorDescuentoPorCorte = val2;
+                                            else if (total >= can3)
+                                                valorDescuentoPorCorte = val3;
+                                            break;
 
-                                    case 2:
-                                    case 3:
-                                        if (total <= can1)
-                                            valorDescuentoPorCorte = val1;
-                                        else if (total >= can2 && total < can3)
-                                            valorDescuentoPorCorte = val2;
-                                        else if (total >= can3)
-                                            valorDescuentoPorCorte = val3;
-                                        break;
+                                        case 2:
+                                        case 3:
+                                            if (total <= can1)
+                                                valorDescuentoPorCorte = val1;
+                                            else if (total >= can2 && total < can3)
+                                                valorDescuentoPorCorte = val2;
+                                            else if (total >= can3)
+                                                valorDescuentoPorCorte = val3;
+                                            break;
 
-                                    default:
-                                        break;
+                                        default:
+                                            break;
+                                    }
                                 }
                             }
                         }
                     }
 
                     decimal? totalPlata = pagas.Sum(s => s.valor);
-                    decimal totalDescuento = total * valorDescuentoPorCorte - (bonos.Count * descuentoBono);
-                    decimal? totalEmpleado = totalPlata - totalDescuento;
+                    decimal totalDescuento = (u.id == 3 || u.id == 4) ? 0 : total * valorDescuentoPorCorte - (bonos.Count * descuentoBono);
+                    decimal? totalEmpleado = (u.id == 3 || u.id == 4) ? totalPlata : totalPlata - totalDescuento;
 
                     var resultado = new
                     {
@@ -669,7 +672,8 @@ namespace Informes.API.Controllers
                         cita.liquidado = true;
                     }
 
-                    valorDescuentoPorCorte = GetValorDescuento(info, parametros, listaBarberos, u);
+                    if (u.id != 3 && u.id != 4)
+                        valorDescuentoPorCorte = GetValorDescuento(info, parametros, listaBarberos, u);
 
                     foreach (var item in info)
                     {
@@ -680,14 +684,13 @@ namespace Informes.API.Controllers
                         if (item.pagoCita == true && item.pagoServicio == true)
                         {
                             tipo = "Normal";
-                            valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
-                            valorBarbero = item.valor - valorBarberia;
+                            valorBarberia = (u.id == 3 || u.id == 4) ? 0 : (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
+                            valorBarbero = (u.id == 3 || u.id == 4) ? item.valor : item.valor - valorBarberia;
                         }
                         else
                         {
                             valorBarberia = 0;
                             valorBarbero = item.valor;
-
                             tipo = item.pagoCita == true ? "Obsequio" : "Descanso";
                         }
 
