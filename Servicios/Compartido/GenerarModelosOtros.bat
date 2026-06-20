@@ -30,7 +30,6 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table CitaServicios ^
 --table Ciudad ^
 --table Clientes ^
---table DetalleProducto ^
 --table Funcionalidades ^
 --table FuncionalidadesSet ^
 --table Genero ^
@@ -39,6 +38,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Padre ^
 --table Parametros ^
 --table Producto ^
+--table ProductoLote ^
 --table Recursos ^
 --table Rol ^
 --table Sede ^
@@ -49,7 +49,8 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table UsuarioRol ^
 --table Usuarios ^
 --table Venta ^
---table VentaDetalle
+--table VentaDetalle ^
+--table VentaDetalleLote
 
 echo ==============================================
 echo ✅ Generación completada correctamente
