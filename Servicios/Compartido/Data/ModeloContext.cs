@@ -24,7 +24,6 @@ namespace Compartido.Data
         public virtual DbSet<CitaServicio> CitaServicios { get; set; }
         public virtual DbSet<Ciudad> Ciudads { get; set; }
         public virtual DbSet<Cliente> Clientes { get; set; }
-        public virtual DbSet<DetalleProducto> DetalleProductos { get; set; }
         public virtual DbSet<Funcionalidade> Funcionalidades { get; set; }
         public virtual DbSet<FuncionalidadesSet> FuncionalidadesSets { get; set; }
         public virtual DbSet<Genero> Generos { get; set; }
@@ -33,6 +32,7 @@ namespace Compartido.Data
         public virtual DbSet<Padre> Padres { get; set; }
         public virtual DbSet<Parametro> Parametros { get; set; }
         public virtual DbSet<Producto> Productos { get; set; }
+        public virtual DbSet<ProductoLote> ProductoLotes { get; set; }
         public virtual DbSet<Recurso> Recursos { get; set; }
         public virtual DbSet<Rol> Rols { get; set; }
         public virtual DbSet<Sede> Sedes { get; set; }
@@ -42,6 +42,7 @@ namespace Compartido.Data
         public virtual DbSet<TipoDocumento> TipoDocumentos { get; set; }
         public virtual DbSet<Usuario> Usuarios { get; set; }
         public virtual DbSet<VentaDetalle> VentaDetalles { get; set; }
+        public virtual DbSet<VentaDetalleLote> VentaDetalleLotes { get; set; }
         public virtual DbSet<Ventum> Venta { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -199,25 +200,6 @@ namespace Compartido.Data
                     .HasConstraintName("FK_Clientes_TipoDocumento");
             });
 
-            modelBuilder.Entity<DetalleProducto>(entity =>
-            {
-                entity.ToTable("DetalleProducto");
-
-                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
-
-                entity.HasOne(d => d.productoNavigation)
-                    .WithMany(p => p.DetalleProductos)
-                    .HasForeignKey(d => d.producto)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_DetalleProducto_Producto");
-
-                entity.HasOne(d => d.usuarioCreacionNavigation)
-                    .WithMany(p => p.DetalleProductos)
-                    .HasForeignKey(d => d.usuarioCreacion)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_DetalleProducto_Usuarios");
-            });
-
             modelBuilder.Entity<Funcionalidade>(entity =>
             {
                 entity.Property(e => e.codigo)
@@ -322,11 +304,6 @@ namespace Compartido.Data
             {
                 entity.ToTable("Producto");
 
-                entity.Property(e => e.Nombre)
-                    .IsRequired()
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
                 entity.Property(e => e.codigo)
                     .IsRequired()
                     .HasMaxLength(50)
@@ -337,7 +314,40 @@ namespace Compartido.Data
                     .HasMaxLength(20)
                     .IsUnicode(false);
 
-                entity.Property(e => e.precio).HasColumnType("decimal(18, 0)");
+                entity.Property(e => e.nombre)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.porcentaje).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.precioVenta).HasColumnType("decimal(18, 2)");
+            });
+
+            modelBuilder.Entity<ProductoLote>(entity =>
+            {
+                entity.ToTable("ProductoLote");
+
+                entity.Property(e => e.estado)
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.fechaCreacion)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.fechaIngreso)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.precioCosto).HasColumnType("decimal(18, 2)");
+
+                entity.HasOne(d => d.productoNavigation)
+                    .WithMany(p => p.ProductoLotes)
+                    .HasForeignKey(d => d.producto)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ProductoLote_Producto");
             });
 
             modelBuilder.Entity<Recurso>(entity =>
@@ -555,6 +565,23 @@ namespace Compartido.Data
                     .HasForeignKey(d => d.venta)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_VentaDetalle_Venta");
+            });
+
+            modelBuilder.Entity<VentaDetalleLote>(entity =>
+            {
+                entity.ToTable("VentaDetalleLote");
+
+                entity.HasOne(d => d.productoLoteNavigation)
+                    .WithMany(p => p.VentaDetalleLotes)
+                    .HasForeignKey(d => d.productoLote)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_VentaDetalleLote_ProductoLote");
+
+                entity.HasOne(d => d.ventaDetalleNavigation)
+                    .WithMany(p => p.VentaDetalleLotes)
+                    .HasForeignKey(d => d.ventaDetalle)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_VentaDetalleLote_VentaDetalle");
             });
 
             modelBuilder.Entity<Ventum>(entity =>

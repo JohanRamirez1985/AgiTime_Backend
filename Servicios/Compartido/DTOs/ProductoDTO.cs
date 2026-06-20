@@ -9,13 +9,15 @@ namespace Compartido.DTOs
     public partial class ProductoDTO
     {
         public int Id { get; set; }
-        public decimal Precio { get; set; }
+        public decimal PrecioVenta { get; set; }
         public string Nombre { get; set; }
         public string Codigo { get; set; }
         public string Estado { get; set; }
         public int Cantidad { get; set; }
         public int empresa { get; set; }
         public int UsuarioCreacion { get; set; }
+        public decimal PrecioCosto { get; set; }
+        public decimal Porcentaje { get; set; }
         public DateTime FechaCreacion { get; set; }
     }
 }

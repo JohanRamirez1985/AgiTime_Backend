@@ -8,7 +8,6 @@ namespace Compartido.Data.Modelos
         public Usuario()
         {
             BloqueosHorarios = new HashSet<BloqueosHorario>();
-            DetalleProductos = new HashSet<DetalleProducto>();
             idRols = new HashSet<Rol>();
         }
 
@@ -34,7 +33,6 @@ namespace Compartido.Data.Modelos
         public virtual Sede sedeNavigation { get; set; }
         public virtual TipoDocumento tipoDocumentoNavigation { get; set; }
         public virtual ICollection<BloqueosHorario> BloqueosHorarios { get; set; }
-        public virtual ICollection<DetalleProducto> DetalleProductos { get; set; }
 
         public virtual ICollection<Rol> idRols { get; set; }
     }
