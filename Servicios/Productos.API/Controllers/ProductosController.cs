@@ -53,51 +53,51 @@ namespace Productos.API.Controllers
 
                 try
                 {
-                    //var prod = ContextBD.Productos.Where(s => s.codigo == dto.Codigo).FirstOrDefault();
+                    var prod = ContextBD.Productos.Where(s => s.nombre == dto.Nombre).FirstOrDefault();
 
-                    //if (prod == null)
-                    //{
-                    var nuevoProd = new Producto
+                    if (prod == null)
                     {
-                        nombre = dto.Nombre,
-                        codigo = dto.Codigo,
-                        precioVenta = dto.PrecioVenta,
-                        porcentaje = dto.Porcentaje,
-                        estado = Estados.Activo
-                    };
+                        var nuevoProd = new Producto
+                        {
+                            nombre = dto.Nombre,
+                            codigo = dto.Codigo,
+                            precioVenta = dto.PrecioVenta,
+                            porcentaje = dto.Porcentaje,
+                            estado = Estados.Activo
+                        };
 
-                    ContextBD.Productos.Add(nuevoProd);
-                    ContextBD.SaveChanges();
+                        ContextBD.Productos.Add(nuevoProd);
+                        ContextBD.SaveChanges();
 
-                    var nuevoDeta = new ProductoLote
+                        var nuevoDeta = new ProductoLote
+                        {
+                            producto = nuevoProd.id,
+                            cantidadInicial = dto.Cantidad,
+                            cantidadDisponible = dto.Cantidad,
+                            precioCosto = dto.PrecioCosto,
+                            usuarioCreacion = dto.UsuarioCreacion,
+                            fechaCreacion = dto.FechaCreacion
+                        };
+                        ContextBD.ProductoLotes.Add(nuevoDeta);
+                        ContextBD.SaveChanges();
+
+                        transaction.Commit();
+
+                        return Ok(new
+                        {
+                            mensaje = "Producto registrado exitosamente",
+                            exito = true
+                        });
+                    }
+                    else
                     {
-                        producto = nuevoProd.id,
-                        cantidadInicial = dto.Cantidad,
-                        cantidadDisponible = dto.Cantidad,
-                        precioCosto = dto.PrecioCosto,
-                        usuarioCreacion = dto.UsuarioCreacion,
-                        fechaCreacion = dto.FechaCreacion
-                    };
-                    ContextBD.ProductoLotes.Add(nuevoDeta);
-                    ContextBD.SaveChanges();
-
-                    transaction.Commit();
-
-                    return Ok(new
-                    {
-                        mensaje = "Producto registrado exitosamente",
-                        exito = true
-                    });
-                    //}
-                    //else
-                    //{
-                    //    return Ok(new
-                    //    {
-                    //        mensaje = "El codigo de producto " + dto.Codigo + " ya existe.",
-                    //        exito = false
-                    //    });
-                    //}
-                }
+                        return Ok(new
+                        {
+                            mensaje = "El producto " + dto.Nombre + " ya existe.",
+                            exito = false
+                        });
+                    }
+            }
                 catch (Exception ex)
                 {
                     transaction.Rollback();
@@ -153,7 +153,7 @@ namespace Productos.API.Controllers
                 {
                     return Ok(new
                     {
-                        mensaje = "Producto " + dto .Nombre + " no encontrado.",
+                        mensaje = "Producto " + dto.Nombre + " no encontrado.",
                         exito = false
                     });
                 }

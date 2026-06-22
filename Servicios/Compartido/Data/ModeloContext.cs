@@ -305,7 +305,6 @@ namespace Compartido.Data
                 entity.ToTable("Producto");
 
                 entity.Property(e => e.codigo)
-                    .IsRequired()
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
