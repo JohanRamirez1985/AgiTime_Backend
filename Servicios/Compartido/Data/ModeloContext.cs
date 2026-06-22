@@ -549,9 +549,13 @@ namespace Compartido.Data
             {
                 entity.ToTable("VentaDetalle");
 
+                entity.Property(e => e.comision).HasColumnType("decimal(18, 0)");
+
+                entity.Property(e => e.descuento).HasColumnType("decimal(18, 0)");
+
                 entity.Property(e => e.total).HasColumnType("decimal(18, 0)");
 
-                entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
+                entity.Property(e => e.valorVenta).HasColumnType("decimal(18, 0)");
 
                 entity.HasOne(d => d.productoNavigation)
                     .WithMany(p => p.VentaDetalles)

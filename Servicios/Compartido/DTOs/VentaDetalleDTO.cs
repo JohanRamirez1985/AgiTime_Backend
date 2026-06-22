@@ -11,7 +11,9 @@ namespace Compartido.DTOs
         public int Producto { get; set; }
         public int NombreProducto { get; set; }
         public int Cantidad { get; set; }
-        public decimal Valor { get; set; }
+        public decimal PrecioVenta { get; set; }
         public decimal Total { get; set; }
+        public decimal Porcentaje { get; set; }
+        public decimal Descuento { get; set; }
     }
 }
