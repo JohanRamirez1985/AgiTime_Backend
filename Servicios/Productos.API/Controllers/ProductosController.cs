@@ -300,8 +300,10 @@ namespace Productos.API.Controllers
                             venta = venta.id,
                             producto = detalle.Producto,
                             cantidad = detalle.Cantidad,
-                            valor = detalle.Valor,
-                            total = detalle.Total
+                            valorVenta = detalle.PrecioVenta,
+                            total = detalle.Total,
+                            comision = detalle.Porcentaje,
+                            descuento = detalle.Descuento
                         };
 
                         ContextBD.VentaDetalles.Add(nuevoDetalle);
