@@ -76,7 +76,8 @@ namespace Productos.API.Controllers
                             cantidadDisponible = dto.Cantidad,
                             precioCosto = dto.PrecioCosto,
                             usuarioCreacion = dto.UsuarioCreacion,
-                            fechaCreacion = dto.FechaCreacion
+                            fechaCreacion = dto.FechaCreacion,
+                            estado = Estados.Activo
                         };
                         ContextBD.ProductoLotes.Add(nuevoDeta);
                         ContextBD.SaveChanges();
@@ -166,7 +167,8 @@ namespace Productos.API.Controllers
                         cantidadDisponible = dto.Cantidad,
                         precioCosto = dto.PrecioCosto,
                         usuarioCreacion = dto.UsuarioCreacion,
-                        fechaCreacion = dto.FechaCreacion
+                        fechaCreacion = dto.FechaCreacion,
+                        estado = Estados.Activo
                     };
                     ContextBD.SaveChanges();
 
