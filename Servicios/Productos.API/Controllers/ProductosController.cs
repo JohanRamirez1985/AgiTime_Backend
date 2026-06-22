@@ -170,6 +170,7 @@ namespace Productos.API.Controllers
                         fechaCreacion = dto.FechaCreacion,
                         estado = Estados.Activo
                     };
+                    ContextBD.ProductoLotes.Add(nuevoDeta);
                     ContextBD.SaveChanges();
 
                     return Ok(new
