@@ -423,9 +423,7 @@ namespace Compartido.Data
                     .HasMaxLength(100)
                     .IsUnicode(false);
 
-                entity.Property(e => e.observaciones)
-                    .HasMaxLength(200)
-                    .IsUnicode(false);
+                entity.Property(e => e.observaciones).IsUnicode(false);
 
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
 
