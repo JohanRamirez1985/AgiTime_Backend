@@ -1098,7 +1098,7 @@ namespace Informes.API.Servicios
 
                 var columnas = new List<(string Nombre, double Width)>
         {
-            ("Fecha", 70),
+            //("Fecha", 70),
             ("Producto", 110),
             ("Vendedor", 110),
             ("Cantidad", 45),
@@ -1226,12 +1226,12 @@ namespace Informes.API.Servicios
 
                     DateTime fechaVenta = Convert.ToDateTime(r.FechaVenta);
 
-                    gfx.DrawString(
-                        fechaVenta.ToString("dd/MM/yyyy"),
-                        font,
-                        XBrushes.Black,
-                        posiciones["Fecha"],
-                        y);
+                    //gfx.DrawString(
+                    //    fechaVenta.ToString("dd/MM/yyyy"),
+                    //    font,
+                    //    XBrushes.Black,
+                    //    posiciones["Fecha"],
+                    //    y);
 
                     gfx.DrawString(
                         Convert.ToString(r.Producto),

@@ -899,7 +899,6 @@ namespace Informes.API.Controllers
             string nombreBase = string.Empty;
             string nombreEmpresa = string.Empty;
             string logo = string.Empty;
-            var venta = new List<object>();
 
             try
             {
@@ -1003,8 +1002,7 @@ namespace Informes.API.Controllers
                 .ThenBy(x => x.Vendedor)
                 .ToList();
 
-                venta.Add(lista);
-
+                var venta = lista.Cast<dynamic>().ToList();
 
                 var pdfBytes = await informeService.GenerarReporteVentas(venta, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, emp, logo);
                 return File(pdfBytes, "application/pdf", $"Resumen_Ventas_{DateTime.Now:yyyyMMdd}.pdf");
