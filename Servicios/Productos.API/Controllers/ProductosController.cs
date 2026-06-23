@@ -335,7 +335,7 @@ namespace Productos.API.Controllers
                             cantidadSolicitada -= cantidadUsada;
 
                             if (lote.cantidadDisponible == 0)
-                                lote.estado = "AGOTADO";
+                                lote.estado = Estados.Agotado;
 
                             if (cantidadUsada > 0)
                             {

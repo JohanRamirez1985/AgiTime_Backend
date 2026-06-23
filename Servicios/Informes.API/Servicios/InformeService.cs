@@ -1,4 +1,5 @@
-﻿using Compartido.DTOs;
+﻿using Compartido.Data.Modelos;
+using Compartido.DTOs;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 using System.Globalization;
@@ -1072,6 +1073,288 @@ namespace Informes.API.Servicios
             //doc.Save(stream, false);
 
             //return stream.ToArray();
+        }
+
+        public async Task<byte[]> GenerarReporteVentas(List<dynamic> ventas, string fechaIni, string fechaFin, string nombreEmpresa, int cliente, string? rutaLogo = null, List<TotalSedeDTO>? totalesSede = null)
+        {
+            try
+            {
+                using var stream = new MemoryStream();
+                var doc = new PdfDocument();
+
+                PdfPage pagina = doc.AddPage();
+                XGraphics gfx = XGraphics.FromPdfPage(pagina);
+
+                var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
+                var font = new XFont("OpenSans", 8, XFontStyle.Regular);
+                var fontBold = new XFont("OpenSans", 8, XFontStyle.Bold);
+                var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+
+                double y = 0;
+
+                double tableLeft = 20;
+                double tableRight = pagina.Width - 20;
+                double filaAlto = 18;
+
+                var columnas = new List<(string Nombre, double Width)>
+        {
+            ("Fecha", 70),
+            ("Producto", 110),
+            ("Vendedor", 110),
+            ("Cantidad", 45),
+            ("Venta", 60),
+            ("Costo", 60),
+            ("Descuento", 60),
+            ("Comision", 60),
+            ("Ganancia", 60)
+        };
+
+                var posiciones = new Dictionary<string, double>();
+
+                double posicionActual = tableLeft;
+
+                foreach (var col in columnas)
+                {
+                    posiciones[col.Nombre] = posicionActual;
+                    posicionActual += col.Width;
+                }
+
+                var lineDark = new XPen(XColors.Black, 1.2);
+
+                string Moneda(decimal valor) =>
+                    valor.ToString("C0", new CultureInfo("es-CO"));
+
+                void DibujarEncabezado()
+                {
+                    double headerHeight = 90;
+
+                    if (!string.IsNullOrEmpty(rutaLogo))
+                    {
+                        try
+                        {
+                            using var http = new HttpClient();
+                            var imgBytes = http.GetByteArrayAsync(rutaLogo).Result;
+
+                            using var msImg = new MemoryStream(imgBytes);
+                            var img = XImage.FromStream(() => msImg);
+
+                            gfx.DrawImage(img, tableLeft, 20, 60, 60);
+                        }
+                        catch
+                        {
+                        }
+                    }
+
+                    gfx.DrawString(
+                        nombreEmpresa,
+                        fontTitle,
+                        XBrushes.DarkBlue,
+                        new XRect(0, 20, pagina.Width, 25),
+                        XStringFormats.TopCenter);
+
+                    gfx.DrawString(
+                        $"Reporte de Ventas {fechaIni} al {fechaFin}",
+                        fontBold,
+                        XBrushes.Black,
+                        new XRect(0, 45, pagina.Width, 20),
+                        XStringFormats.TopCenter);
+
+                    y = headerHeight;
+                }
+
+                void DibujarEncabezadoTabla()
+                {
+                    foreach (var col in columnas)
+                    {
+                        gfx.DrawString(
+                            col.Nombre,
+                            fontBold,
+                            XBrushes.Black,
+                            posiciones[col.Nombre],
+                            y);
+                    }
+
+                    y += filaAlto;
+                    y += 5;
+                }
+
+                void NuevaPagina()
+                {
+                    pagina = doc.AddPage();
+                    gfx = XGraphics.FromPdfPage(pagina);
+
+                    DibujarEncabezado();
+                    DibujarEncabezadoTabla();
+                }
+
+                void ValidarSalto(double espacio)
+                {
+                    if (y + espacio > pagina.Height - 40)
+                    {
+                        NuevaPagina();
+                    }
+                }
+
+                DibujarEncabezado();
+                DibujarEncabezadoTabla();
+
+                int totalCantidad = 0;
+                decimal totalVenta = 0;
+                decimal totalCosto = 0;
+                decimal totalDescuento = 0;
+                decimal totalComision = 0;
+                decimal totalGanancia = 0;
+
+                foreach (var r in ventas)
+                {
+                    ValidarSalto(filaAlto);
+
+                    decimal venta = Convert.ToDecimal(r.Venta);
+                    decimal costo = Convert.ToDecimal(r.Costo);
+                    decimal descuento = Convert.ToDecimal(r.Descuento);
+                    decimal comision = Convert.ToDecimal(r.Comision);
+                    decimal ganancia = Convert.ToDecimal(r.Ganancia);
+
+                    int cantidad = Convert.ToInt32(r.Cantidad);
+
+                    totalCantidad += cantidad;
+                    totalVenta += venta;
+                    totalCosto += costo;
+                    totalDescuento += descuento;
+                    totalComision += comision;
+                    totalGanancia += ganancia;
+
+                    DateTime fechaVenta = Convert.ToDateTime(r.FechaVenta);
+
+                    gfx.DrawString(
+                        fechaVenta.ToString("dd/MM/yyyy"),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Fecha"],
+                        y);
+
+                    gfx.DrawString(
+                        Convert.ToString(r.Producto),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Producto"],
+                        y);
+
+                    gfx.DrawString(
+                        Convert.ToString(r.Vendedor),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Vendedor"],
+                        y);
+
+                    gfx.DrawString(
+                        cantidad.ToString(),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Cantidad"],
+                        y);
+
+                    gfx.DrawString(
+                        Moneda(venta),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Venta"],
+                        y);
+
+                    gfx.DrawString(
+                        Moneda(costo),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Costo"],
+                        y);
+
+                    gfx.DrawString(
+                        Moneda(descuento),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Descuento"],
+                        y);
+
+                    gfx.DrawString(
+                        Moneda(comision),
+                        font,
+                        XBrushes.Black,
+                        posiciones["Comision"],
+                        y);
+
+                    gfx.DrawString(
+                        Moneda(ganancia),
+                        fontBold,
+                        XBrushes.Black,
+                        posiciones["Ganancia"],
+                        y);
+
+                    y += filaAlto;
+                }
+
+                ValidarSalto(50);
+
+                gfx.DrawLine(lineDark, tableLeft, y, tableRight, y);
+
+                y += 10;
+
+                gfx.DrawString(
+                    "TOTAL",
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Producto"],
+                    y);
+
+                gfx.DrawString(
+                    totalCantidad.ToString(),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Cantidad"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalVenta),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Venta"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalCosto),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Costo"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalDescuento),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Descuento"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalComision),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Comision"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalGanancia),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Ganancia"],
+                    y);
+
+                doc.Save(stream, false);
+
+                return stream.ToArray();
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

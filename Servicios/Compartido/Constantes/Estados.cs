@@ -13,5 +13,6 @@ namespace Compartido.Constantes
         public const string Cancelada = "Cancelada";
         public const string Asistio = "Asistio";
         public const string Inasistencia = "Inasistencia";
+        public const string Agotado = "Agotado";
     }
 }

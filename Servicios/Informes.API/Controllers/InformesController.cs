@@ -893,6 +893,135 @@ namespace Informes.API.Controllers
             }
         }
 
+        [HttpGet("informacionInventarioVenta")]
+        public async Task<IActionResult> InformacionInventarioVenta([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp, int? usuario = null, bool personal = false)
+        {
+            string nombreBase = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string logo = string.Empty;
+            var venta = new List<object>();
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = (
+                    from v in ContextBD.Venta
+                    join vd in ContextBD.VentaDetalles on v.id equals vd.venta
+                    join vl in ContextBD.VentaDetalleLotes on vd.id equals vl.ventaDetalle
+                    join pl in ContextBD.ProductoLotes on vl.productoLote equals pl.id
+                    join p in ContextBD.Productos on vd.producto equals p.id
+                    join u in ContextBD.Usuarios on v.usuarioVenta equals u.id
+                    where v.fechaVenta >= fechaInicio
+                       && v.fechaVenta <= fechaFin
+                    group new { vl, pl } by new
+                    {
+                        v.fechaVenta,
+                        VentaDetalleId = vd.id,
+                        Producto = p.nombre,
+                        Vendedor = u.nombre,
+                        vd.cantidad,
+                        vd.valorVenta,
+                        vd.total,
+                        vd.descuento,
+                        vd.comision
+                    }
+                    into g
+                    select new
+                    {
+                        FechaVenta = g.Key.fechaVenta,
+                        Producto = g.Key.Producto,
+                        Vendedor = g.Key.Vendedor,
+
+                        Cantidad = g.Key.cantidad,
+
+                        Venta = g.Key.cantidad * g.Key.valorVenta,
+                        // Si prefieres usar el valor final pagado:
+                        // Venta = g.Key.total,
+
+                        Descuento = g.Key.descuento,
+                        Comision = g.Key.comision,
+
+                        Costo = g.Sum(x => x.vl.cantidad * x.pl.precioCosto)
+                    }
+                )
+                .ToList()
+                .GroupBy(x => new
+                {
+                    x.FechaVenta,
+                    x.Producto,
+                    x.Vendedor
+                })
+                .Select(g => new
+                {
+                    FechaVenta = g.Key.FechaVenta,
+                    Producto = g.Key.Producto,
+                    Vendedor = g.Key.Vendedor,
+
+                    Cantidad = g.Sum(x => x.Cantidad),
+                    Venta = g.Sum(x => x.Venta),
+                    Costo = g.Sum(x => x.Costo),
+                    Descuento = g.Sum(x => x.Descuento),
+                    Comision = g.Sum(x => x.Comision),
+
+                    Ganancia = g.Sum(x => x.Venta)
+                             - g.Sum(x => x.Costo)
+                             - g.Sum(x => x.Comision)
+                             - g.Sum(x => x.Descuento)
+                })
+                .OrderBy(x => x.FechaVenta)
+                .ThenBy(x => x.Producto)
+                .ThenBy(x => x.Vendedor)
+                .ToList();
+
+                venta.Add(lista);
+
+
+                var pdfBytes = await informeService.GenerarReporteVentas(venta, fechaInicio.ToString("dd/MM/yyyy"), fechaFin.ToString("dd/MM/yyyy"), nombreEmpresa, emp, logo);
+                return File(pdfBytes, "application/pdf", $"Resumen_Ventas_{DateTime.Now:yyyyMMdd}.pdf");
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
         private decimal GetDecimal(Parametro? parametro)
         {
             if (parametro == null)
