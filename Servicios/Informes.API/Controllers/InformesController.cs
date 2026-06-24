@@ -994,8 +994,8 @@ namespace Informes.API.Controllers
 
                     Ganancia = g.Sum(x => x.Venta)
                              - g.Sum(x => x.Costo)
-                             //- g.Sum(x => x.Comision)
-                             - g.Sum(x => x.Descuento)
+                             - g.Sum(x => x.Comision)
+                             //- g.Sum(x => x.Descuento)
                 })
                 .OrderBy(x => x.FechaVenta)
                 .ThenBy(x => x.Producto)
