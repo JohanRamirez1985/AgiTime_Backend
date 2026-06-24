@@ -173,7 +173,16 @@ namespace Informes.API.Servicios
                     }
                 }
 
-                decimal totalBarbero = (r.totalPlata ?? 0) + (r.totalPlataObsequios ?? 0) + (r.totalPlataDescanso ?? 0);
+                if (r.comisionVentas > 0)
+                {
+                    gfx.DrawString("Comision", font, XBrushes.Black,
+                            colDetalle, y);
+                    gfx.DrawString(Moneda((decimal)r.comisionVentas), font,
+                        XBrushes.Black, colValor, y);
+                    y += filaAlto;
+                }
+
+                decimal totalBarbero = (r.totalPlata ?? 0) + (r.totalPlataObsequios ?? 0) + (r.totalPlataDescanso ?? 0) + (r.comisionVentas ?? 0);
                 totalGeneralDia += totalBarbero;
 
                 // ===== Línea limpia antes del total =====
@@ -351,6 +360,7 @@ namespace Informes.API.Servicios
                 bool mostrarDescanso = true;
                 bool mostrarTotalSedes = true;
                 bool mostrarTotalBonos = true;
+                bool mostrarComision = true;
 
                 if ( cliente == 8)
                 {
@@ -370,21 +380,24 @@ namespace Informes.API.Servicios
                 };
 
                 if (mostrarIngreso)
-                    columnas.Add(("Ingreso", 65));
+                    columnas.Add(("Ingreso", 55));
 
                 if (mostrarBarberia)
-                    columnas.Add(("Negocio", 65));
+                    columnas.Add(("Negocio", 55));
 
                 if (mostrarEmpleado)
-                    columnas.Add(("Empleado", 65));
+                    columnas.Add(("Empleado", 55));
 
                 if (mostrarObsequio)
-                    columnas.Add(("Obsequios", 65));
+                    columnas.Add(("Obsequios", 55));
 
                 if (mostrarDescanso)
-                    columnas.Add(("Descanso", 65));
+                    columnas.Add(("Descanso", 55));
 
-                columnas.Add(("Total", 65));
+                if (mostrarComision)
+                    columnas.Add(("Comision", 55));
+
+                columnas.Add(("Total", 60));
 
                 // =========================
                 // POSICIONES
@@ -485,6 +498,7 @@ namespace Informes.API.Servicios
                 decimal totalGeneralEmpleado = 0;
                 decimal totalGeneralObsequio = 0;
                 decimal totalGeneralDescanso = 0;
+                decimal totalGeneralComision = 0;
 
                 foreach (var r in resumenUsuarios)
                 {
@@ -500,6 +514,7 @@ namespace Informes.API.Servicios
                         decimal descanso = r.totalPlataDescanso ?? 0;
                         decimal totalBarbero = r.totalIngresoBarber ?? 0;
                         decimal totalBonos = r.totalBonos ?? 0;
+                        decimal comisionVentas = r.comisionVentas ?? 0;
 
                         totalGeneralServicios += totalServicios;
                         totalGeneral += totalBarbero;
@@ -508,6 +523,7 @@ namespace Informes.API.Servicios
                         totalGeneralEmpleado += empleado;
                         totalGeneralObsequio += obsequio;
                         totalGeneralDescanso += descanso;
+                        totalGeneralComision += comisionVentas;
 
                         var valorTexto = totalBonos > 0 ? totalServicios.ToString() + " (" + totalBonos.ToString() + ")*" : totalServicios.ToString();
 
@@ -537,6 +553,11 @@ namespace Informes.API.Servicios
                         if (mostrarDescanso)
                         {
                             gfx.DrawString("(" + r.totaldescanso + ") " + Moneda(descanso),font,XBrushes.Black,posiciones["Descanso"],y);
+                        }
+
+                        if (mostrarComision)
+                        {
+                            gfx.DrawString(Moneda(comisionVentas), font, XBrushes.Black, posiciones["Comision"], y);
                         }
 
                         gfx.DrawString(Moneda(totalBarbero),fontBold,XBrushes.Black,posiciones["Total"],y);
@@ -579,6 +600,11 @@ namespace Informes.API.Servicios
                 if (mostrarDescanso)
                 {
                     gfx.DrawString(Moneda(totalGeneralDescanso),font,XBrushes.Black,posiciones["Descanso"],y);
+                }
+
+                if (mostrarComision)
+                {
+                    gfx.DrawString(Moneda(totalGeneralComision), font, XBrushes.Black, posiciones["Comision"], y);
                 }
 
                 gfx.DrawString(Moneda(totalGeneral),fontBold,XBrushes.Black,posiciones["Total"],y);
@@ -792,6 +818,7 @@ namespace Informes.API.Servicios
             bool mostrarObsequio = true;
             bool mostrarDescanso = true;
             bool mostrarTotalBonos = true;
+            bool mostrarComision = true;
 
             // =========================
             // COLUMNAS DINÁMICAS
@@ -810,6 +837,9 @@ namespace Informes.API.Servicios
 
             if (mostrarDescanso)
                 columnas.Add(("Descanso", 90));
+
+            if (mostrarComision)
+                columnas.Add(("Comision", 90));
 
             columnas.Add(("Total", 90));
 
@@ -918,6 +948,7 @@ namespace Informes.API.Servicios
                 decimal descanso = r.totalPlataDescanso ?? 0;
                 decimal totalBarbero = r.totalIngresoBarber ?? 0;
                 decimal totalBonos = r.totalBonos ?? 0;
+                decimal comisionVentas = r.comisionVentas ?? 0;
 
                 totalGeneral += totalBarbero;
 
@@ -939,6 +970,11 @@ namespace Informes.API.Servicios
                 if (mostrarDescanso)
                 {
                     gfx.DrawString(Moneda(descanso), font, XBrushes.Black, posiciones["Descanso"], y);
+                }
+
+                if (mostrarComision)
+                {
+                    gfx.DrawString(Moneda(comisionVentas), font, XBrushes.Black, posiciones["Comision"], y);
                 }
 
                 gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black, posiciones["Total"], y);

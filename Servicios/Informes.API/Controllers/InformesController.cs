@@ -150,6 +150,7 @@ namespace Informes.API.Controllers
             string logo = string.Empty;
             List<Usuario> usuarios;
             var resumenUsuarios = new List<object>();
+            var resumenInventario = new List<object>();
             decimal bono = 0;
 
             try
@@ -229,6 +230,15 @@ namespace Informes.API.Controllers
                     var obsequios = info.Where(i => i.pagoCita == true && i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
 
+                    var comisionVentas = (
+                            from v in ContextBD.Venta
+                            join vd in ContextBD.VentaDetalles on v.id equals vd.venta
+                            where v.usuarioVenta == u.id
+                               && v.fechaVenta >= fecha
+                               && v.fechaVenta < fecha.AddDays(1)
+                            select (decimal?)vd.comision
+                        ).Sum() ?? 0;
+
                     var resultado = new
                     {
                         nombre = u.nombre,
@@ -238,11 +248,14 @@ namespace Informes.API.Controllers
                         obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
                         totalPlataObsequios = obsequios.Sum(s => s.valor),
                         descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList(),
-                        totalPlataDescanso = noPagas.Sum(s => s.valor)
+                        totalPlataDescanso = noPagas.Sum(s => s.valor),
+                        comisionVentas = comisionVentas
                     };
 
-                    if (pagas.Count > 0 || obsequios.Count > 0 || noPagas.Count > 0)
+                    if (pagas.Count > 0 || obsequios.Count > 0 || noPagas.Count > 0 || comisionVentas > 0)
                         resumenUsuarios.Add(resultado);
+
+                    
                 }
 
                 if (resumenUsuarios.Count > 0)
@@ -520,6 +533,15 @@ namespace Informes.API.Controllers
                     decimal totalDescuento = (u.id == 3 || u.id == 4) ? 0 : total * valorDescuentoPorCorte - (bonos.Count * descuentoBono);
                     decimal? totalEmpleado = (u.id == 3 || u.id == 4) ? totalPlata : totalPlata - totalDescuento;
 
+                    var comisionVentas = (
+                            from v in ContextBD.Venta
+                            join vd in ContextBD.VentaDetalles on v.id equals vd.venta
+                            where v.usuarioVenta == u.id
+                               && v.fechaVenta >= fechaInicio
+                               && v.fechaVenta <= fechaFin
+                            select (decimal?)vd.comision
+                        ).Sum() ?? 0;
+
                     var resultado = new
                     {
                         nombre = u.nombre,
@@ -538,7 +560,8 @@ namespace Informes.API.Controllers
                         totalPlataDescanso = noPagas.Sum(s => s.valor),
                         totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valor) + noPagas.Sum(s => s.valor),
                         sede = u.sedeNavigation.Nombre,
-                        totalBonos = bonos.Count
+                        totalBonos = bonos.Count,
+                        comisionVentas = comisionVentas
                     };
 
                     resumenUsuarios.Add(resultado);
@@ -851,6 +874,15 @@ namespace Informes.API.Controllers
                     decimal? totalDescuento = pagas.Sum(s => s.valorBarberia);
                     decimal? totalEmpleado = pagas.Sum(s => s.valorBarbero);
 
+                    var comisionVentas = (
+                            from v in ContextBD.Venta
+                            join vd in ContextBD.VentaDetalles on v.id equals vd.venta
+                            where v.usuarioVenta == u.id
+                               && v.fechaVenta >= fechaInicio
+                               && v.fechaVenta <= fechaFin
+                            select (decimal?)vd.comision
+                        ).Sum() ?? 0;
+
                     var resultado = new
                     {
                         nombre = u.nombre,
@@ -864,7 +896,8 @@ namespace Informes.API.Controllers
                         totalPlataDescanso = noPagas.Sum(s => s.valorBarbero),
                         totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valorBarbero) + noPagas.Sum(s => s.valorBarbero),
                         sede = u.sedeNavigation.Nombre,
-                        totalBonos = bonos.Count
+                        totalBonos = bonos.Count,
+                        comisionVentas = comisionVentas
                     };
 
                     resumenUsuarios.Add(resultado);
