@@ -963,9 +963,9 @@ namespace Informes.API.Controllers
 
                         Cantidad = g.Key.cantidad,
 
-                        Venta = g.Key.cantidad * g.Key.valorVenta,
+                        //Venta = g.Key.cantidad * g.Key.valorVenta,
                         // Si prefieres usar el valor final pagado:
-                        // Venta = g.Key.total,
+                        Venta = g.Key.total,
 
                         Descuento = g.Key.descuento,
                         Comision = g.Key.comision,
@@ -994,7 +994,7 @@ namespace Informes.API.Controllers
 
                     Ganancia = g.Sum(x => x.Venta)
                              - g.Sum(x => x.Costo)
-                             - g.Sum(x => x.Comision)
+                             //- g.Sum(x => x.Comision)
                              - g.Sum(x => x.Descuento)
                 })
                 .OrderBy(x => x.FechaVenta)
