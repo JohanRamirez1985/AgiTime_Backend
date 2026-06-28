@@ -1053,6 +1053,93 @@ namespace Informes.API.Controllers
             }
         }
 
+        [HttpGet("inventarioProductos")]
+        public async Task<IActionResult> ObtenerInventarioProductos([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string logo = string.Empty;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Productos
+                    .Select(p => new ProductoDTO
+                    {
+                        Id = p.id,
+                        Nombre = p.nombre,
+                        Codigo = p.codigo,
+                        PrecioVenta = p.precioVenta,
+                        Porcentaje = p.porcentaje ?? 0,
+
+                        Cantidad = ContextBD.ProductoLotes
+                            .Where(l => l.producto == p.id)
+                            .Sum(l => (int?)l.cantidadDisponible) ?? 0,
+
+                        preciosCosto = ContextBD.ProductoLotes
+                            .Where(l => l.producto == p.id &&
+                                        l.estado == "Activo" &&
+                                        l.cantidadDisponible > 0)
+                            .GroupBy(l => l.precioCosto)
+                            .Select(g => new InventarioCostoDTO
+                            {
+                                precioCosto = g.Key,
+                                cantidad = g.Sum(x => x.cantidadDisponible)
+                            })
+                            .OrderBy(x => x.precioCosto)
+                            .ToList()
+                    })
+                    .OrderBy(p => p.Nombre)
+                    .ToList();
+
+                var producto = lista.Cast<dynamic>().ToList();
+
+                var pdfBytes = await informeService.GenerarReporteInventarioProducto(producto, nombreEmpresa, emp, logo);
+                return File(pdfBytes, "application/pdf", $"Resumen_Ventas_{DateTime.Now:yyyyMMdd}.pdf");
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
         private decimal GetDecimal(Parametro? parametro)
         {
             if (parametro == null)

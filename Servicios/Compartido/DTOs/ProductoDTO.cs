@@ -19,5 +19,7 @@ namespace Compartido.DTOs
         public decimal PrecioCosto { get; set; }
         public decimal Porcentaje { get; set; }
         public DateTime FechaCreacion { get; set; }
+
+        public List<InventarioCostoDTO> preciosCosto { get; set; } = new();
     }
 }
