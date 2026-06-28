@@ -558,7 +558,7 @@ namespace Informes.API.Controllers
                         descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList(),
                         totaldescanso = noPagas.Count,
                         totalPlataDescanso = noPagas.Sum(s => s.valor),
-                        totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valor) + noPagas.Sum(s => s.valor),
+                        totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valor) + noPagas.Sum(s => s.valor) + comisionVentas,
                         sede = u.sedeNavigation.Nombre,
                         totalBonos = bonos.Count,
                         comisionVentas = comisionVentas
@@ -894,7 +894,7 @@ namespace Informes.API.Controllers
                         totalPlataObsequios = obsequios.Sum(s => s.valorBarbero),
                         totaldescanso = noPagas.Count,
                         totalPlataDescanso = noPagas.Sum(s => s.valorBarbero),
-                        totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valorBarbero) + noPagas.Sum(s => s.valorBarbero),
+                        totalIngresoBarber = totalEmpleado + obsequios.Sum(s => s.valorBarbero) + noPagas.Sum(s => s.valorBarbero) + comisionVentas,
                         sede = u.sedeNavigation.Nombre,
                         totalBonos = bonos.Count,
                         comisionVentas = comisionVentas
@@ -1122,9 +1122,7 @@ namespace Informes.API.Controllers
                     .OrderBy(p => p.Nombre)
                     .ToList();
 
-                var producto = lista.Cast<dynamic>().ToList();
-
-                var pdfBytes = await informeService.GenerarReporteInventarioProducto(producto, nombreEmpresa, emp, logo);
+                var pdfBytes = await informeService.GenerarReporteInventarioProducto(lista, nombreEmpresa, emp, logo);
                 return File(pdfBytes, "application/pdf", $"Resumen_Ventas_{DateTime.Now:yyyyMMdd}.pdf");
 
             }
