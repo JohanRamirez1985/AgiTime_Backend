@@ -1393,7 +1393,7 @@ namespace Informes.API.Servicios
             }
         }
 
-        public async Task<byte[]> GenerarReporteInventarioProducto(List<dynamic> producto, string nombreEmpresa, int cliente, string? rutaLogo = null)
+        public async Task<byte[]> GenerarReporteInventarioProducto(List<ProductoDTO> producto, string nombreEmpresa, int cliente, string? rutaLogo = null)
         {
             try
             {
@@ -1415,12 +1415,16 @@ namespace Informes.API.Servicios
 
                 var columnas = new List<(string Nombre, double Width)>
     {
-        ("Producto",180),
-        ("Precio Venta",70),
-        ("Precio Costo",70),
-        ("Porcentaje",70),
-        ("Stock",50),
-        ("Ganancia",70)
+                ("Producto",150),
+                ("Stock",30),
+                ("P. Venta",40),
+                ("T. P. Venta", 50),
+                ("P. Costo",40),
+                ("T. P. Costo", 50),
+                ("Comision",50),
+                ("T. Comision", 50),
+                ("Ganancia",50),
+                ("T. Ganancia",50)
     };
 
                 var posiciones = new Dictionary<string, double>();
@@ -1508,71 +1512,118 @@ namespace Informes.API.Servicios
                 DibujarEncabezadoTabla();
 
                 decimal totalVenta = 0;
+                decimal totalTVenta = 0;
                 decimal totalCosto = 0;
+                decimal totalTCosto = 0;
                 decimal totalPorcentaje = 0;
+                decimal totalTPorcentaje = 0;
                 decimal totalGanancia = 0;
+                decimal totalTGanancia = 0;
                 int totalStock = 0;
 
                 foreach (var p in producto)
                 {
-                    ValidarSalto(filaAlto);
+                    bool primeraLinea = true;
 
-                    decimal costo = p.preciosCosto.FirstOrDefault()?.precioCosto ?? 0;
-                    decimal venta = p.PrecioVenta;
-                    decimal porcentaje = p.Porcentaje;
-                    int stock = p.Cantidad;
+                    foreach (var lote in p.preciosCosto)
+                    {
+                        ValidarSalto(filaAlto);
 
-                    decimal ganancia = venta - costo - porcentaje;
+                        int stock = lote.cantidad;
+                        decimal venta = p.PrecioVenta;
+                        decimal tVenta = p.PrecioVenta * stock;
+                        decimal costo = lote.precioCosto;
+                        decimal tCosto = lote.precioCosto * stock;
+                        decimal porcentaje = p.Porcentaje;
+                        decimal tPorcentaje = p.Porcentaje * stock;
+                        decimal ganancia = venta - costo - porcentaje;
+                        decimal tGanancia = (venta - costo - porcentaje) * stock;
 
-                    totalVenta += venta;
-                    totalCosto += costo;
-                    totalPorcentaje += porcentaje;
-                    totalStock += stock;
-                    totalGanancia += ganancia;
+                        totalStock += stock;
+                        totalVenta += venta;
+                        totalTVenta += tVenta;
+                        totalCosto += costo;
+                        totalTCosto += tCosto;
+                        totalPorcentaje += porcentaje;
+                        totalTPorcentaje += tPorcentaje;
+                        totalGanancia += ganancia;
+                        totalTGanancia += tGanancia;
 
-                    gfx.DrawString(
-                        p.Nombre,
-                        font,
-                        XBrushes.Black,
-                        posiciones["Producto"],
-                        y);
+                        // Solo escribe el nombre del producto en la primera línea
+                        gfx.DrawString(
+                            primeraLinea ? p.Nombre : "",
+                            font,
+                            XBrushes.Black,
+                            posiciones["Producto"],
+                            y);
 
-                    gfx.DrawString(
-                        Moneda(venta),
-                        font,
-                        XBrushes.Black,
-                        posiciones["Precio Venta"],
-                        y);
+                        gfx.DrawString(
+                            stock.ToString(),
+                            font,
+                            XBrushes.Black,
+                            posiciones["Stock"],
+                            y);
 
-                    gfx.DrawString(
-                        Moneda(costo),
-                        font,
-                        XBrushes.Black,
-                        posiciones["Precio Costo"],
-                        y);
+                        gfx.DrawString(
+                            Moneda(venta),
+                            font,
+                            XBrushes.Black,
+                            posiciones["P. Venta"],
+                            y);
 
-                    gfx.DrawString(
-                        Moneda(porcentaje),
-                        font,
-                        XBrushes.Black,
-                        posiciones["Porcentaje"],
-                        y);
+                        gfx.DrawString(
+                            Moneda(tVenta),
+                            font,
+                            XBrushes.Black,
+                            posiciones["T. P. Venta"],
+                            y);
 
-                    gfx.DrawString(
-                        stock.ToString(),
-                        font,
-                        XBrushes.Black,
-                        posiciones["Stock"],
-                        y);
+                        gfx.DrawString(
+                            Moneda(costo),
+                            font,
+                            XBrushes.Black,
+                            posiciones["P. Costo"],
+                            y);
 
-                    gfx.DrawString(
-                        Moneda(ganancia),
-                        fontBold,
-                        XBrushes.Black,
-                        posiciones["Ganancia"],
-                        y);
+                        gfx.DrawString(
+                           Moneda(tCosto),
+                           font,
+                           XBrushes.Black,
+                           posiciones["T. P. Costo"],
+                           y);
 
-                    y += filaAlto;
+                        gfx.DrawString(
+                            Moneda(porcentaje),
+                            font,
+                            XBrushes.Black,
+                            posiciones["Comision"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(tPorcentaje),
+                            font,
+                            XBrushes.Black,
+                            posiciones["T. Comision"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(ganancia),
+                            fontBold,
+                            XBrushes.Black,
+                            posiciones["Ganancia"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(tGanancia),
+                            fontBold,
+                            XBrushes.Black,
+                            posiciones["T. Ganancia"],
+                            y);
+
+                        y += filaAlto;
+
+                        primeraLinea = false;
+                    }
                 }
 
                 ValidarSalto(40);
@@ -1589,27 +1640,6 @@ namespace Informes.API.Servicios
                     y);
 
                 gfx.DrawString(
-                    Moneda(totalVenta),
-                    fontBold,
-                    XBrushes.Black,
-                    posiciones["Precio Venta"],
-                    y);
-
-                gfx.DrawString(
-                    Moneda(totalCosto),
-                    fontBold,
-                    XBrushes.Black,
-                    posiciones["Precio Costo"],
-                    y);
-
-                gfx.DrawString(
-                    Moneda(totalPorcentaje),
-                    fontBold,
-                    XBrushes.Black,
-                    posiciones["Porcentaje"],
-                    y);
-
-                gfx.DrawString(
                     totalStock.ToString(),
                     fontBold,
                     XBrushes.Black,
@@ -1617,10 +1647,59 @@ namespace Informes.API.Servicios
                     y);
 
                 gfx.DrawString(
+                    Moneda(totalVenta),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["P. Venta"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTVenta),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. P. Venta"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalCosto),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["P. Costo"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTCosto),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. P. Costo"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalPorcentaje),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Comision"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTPorcentaje),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. Comision"],
+                    y);
+
+                gfx.DrawString(
                     Moneda(totalGanancia),
                     fontBold,
                     XBrushes.Black,
                     posiciones["Ganancia"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTGanancia),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. Ganancia"],
                     y);
 
                 doc.Save(stream, false);
