@@ -1392,5 +1392,324 @@ namespace Informes.API.Servicios
                 return null;
             }
         }
+
+        public async Task<byte[]> GenerarReporteInventarioProducto(List<ProductoDTO> producto, string nombreEmpresa, int cliente, string? rutaLogo = null)
+        {
+            try
+            {
+                using var stream = new MemoryStream();
+                var doc = new PdfDocument();
+
+                PdfPage pagina = doc.AddPage();
+                XGraphics gfx = XGraphics.FromPdfPage(pagina);
+
+                var font = new XFont("OpenSans", 8, XFontStyle.Regular);
+                var fontBold = new XFont("OpenSans", 8, XFontStyle.Bold);
+                var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+
+                double y = 0;
+
+                double tableLeft = 20;
+                double tableRight = pagina.Width - 20;
+                double filaAlto = 18;
+
+                var columnas = new List<(string Nombre, double Width)>
+    {
+                ("Producto",150),
+                ("Stock",30),
+                ("P. Venta",40),
+                ("T. P. Venta", 50),
+                ("P. Costo",40),
+                ("T. P. Costo", 50),
+                ("Comision",50),
+                ("T. Comision", 50),
+                ("Ganancia",50),
+                ("T. Ganancia",50)
+    };
+
+                var posiciones = new Dictionary<string, double>();
+
+                double pos = tableLeft;
+
+                foreach (var c in columnas)
+                {
+                    posiciones[c.Nombre] = pos;
+                    pos += c.Width;
+                }
+
+                var lineDark = new XPen(XColors.Black, 1.2);
+
+                string Moneda(decimal valor) =>
+                    valor.ToString("C0", new CultureInfo("es-CO"));
+
+                void DibujarEncabezado()
+                {
+                    double headerHeight = 90;
+
+                    if (!string.IsNullOrEmpty(rutaLogo))
+                    {
+                        try
+                        {
+                            using var http = new HttpClient();
+                            var bytes = http.GetByteArrayAsync(rutaLogo).Result;
+
+                            using var ms = new MemoryStream(bytes);
+                            var img = XImage.FromStream(() => ms);
+
+                            gfx.DrawImage(img, tableLeft, 20, 60, 60);
+                        }
+                        catch { }
+                    }
+
+                    gfx.DrawString(
+                        nombreEmpresa,
+                        fontTitle,
+                        XBrushes.DarkBlue,
+                        new XRect(0, 20, pagina.Width, 25),
+                        XStringFormats.TopCenter);
+
+                    gfx.DrawString(
+                        "Reporte Utilidad Inventario",
+                        fontBold,
+                        XBrushes.Black,
+                        new XRect(0, 45, pagina.Width, 20),
+                        XStringFormats.TopCenter);
+
+                    y = headerHeight;
+                }
+
+                void DibujarEncabezadoTabla()
+                {
+                    foreach (var c in columnas)
+                    {
+                        gfx.DrawString(
+                            c.Nombre,
+                            fontBold,
+                            XBrushes.Black,
+                            posiciones[c.Nombre],
+                            y);
+                    }
+
+                    y += filaAlto + 5;
+                }
+
+                void NuevaPagina()
+                {
+                    pagina = doc.AddPage();
+                    gfx = XGraphics.FromPdfPage(pagina);
+
+                    DibujarEncabezado();
+                    DibujarEncabezadoTabla();
+                }
+
+                void ValidarSalto(double espacio)
+                {
+                    if (y + espacio > pagina.Height - 40)
+                        NuevaPagina();
+                }
+
+                DibujarEncabezado();
+                DibujarEncabezadoTabla();
+
+                decimal totalVenta = 0;
+                decimal totalTVenta = 0;
+                decimal totalCosto = 0;
+                decimal totalTCosto = 0;
+                decimal totalPorcentaje = 0;
+                decimal totalTPorcentaje = 0;
+                decimal totalGanancia = 0;
+                decimal totalTGanancia = 0;
+                int totalStock = 0;
+
+                foreach (var p in producto)
+                {
+                    bool primeraLinea = true;
+
+                    foreach (var lote in p.preciosCosto)
+                    {
+                        ValidarSalto(filaAlto);
+
+                        int stock = lote.cantidad;
+                        decimal venta = p.PrecioVenta;
+                        decimal tVenta = p.PrecioVenta * stock;
+                        decimal costo = lote.precioCosto;
+                        decimal tCosto = lote.precioCosto * stock;
+                        decimal porcentaje = p.Porcentaje;
+                        decimal tPorcentaje = p.Porcentaje * stock;
+                        decimal ganancia = venta - costo - porcentaje;
+                        decimal tGanancia = (venta - costo - porcentaje) * stock;
+
+                        totalStock += stock;
+                        totalVenta += venta;
+                        totalTVenta += tVenta;
+                        totalCosto += costo;
+                        totalTCosto += tCosto;
+                        totalPorcentaje += porcentaje;
+                        totalTPorcentaje += tPorcentaje;
+                        totalGanancia += ganancia;
+                        totalTGanancia += tGanancia;
+
+                        // Solo escribe el nombre del producto en la primera línea
+                        gfx.DrawString(
+                            primeraLinea ? p.Nombre : "",
+                            font,
+                            XBrushes.Black,
+                            posiciones["Producto"],
+                            y);
+
+                        gfx.DrawString(
+                            stock.ToString(),
+                            font,
+                            XBrushes.Black,
+                            posiciones["Stock"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(venta),
+                            font,
+                            XBrushes.Black,
+                            posiciones["P. Venta"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(tVenta),
+                            font,
+                            XBrushes.Black,
+                            posiciones["T. P. Venta"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(costo),
+                            font,
+                            XBrushes.Black,
+                            posiciones["P. Costo"],
+                            y);
+
+                        gfx.DrawString(
+                           Moneda(tCosto),
+                           font,
+                           XBrushes.Black,
+                           posiciones["T. P. Costo"],
+                           y);
+
+                        gfx.DrawString(
+                            Moneda(porcentaje),
+                            font,
+                            XBrushes.Black,
+                            posiciones["Comision"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(tPorcentaje),
+                            font,
+                            XBrushes.Black,
+                            posiciones["T. Comision"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(ganancia),
+                            fontBold,
+                            XBrushes.Black,
+                            posiciones["Ganancia"],
+                            y);
+
+                        gfx.DrawString(
+                            Moneda(tGanancia),
+                            fontBold,
+                            XBrushes.Black,
+                            posiciones["T. Ganancia"],
+                            y);
+
+                        y += filaAlto;
+
+                        primeraLinea = false;
+                    }
+                }
+
+                ValidarSalto(40);
+
+                gfx.DrawLine(lineDark, tableLeft, y, tableRight, y);
+
+                y += 10;
+
+                gfx.DrawString(
+                    "TOTAL",
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Producto"],
+                    y);
+
+                gfx.DrawString(
+                    totalStock.ToString(),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Stock"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalVenta),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["P. Venta"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTVenta),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. P. Venta"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalCosto),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["P. Costo"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTCosto),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. P. Costo"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalPorcentaje),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Comision"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTPorcentaje),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. Comision"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalGanancia),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["Ganancia"],
+                    y);
+
+                gfx.DrawString(
+                    Moneda(totalTGanancia),
+                    fontBold,
+                    XBrushes.Black,
+                    posiciones["T. Ganancia"],
+                    y);
+
+                doc.Save(stream, false);
+
+                return stream.ToArray();
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }
