@@ -487,7 +487,13 @@ namespace Productos.API.Controllers
 
                         stock = ContextBD.ProductoLotes
                             .Where(l => l.producto == p.id)
-                            .Sum(l => (int?)l.cantidadDisponible) ?? 0
+                            .Sum(l => (int?)l.cantidadDisponible) ?? 0,
+
+                        precioCosto = ContextBD.ProductoLotes
+                            .Where(l => l.producto == p.id && l.estado == "Activo")
+                            .OrderBy(l => l.fechaIngreso)
+                            .Select(l => l.precioCosto)
+                            .FirstOrDefault()
                     })
                     .OrderBy(p => p.nombre)
                     .ToList();
