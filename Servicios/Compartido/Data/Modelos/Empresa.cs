@@ -12,5 +12,6 @@ namespace Compartido.Data.Modelos
         public string conexionBD { get; set; }
         public string estado { get; set; }
         public bool servicio { get; set; }
+        public string telefono { get; set; }
     }
 }
