@@ -230,14 +230,29 @@ namespace Informes.API.Controllers
                     var obsequios = info.Where(i => i.pagoCita == true && i.pagoServicio == false).ToList();
                     var noPagas = info.Where(i => i.pagoCita == false).ToList();
 
-                    var comisionVentas = (
-                            from v in ContextBD.Venta
-                            join vd in ContextBD.VentaDetalles on v.id equals vd.venta
-                            where v.usuarioVenta == u.id
-                               && v.fechaVenta >= fecha
-                               && v.fechaVenta < fecha.AddDays(1)
-                            select (decimal?)vd.comision
-                        ).Sum() ?? 0;
+                    //var comisionVentas = (
+                    //        from v in ContextBD.Venta
+                    //        join vd in ContextBD.VentaDetalles on v.id equals vd.venta
+                    //        where v.usuarioVenta == u.id
+                    //           && v.fechaVenta >= fecha
+                    //           && v.fechaVenta < fecha.AddDays(1)
+                    //        select (decimal?)vd.comision
+                    //    ).Sum() ?? 0;
+
+                    var ventas = (from v in ContextBD.Venta
+                                    join vd in ContextBD.VentaDetalles on v.id equals vd.venta
+                                    join p in ContextBD.Productos on vd.producto equals p.id
+                                    where v.usuarioVenta == u.id
+                                        && v.fechaVenta >= fecha
+                                        && v.fechaVenta < fecha.AddDays(1)
+                                    select new
+                                    {
+                                        producto = p.nombre,
+                                        valor = vd.total,       
+                                        comision = vd.comision,
+                                        cantidad = vd.cantidad
+                                    }
+                                 ).ToList();
 
                     var resultado = new
                     {
@@ -249,10 +264,10 @@ namespace Informes.API.Controllers
                         totalPlataObsequios = obsequios.Sum(s => s.valor),
                         descanso = noPagas.Select(s => new { s.servicio, s.valor }).ToList(),
                         totalPlataDescanso = noPagas.Sum(s => s.valor),
-                        comisionVentas = comisionVentas
+                        comisionVentas = ventas
                     };
 
-                    if (pagas.Count > 0 || obsequios.Count > 0 || noPagas.Count > 0 || comisionVentas > 0)
+                    if (pagas.Count > 0 || obsequios.Count > 0 || noPagas.Count > 0 || ventas.Count > 0)
                         resumenUsuarios.Add(resultado);
 
                     

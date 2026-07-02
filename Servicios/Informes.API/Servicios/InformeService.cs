@@ -172,17 +172,29 @@ namespace Informes.API.Servicios
                         y += filaAlto;
                     }
                 }
-
-                if (r.comisionVentas > 0)
+                decimal totalVentas = 0;
+                //if (r.comisionVentas > 0)
+                if (r.comisionVentas is IEnumerable<dynamic> venta && venta.Any())
                 {
-                    gfx.DrawString("Comision", font, XBrushes.Black,
+                    gfx.DrawString("Productos", font, XBrushes.Black,
                             colDetalle, y);
-                    gfx.DrawString(Moneda((decimal)r.comisionVentas), font,
-                        XBrushes.Black, colValor, y);
+                    //gfx.DrawString(Moneda((decimal)r.comisionVentas), font,
+                    //    XBrushes.Black, colValor, y);
+                    //y += filaAlto;
                     y += filaAlto;
+
+                    foreach (var d in venta)
+                    {
+                        gfx.DrawString($"• {d.producto}", font, XBrushes.Black,
+                            colDetalle, y);
+                        gfx.DrawString(Moneda((decimal)d.valor), font,
+                            XBrushes.Black, colValor, y);
+                        y += filaAlto;
+                        totalVentas += (decimal)d.valor;
+                    }
                 }
 
-                decimal totalBarbero = (r.totalPlata ?? 0) + (r.totalPlataObsequios ?? 0) + (r.totalPlataDescanso ?? 0) + (r.comisionVentas ?? 0);
+                decimal totalBarbero = (r.totalPlata ?? 0) + (r.totalPlataObsequios ?? 0) + (r.totalPlataDescanso ?? 0) + (totalVentas);
                 totalGeneralDia += totalBarbero;
 
                 // ===== Línea limpia antes del total =====
