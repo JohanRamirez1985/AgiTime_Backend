@@ -176,8 +176,8 @@ namespace Informes.API.Servicios
                 //if (r.comisionVentas > 0)
                 if (r.comisionVentas is IEnumerable<dynamic> venta && venta.Any())
                 {
-                    gfx.DrawString("Productos", font, XBrushes.Black,
-                            colDetalle, y);
+                    gfx.DrawString("Productos", fontBold, XBrushes.Black,
+                            colNombre, y);
                     //gfx.DrawString(Moneda((decimal)r.comisionVentas), font,
                     //    XBrushes.Black, colValor, y);
                     //y += filaAlto;
