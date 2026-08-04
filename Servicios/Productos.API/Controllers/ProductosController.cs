@@ -5,6 +5,8 @@ using Compartido.Data.Modelos;
 using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Productos.API.Controllers
 {
@@ -512,6 +514,359 @@ namespace Productos.API.Controllers
                     exito = true,
                     datos = lista
                 });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("gestionarVenta")]
+        public IActionResult GestionarVenta([FromQuery] DateTime fechaInicio, DateTime fechaFin, int emp, int? usuario = null)
+        {
+            string nombreBase = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string logo = string.Empty;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = (
+                    from v in ContextBD.Venta
+                    join vd in ContextBD.VentaDetalles on v.id equals vd.venta
+                    join vl in ContextBD.VentaDetalleLotes on vd.id equals vl.ventaDetalle
+                    join pl in ContextBD.ProductoLotes on vl.productoLote equals pl.id
+                    join p in ContextBD.Productos on vd.producto equals p.id
+                    join u in ContextBD.Usuarios on v.usuarioVenta equals u.id
+                    where v.fechaVenta >= fechaInicio
+                       && v.fechaVenta <= fechaFin
+                    group new { vl, pl } by new
+                    {
+                        v.id,
+                        v.fechaVenta,
+                        VentaDetalleId = vd.id,
+                        Producto = p.nombre,
+                        Vendedor = u.nombre,
+                        vd.cantidad,
+                        vd.valorVenta,
+                        vd.total,
+                        vd.descuento,
+                        vd.comision
+                    }
+                    into g
+                    select new
+                    {
+                        Id = g.Key.id,
+                        FechaVenta = g.Key.fechaVenta,
+                        Producto = g.Key.Producto,
+                        Vendedor = g.Key.Vendedor,
+
+                        Cantidad = g.Key.cantidad,
+
+                        //Venta = g.Key.cantidad * g.Key.valorVenta,
+                        // Si prefieres usar el valor final pagado:
+                        Venta = g.Key.total,
+
+                        Descuento = g.Key.descuento,
+                        Comision = g.Key.comision,
+
+                        Costo = g.Sum(x => x.vl.cantidad * x.pl.precioCosto)
+                    }
+                )
+                .ToList()
+                .GroupBy(x => new
+                {
+                    x.Id,
+                    x.FechaVenta,
+                    x.Producto,
+                    x.Vendedor
+                })
+                .Select(g => new
+                {
+                    Id = g.Key.Id,
+                    FechaVenta = g.Key.FechaVenta,
+                    Producto = g.Key.Producto,
+                    Vendedor = g.Key.Vendedor,
+
+                    Cantidad = g.Sum(x => x.Cantidad),
+                    Venta = g.Sum(x => x.Venta),
+                    Costo = g.Sum(x => x.Costo),
+                    Descuento = g.Sum(x => x.Descuento),
+                    Comision = g.Sum(x => x.Comision),
+
+                    Ganancia = g.Sum(x => x.Venta)
+                             - g.Sum(x => x.Costo)
+                             - g.Sum(x => x.Comision)
+                    //- g.Sum(x => x.Descuento)
+                })
+                .OrderBy(x => x.FechaVenta)
+                .ThenBy(x => x.Producto)
+                .ThenBy(x => x.Vendedor)
+                .ToList();
+
+                if (!lista.Any())
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay ventas registradas",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("eliminarVenta")]
+        public async Task<IActionResult> EliminarVenta([FromBody] VentaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                using var transaction = await ContextBD.Database.BeginTransactionAsync();
+
+                try
+                {
+                    // Buscar la venta
+                    var venta = await ContextBD.Venta.FirstOrDefaultAsync(x => x.id == dto.Id);
+
+                    if (venta == null)
+                    {
+                        await transaction.RollbackAsync();
+
+                        return Ok(new
+                        {
+                            mensaje = "La venta no existe",
+                            exito = false
+                        });
+                    }
+
+                    // Buscar los detalles de la venta
+                    var detalles = await ContextBD.VentaDetalles
+                        .Where(x => x.venta == dto.Id)
+                        .ToListAsync();
+
+                    if (detalles.Any())
+                    {
+                        var detalleIds = detalles
+                            .Select(x => x.id)
+                            .ToList();
+
+                        // Buscar los lotes utilizados en esos detalles
+                        var detallesLote = await ContextBD.VentaDetalleLotes
+                            .Where(x => detalleIds.Contains(x.ventaDetalle))
+                            .ToListAsync();
+
+                        foreach (var detalleLote in detallesLote)
+                        {
+                            // Buscar el ProductoLote
+                            var productoLote = await ContextBD.ProductoLotes
+                                .FirstOrDefaultAsync(x => x.id == detalleLote.productoLote);
+
+                            if (productoLote != null)
+                            {
+                                // Devolver la cantidad al inventario
+                                productoLote.cantidadDisponible += detalleLote.cantidad;
+
+                                // Si estaba agotado, vuelve a estar activo
+                                if (productoLote.estado == Estados.Agotado)
+                                {
+                                    productoLote.estado = Estados.Activo;
+                                }
+                            }
+                        }
+
+                        // Eliminar relaciones VentaDetalleLote
+                        ContextBD.VentaDetalleLotes.RemoveRange(detallesLote);
+
+                        // Eliminar detalles de la venta
+                        ContextBD.VentaDetalles.RemoveRange(detalles);
+                    }
+
+                    // Eliminar la venta
+                    ContextBD.Venta.Remove(venta);
+
+                    // Guardar todo
+                    await ContextBD.SaveChangesAsync();
+
+                    // Confirmar transacción
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        mensaje = "Se elimino la venta exitosamente",
+                        exito = true
+                    });
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("editarVenta")]
+        public async Task<IActionResult> EditarVenta([FromBody] VentaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                using var transaction = await ContextBD.Database.BeginTransactionAsync();
+
+                try
+                {
+                    // Buscar la venta
+                    var venta = await ContextBD.Venta
+                        .FirstOrDefaultAsync(x => x.id == dto.Id);
+
+                    if (venta == null)
+                    {
+                        await transaction.RollbackAsync();
+
+                        return Ok(new
+                        {
+                            mensaje = "La venta no existe",
+                            exito = false
+                        });
+                    }
+
+                    // Buscar los detalles de la venta
+                    var detalles = await ContextBD.VentaDetalles
+                        .Where(x => x.venta == dto.Id)
+                        .ToListAsync();
+
+                    if (dto.Detalles != null)
+                    {
+                        foreach (var detalleDTO in dto.Detalles)
+                        {
+                            var detalle = detalles
+                                .FirstOrDefault(x => x.id == detalleDTO.Id);
+
+                            if (detalle != null)
+                            {
+                                detalle.total = detalleDTO.Total;
+                                detalle.descuento = detalleDTO.Descuento;
+                                detalle.comision = detalleDTO.Porcentaje;
+                            }
+                        }
+                    }
+
+                    await ContextBD.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        mensaje = "La venta se actualizó exitosamente",
+                        exito = true
+                    });
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+
             }
             catch (Exception ex)
             {

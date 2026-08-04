@@ -8,6 +8,7 @@ namespace Compartido.DTOs
 {
     public partial class VentaDetalleDTO
     {
+        public int Id { get; set; }
         public int Producto { get; set; }
         public int NombreProducto { get; set; }
         public int Cantidad { get; set; }
