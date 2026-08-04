@@ -576,6 +576,7 @@ namespace Productos.API.Controllers
                     join u in ContextBD.Usuarios on v.usuarioVenta equals u.id
                     where v.fechaVenta >= fechaInicio
                        && v.fechaVenta <= fechaFin
+                       && (!usuario.HasValue || v.usuarioVenta == usuario.Value)
                     group new { vl, pl } by new
                     {
                         v.id,
