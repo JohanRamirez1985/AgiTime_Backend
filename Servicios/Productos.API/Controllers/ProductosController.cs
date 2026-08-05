@@ -579,7 +579,7 @@ namespace Productos.API.Controllers
                        && (!usuario.HasValue || v.usuarioVenta == usuario.Value)
                     group new { vl, pl } by new
                     {
-                        v.id,
+                        vd.id,
                         v.fechaVenta,
                         VentaDetalleId = vd.id,
                         Producto = p.nombre,
@@ -673,9 +673,14 @@ namespace Productos.API.Controllers
         public async Task<IActionResult> EliminarVenta([FromBody] VentaDTO dto)
         {
             string nombreBase = string.Empty;
+
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var empresa = ContextGene.Empresas
+                    .FirstOrDefault(e =>
+                        e.id == dto.empresa &&
+                        e.estado == Estados.Activo);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -689,75 +694,87 @@ namespace Productos.API.Controllers
 
                 nombreBase = empresa.conexionBD;
 
-                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
-                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+                var connectionTemplate =
+                    configuracion["ConnectionStrings:ConnectionFactory"];
+
+                var connectionString =
+                    string.Format(connectionTemplate, empresa.conexionBD);
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                using var transaction = await ContextBD.Database.BeginTransactionAsync();
+                using var transaction =
+                    await ContextBD.Database.BeginTransactionAsync();
 
                 try
                 {
-                    // Buscar la venta
-                    var venta = await ContextBD.Venta.FirstOrDefaultAsync(x => x.id == dto.Id);
+                    // Buscar el detalle que se quiere eliminar
+                    var detalle = await ContextBD.VentaDetalles
+                        .FirstOrDefaultAsync(x => x.id == dto.Id);
 
-                    if (venta == null)
+                    if (detalle == null)
                     {
                         await transaction.RollbackAsync();
 
                         return Ok(new
                         {
-                            mensaje = "La venta no existe",
+                            mensaje = "El detalle de la venta no existe",
                             exito = false
                         });
                     }
 
-                    // Buscar los detalles de la venta
-                    var detalles = await ContextBD.VentaDetalles
-                        .Where(x => x.venta == dto.Id)
+                    // Guardamos el ID de la venta
+                    var ventaId = detalle.venta;
+
+                    // Contar cuántos detalles tiene actualmente la venta
+                    var cantidadDetalles = await ContextBD.VentaDetalles
+                        .CountAsync(x => x.venta == ventaId);
+
+                    // Buscar los lotes utilizados por ESTE detalle
+                    var detallesLote = await ContextBD.VentaDetalleLotes
+                        .Where(x => x.ventaDetalle == detalle.id)
                         .ToListAsync();
 
-                    if (detalles.Any())
+                    // Devolver las cantidades al inventario
+                    foreach (var detalleLote in detallesLote)
                     {
-                        var detalleIds = detalles
-                            .Select(x => x.id)
-                            .ToList();
+                        var productoLote = await ContextBD.ProductoLotes
+                            .FirstOrDefaultAsync(x =>
+                                x.id == detalleLote.productoLote);
 
-                        // Buscar los lotes utilizados en esos detalles
-                        var detallesLote = await ContextBD.VentaDetalleLotes
-                            .Where(x => detalleIds.Contains(x.ventaDetalle))
-                            .ToListAsync();
-
-                        foreach (var detalleLote in detallesLote)
+                        if (productoLote != null)
                         {
-                            // Buscar el ProductoLote
-                            var productoLote = await ContextBD.ProductoLotes
-                                .FirstOrDefaultAsync(x => x.id == detalleLote.productoLote);
+                            // Devolver cantidad al inventario
+                            productoLote.cantidadDisponible += detalleLote.cantidad;
 
-                            if (productoLote != null)
+                            // Si estaba agotado, vuelve a estar activo
+                            if (productoLote.estado == Estados.Agotado)
                             {
-                                // Devolver la cantidad al inventario
-                                productoLote.cantidadDisponible += detalleLote.cantidad;
-
-                                // Si estaba agotado, vuelve a estar activo
-                                if (productoLote.estado == Estados.Agotado)
-                                {
-                                    productoLote.estado = Estados.Activo;
-                                }
+                                productoLote.estado = Estados.Activo;
                             }
                         }
-
-                        // Eliminar relaciones VentaDetalleLote
-                        ContextBD.VentaDetalleLotes.RemoveRange(detallesLote);
-
-                        // Eliminar detalles de la venta
-                        ContextBD.VentaDetalles.RemoveRange(detalles);
                     }
 
-                    // Eliminar la venta
-                    ContextBD.Venta.Remove(venta);
+                    // Eliminar los lotes asociados al detalle
+                    ContextBD.VentaDetalleLotes
+                        .RemoveRange(detallesLote);
 
-                    // Guardar todo
+                    // Eliminar el detalle
+                    ContextBD.VentaDetalles.Remove(detalle);
+
+                    // Si este era el único detalle de la venta,
+                    // eliminar también la venta
+                    if (cantidadDetalles == 1)
+                    {
+                        var venta = await ContextBD.Venta
+                            .FirstOrDefaultAsync(x => x.id == ventaId);
+
+                        if (venta != null)
+                        {
+                            ContextBD.Venta.Remove(venta);
+                        }
+                    }
+
+                    // Guardar cambios
                     await ContextBD.SaveChangesAsync();
 
                     // Confirmar transacción
@@ -765,7 +782,10 @@ namespace Productos.API.Controllers
 
                     return Ok(new
                     {
-                        mensaje = "Se elimino la venta exitosamente",
+                        mensaje = cantidadDetalles == 1
+                            ? "La venta se eliminó exitosamente"
+                            : "El producto se eliminó de la venta exitosamente",
+
                         exito = true
                     });
                 }
@@ -777,7 +797,11 @@ namespace Productos.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+                LogsCatch.GuardarError(
+                    ex,
+                    configuracion,
+                    ContextFact,
+                    nombreBase);
 
                 return StatusCode(500, new
                 {
@@ -791,9 +815,14 @@ namespace Productos.API.Controllers
         public async Task<IActionResult> EditarVenta([FromBody] VentaDTO dto)
         {
             string nombreBase = string.Empty;
+
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var empresa = ContextGene.Empresas
+                    .FirstOrDefault(e =>
+                        e.id == dto.empresa &&
+                        e.estado == Estados.Activo);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -807,50 +836,53 @@ namespace Productos.API.Controllers
 
                 nombreBase = empresa.conexionBD;
 
-                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
-                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+                var connectionTemplate =
+                    configuracion["ConnectionStrings:ConnectionFactory"];
+
+                var connectionString =
+                    string.Format(connectionTemplate, empresa.conexionBD);
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                using var transaction = await ContextBD.Database.BeginTransactionAsync();
+                using var transaction =
+                    await ContextBD.Database.BeginTransactionAsync();
 
                 try
                 {
-                    // Buscar la venta
-                    var venta = await ContextBD.Venta
-                        .FirstOrDefaultAsync(x => x.id == dto.Id);
-
-                    if (venta == null)
+                    if (dto.Detalles == null || !dto.Detalles.Any())
                     {
                         await transaction.RollbackAsync();
 
                         return Ok(new
                         {
-                            mensaje = "La venta no existe",
+                            mensaje = "No se recibió el detalle de la venta",
                             exito = false
                         });
                     }
 
-                    // Buscar los detalles de la venta
-                    var detalles = await ContextBD.VentaDetalles
-                        .Where(x => x.venta == dto.Id)
-                        .ToListAsync();
+                    // Como solo se va a editar un producto,
+                    // tomamos el detalle enviado.
+                    var detalleDTO = dto.Detalles.First();
 
-                    if (dto.Detalles != null)
+                    // Buscar el VentaDetalle
+                    var detalle = await ContextBD.VentaDetalles
+                        .FirstOrDefaultAsync(x => x.id == detalleDTO.Id);
+
+                    if (detalle == null)
                     {
-                        foreach (var detalleDTO in dto.Detalles)
-                        {
-                            var detalle = detalles
-                                .FirstOrDefault(x => x.id == detalleDTO.Id);
+                        await transaction.RollbackAsync();
 
-                            if (detalle != null)
-                            {
-                                detalle.total = detalleDTO.Total;
-                                detalle.descuento = detalleDTO.Descuento;
-                                detalle.comision = detalleDTO.Porcentaje;
-                            }
-                        }
+                        return Ok(new
+                        {
+                            mensaje = "El detalle de la venta no existe",
+                            exito = false
+                        });
                     }
+
+                    // Actualizar únicamente los campos permitidos
+                    detalle.total = detalleDTO.Total;
+                    detalle.descuento = detalleDTO.Descuento;
+                    detalle.comision = detalleDTO.Porcentaje;
 
                     await ContextBD.SaveChangesAsync();
 
@@ -858,7 +890,7 @@ namespace Productos.API.Controllers
 
                     return Ok(new
                     {
-                        mensaje = "La venta se actualizó exitosamente",
+                        mensaje = "El detalle de la venta se actualizó exitosamente",
                         exito = true
                     });
                 }
@@ -867,11 +899,14 @@ namespace Productos.API.Controllers
                     await transaction.RollbackAsync();
                     throw;
                 }
-
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+                LogsCatch.GuardarError(
+                    ex,
+                    configuracion,
+                    ContextFact,
+                    nombreBase);
 
                 return StatusCode(500, new
                 {
