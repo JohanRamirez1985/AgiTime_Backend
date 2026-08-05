@@ -2435,10 +2435,7 @@ namespace Agendamiento.API.Controllers
                 using var ContextBD = ContextFact.Create(connectionString);
 
                 var bloqueo = ContextBD.BloqueosHorarios
-                    .FirstOrDefault(b =>
-                        b.id == dto.Id &&
-                        b.usuario == dto.Usuario
-                    );
+                              .FirstOrDefault(b => b.id == dto.Id);
 
                 if (bloqueo == null)
                 {
