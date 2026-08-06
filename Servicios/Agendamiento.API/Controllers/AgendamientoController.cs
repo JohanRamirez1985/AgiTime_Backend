@@ -2392,5 +2392,85 @@ namespace Agendamiento.API.Controllers
                 });
             }
         }
+
+        [HttpPost("eliminarBloqueo")]
+        public IActionResult EliminarBloqueo([FromBody] BloqueoDTO dto)
+        {
+            string nombreBase = string.Empty;
+
+            try
+            {
+                var empresa = ContextGene.Empresas
+                    .FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+
+                var connectionString = string.Format(
+                    connectionTemplate,
+                    empresa.conexionBD
+                );
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var bloqueo = ContextBD.BloqueosHorarios
+                              .FirstOrDefault(b => b.id == dto.Id);
+
+                if (bloqueo == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "El bloqueo no existe o no pertenece al usuario",
+                        exito = false
+                    });
+                }
+
+                ContextBD.BloqueosHorarios.Remove(bloqueo);
+
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Bloqueo eliminado correctamente",
+                    exito = true
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(
+                    ex,
+                    configuracion,
+                    ContextFact,
+                    nombreBase
+                );
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }
