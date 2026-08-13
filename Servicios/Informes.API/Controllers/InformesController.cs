@@ -849,9 +849,11 @@ namespace Informes.API.Controllers
                 
                 var totalesPorSede = (from c in ContextBD.Citas
                                    join l in ContextBD.LiquidacionCita on c.id equals l.cita
-                                   where l.fechaCita >= fechaInicio && l.fechaCita <= fechaFin
-                                   && idsUsuarios.Contains(c.recurso)
-                                   && l.tipo == "Normal"
+                                   where l.fechaCita >= fechaInicio 
+                                    && l.fechaCita <= fechaFin
+                                    && idsUsuarios.Contains(c.recurso)
+                                    && l.tipo == "Normal"
+                                    && !(emp == 2 && (c.recurso == 3 || c.recurso == 4))
                                    group l by l.sede into g
                                    select new TotalSedeDTO
                                    {
@@ -1464,7 +1466,7 @@ namespace Informes.API.Controllers
             return Math.Round(porcentaje, 2);
         }
 
-        public async Task<object> ObtenerValorDiario(ModeloContext ContextBD)
+        private async Task<object> ObtenerValorDiario(ModeloContext ContextBD)
         {
             var zonaColombia = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
 
