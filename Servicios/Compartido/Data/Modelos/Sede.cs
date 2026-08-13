@@ -21,6 +21,7 @@ namespace Compartido.Data.Modelos
         public string estado { get; set; }
         public string longitud { get; set; }
         public string latitud { get; set; }
+        public string foto { get; set; }
 
         public virtual ICollection<Recurso> Recursos { get; set; }
         public virtual ICollection<Servicio> Servicios { get; set; }
