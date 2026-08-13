@@ -1,12 +1,13 @@
-﻿using Compartido.Data;
-using Compartido.Data.Modelos;
+﻿using Clientes.API.Servicios;
 using Compartido;
 using Compartido.Constantes;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
-using Clientes.API.Servicios;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace Clientes.API.Controllers
 {
@@ -148,77 +149,85 @@ namespace Clientes.API.Controllers
         //    }
         //}
 
-        //[HttpPost("registrarCliente")]
-        //public IActionResult CrearCliente([FromBody] ClienteDTO dto)
-        //{
-        //    string nombreBase = string.Empty;
-        //    try
-        //    {
-        //        var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
-        //        var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+        [HttpPost("registrarCliente")]
+        public IActionResult CrearCliente([FromBody] ClienteDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
 
-        //if (!resultado.Exito)
-        //{
-        //    return Ok(new
-        //    {
-        //        mensaje = resultado.Mensaje,
-        //        exito = false
-        //    });
-        //}
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
 
-        //nombreBase = empresa.conexionBD;
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
 
-        //        var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
-        //        var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
 
-        //        using var ContextBD = ContextFact.Create(connectionString);
+                nombreBase = empresa.conexionBD;
 
-        //        var valida = ContextBD.Clientes.Where(e => e.documento == dto.Documento).FirstOrDefault();
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
 
-        //        if (valida != null)
-        //        {
-        //            return Ok(new
-        //            {
-        //                mensaje = "Ya hay un cliente creado con el número de identificación: " + dto.Documento,
-        //                exito = false
-        //            });
-        //        }
+                using var ContextBD = ContextFact.Create(connectionString);
 
-        //        var nuevoCliente = new Cliente
-        //        {
-        //            nombre = dto.Nombre,
-        //            correo = dto.Correo,
-        //            login = dto.Correo,
-        //            password = EncripPassword.EncriptarPassword(dto.Password),
-        //            telefono = dto.Telefono,
-        //            fechaNacimiento = dto.FechaNacimiento,
-        //            genero = dto.Genero,
-        //            tipoDocumento = dto.TipoDocumento,
-        //            documento = dto.Documento,
-        //            estado = Estados.Activo,
-        //            fechaCreacion = DateTime.Now
-        //        };
+                var valida = ContextBD.Clientes.Where(e => e.telefono == dto.Telefono).FirstOrDefault();
 
-        //        ContextBD.Clientes.Add(nuevoCliente);
-        //        ContextBD.SaveChanges();
+                if (valida != null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Ya hay un cliente creado con el número de celular: " + dto.Telefono,
+                        exito = false
+                    });
+                }
 
-        //        return Ok(new
-        //        {
-        //            mensaje = "Cliente registrado exitosamente",
-        //            exito = true,
-        //            clienteId = nuevoCliente.id
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+                var nuevoCliente = new Cliente
+                {
+                    nombre = dto.Nombre,
+                    correo = dto.Correo,
+                    telefono = dto.Telefono,
+                    fechaNacimiento = dto.FechaNacimiento,
+                    genero = dto.Genero,
+                    tipoDocumento = dto.TipoDocumento,
+                    documento = dto.Documento,
+                    estado = Estados.Activo,
+                    fechaCreacion = DateTime.Now
+                };
 
-        //        return StatusCode(500, new
-        //        {
-        //            mensaje = "Ocurrió un error interno",
-        //            exito = false
-        //        });
-        //    }
-        //}
+                ContextBD.Clientes.Add(nuevoCliente);
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Cliente registrado exitosamente",
+                    exito = true,
+                    clienteId = nuevoCliente.id
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }
