@@ -404,6 +404,10 @@ namespace Compartido.Data
                     .HasMaxLength(20)
                     .IsUnicode(false);
 
+                entity.Property(e => e.foto)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.latitud)
                     .HasMaxLength(50)
                     .IsUnicode(false);
