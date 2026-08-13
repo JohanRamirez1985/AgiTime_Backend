@@ -631,7 +631,14 @@ namespace Informes.API.Servicios
                     }
                     else
                     {
+                        var nombresExcluir = new[]
+                        {
+                            "José Daniel Quintero",
+                            "Juan Felipe Quintero"
+                        };
+
                         totalesPorSede = resumenUsuarios
+                            .Where(r => cliente != 2 || !nombresExcluir.Contains((string)r.nombre))
                         .GroupBy(r => r.sede)
                         .Select(g => new TotalSedeDTO
                         {

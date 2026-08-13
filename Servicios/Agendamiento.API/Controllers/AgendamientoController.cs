@@ -83,6 +83,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
+                    var envioEmailCita = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "Envio_email_cita")?.valor == "true";
+
                     var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni 
                                                            && c.recurso == dto.recurso
                                                            && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
@@ -197,7 +199,7 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        if (dto.UsuarioCreacion != "Usuario")
+                        if (dto.UsuarioCreacion != "Usuario" && envioEmailCita)
                         {
                             var infoRecurso = ContextBD.Usuarios
                                                 .Include(u => u.sedeNavigation)
