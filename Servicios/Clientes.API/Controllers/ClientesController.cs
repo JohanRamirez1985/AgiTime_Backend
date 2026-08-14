@@ -201,11 +201,11 @@ namespace Clientes.API.Controllers
                     correo = dto.Correo,
                     telefono = dto.Telefono,
                     fechaNacimiento = dto.FechaNacimiento,
-                    genero = dto.Genero,
-                    tipoDocumento = dto.TipoDocumento,
-                    documento = dto.Documento,
+                    genero = dto.Genero > 0 ? dto.Genero : (int?)null,
+                    tipoDocumento = dto.TipoDocumento > 0 ? dto.TipoDocumento : (int?)null,
+                    documento = string.IsNullOrWhiteSpace(dto.Documento) ? null : dto.Documento,
                     estado = Estados.Activo,
-                    fechaCreacion = DateTime.Now
+                    fechaCreacion = dto.FechaCreacion
                 };
 
                 ContextBD.Clientes.Add(nuevoCliente);
