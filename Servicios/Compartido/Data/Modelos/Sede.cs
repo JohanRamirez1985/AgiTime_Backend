@@ -19,6 +19,9 @@ namespace Compartido.Data.Modelos
         public string telefono { get; set; }
         public string barrio { get; set; }
         public string estado { get; set; }
+        public string longitud { get; set; }
+        public string latitud { get; set; }
+        public string foto { get; set; }
 
         public virtual ICollection<Recurso> Recursos { get; set; }
         public virtual ICollection<Servicio> Servicios { get; set; }
