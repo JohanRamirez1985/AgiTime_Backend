@@ -33,6 +33,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Funcionalidades ^
 --table FuncionalidadesSet ^
 --table Genero ^
+--table IngresoMesPrueba ^
 --table LiquidacionCita ^
 --table Logs ^
 --table Padre ^
