@@ -793,6 +793,10 @@ namespace Informes.API.Controllers
             int total = 0;
             List<Usuario> usuarios;
             var resumenUsuarios = new List<object>();
+            var totalServiciosIngresoMes = 0;
+            decimal totalPlataIngresoMes = 0;
+            decimal totalBarberiaIngresoMes = 0;
+            decimal totalBarberoIngresoMes = 0;
 
             try
             {
@@ -863,6 +867,38 @@ namespace Informes.API.Controllers
                                        TotalBon = g.Count(x => x.bono == true)
                                    }).ToList();
 
+                var totalesPorSedeIngresoMes = ContextBD.IngresoMesPruebas
+                                    .Where(i => i.fecha >= fechaInicio
+                                             && i.fecha <= fechaFin
+                                             && idsUsuarios.Contains(i.recurso)
+                                             && !(emp == 2 && (i.recurso == 3 || i.recurso == 4)))
+                                    .GroupBy(i => i.sede)
+                                    .Select(g => new TotalSedeDTO
+                                    {
+                                        Sede = g.Key,
+                                        TotalSer = g.Sum(x => x.numero),
+                                        TotalBar = g.Sum(x => x.valorBarberia ?? 0),
+                                        TotalBon = 0
+                                    })
+                                    .ToList();
+
+                foreach (var ingreso in totalesPorSedeIngresoMes)
+                {
+                    var sedeExistente = totalesPorSede
+                        .FirstOrDefault(x => x.Sede == ingreso.Sede);
+
+                    if (sedeExistente != null)
+                    {
+                        sedeExistente.TotalSer += ingreso.TotalSer;
+                        sedeExistente.TotalBar += ingreso.TotalBar;
+                        sedeExistente.TotalBon += ingreso.TotalBon;
+                    }
+                    else
+                    {
+                        totalesPorSede.Add(ingreso);
+                    }
+                }
+
                 foreach (Usuario u in usuarios)
                 {
                     var info = (from c in ContextBD.Citas
@@ -890,6 +926,25 @@ namespace Informes.API.Controllers
                     decimal? totalPlata = pagas.Sum(s => s.valorServicio);
                     decimal? totalDescuento = pagas.Sum(s => s.valorBarberia);
                     decimal? totalEmpleado = pagas.Sum(s => s.valorBarbero);
+
+                    if (emp == 2)
+                    {
+                        var ingresoMes = ContextBD.IngresoMesPruebas
+                            .Where(i => i.recurso == u.id
+                                     && i.fecha >= fechaInicio
+                                     && i.fecha <= fechaFin)
+                            .ToList();
+
+                        totalServiciosIngresoMes = ingresoMes.Sum(i => i.numero);
+                        totalPlataIngresoMes = ingresoMes.Sum(i => i.valorServicio ?? 0);
+                        totalBarberiaIngresoMes = ingresoMes.Sum(i => i.valorBarberia ?? 0);
+                        totalBarberoIngresoMes = ingresoMes.Sum(i => i.valorBarbero ?? 0);
+                    }
+
+                    total += totalServiciosIngresoMes;
+                    totalPlata = (totalPlata ?? 0) + totalPlataIngresoMes;
+                    totalDescuento = (totalDescuento ?? 0) + totalBarberiaIngresoMes;
+                    totalEmpleado = (totalEmpleado ?? 0) + totalBarberoIngresoMes;
 
                     var comisionVentas = (
                             from v in ContextBD.Venta
@@ -1142,6 +1197,77 @@ namespace Informes.API.Controllers
                 var pdfBytes = await informeService.GenerarReporteInventarioProducto(lista, nombreEmpresa, emp, logo);
                 return File(pdfBytes, "application/pdf", $"Resumen_Ventas_{DateTime.Now:yyyyMMdd}.pdf");
 
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("ingresoMesPrueba")]
+        public IActionResult INgresoMesPrueba([FromBody] IngresoMesPruebasDTO dto)
+        {
+            string nombreBase = string.Empty;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var ingreso = new IngresoMesPrueba
+                {
+                    valorServicio = dto.valorServicio,
+                    valorBarberia = dto.valorBarberia,
+                    valorBarbero = dto.valorBarbero,
+                    fecha = dto.fecha,
+                    numero = dto.numero,
+                    sede = dto.sede,
+                    recurso = dto.recurso,
+                    fechaCreacion = dto.fechaCreacion,
+                    usuarioCreacion = dto.usuarioCreacion
+                };
+
+                ContextBD.IngresoMesPruebas.Add(ingreso);
+
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Registrado guardado exitosamente",
+                    exito = true
+                });
             }
             catch (Exception ex)
             {

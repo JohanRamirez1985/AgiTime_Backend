@@ -27,6 +27,7 @@ namespace Compartido.Data
         public virtual DbSet<Funcionalidade> Funcionalidades { get; set; }
         public virtual DbSet<FuncionalidadesSet> FuncionalidadesSets { get; set; }
         public virtual DbSet<Genero> Generos { get; set; }
+        public virtual DbSet<IngresoMesPrueba> IngresoMesPruebas { get; set; }
         public virtual DbSet<LiquidacionCitum> LiquidacionCita { get; set; }
         public virtual DbSet<Log> Logs { get; set; }
         public virtual DbSet<Padre> Padres { get; set; }
@@ -239,6 +240,35 @@ namespace Compartido.Data
                     .IsRequired()
                     .HasMaxLength(50)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<IngresoMesPrueba>(entity =>
+            {
+                entity.ToTable("IngresoMesPrueba");
+
+                entity.Property(e => e.fecha).HasColumnType("datetime");
+
+                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
+
+                entity.Property(e => e.sede)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.usuarioCreacion)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.valorBarberia).HasColumnType("decimal(18, 0)");
+
+                entity.Property(e => e.valorBarbero).HasColumnType("decimal(18, 0)");
+
+                entity.Property(e => e.valorServicio).HasColumnType("decimal(18, 0)");
+
+                entity.HasOne(d => d.recursoNavigation)
+                    .WithMany(p => p.IngresoMesPruebas)
+                    .HasForeignKey(d => d.recurso)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_IngresoMesPrueba_Usuarios");
             });
 
             modelBuilder.Entity<LiquidacionCitum>(entity =>
