@@ -24,7 +24,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --no-onconfiguring ^
 --force ^
 --table Empresa ^
---table Parametros 
+--table ParametrosGenerales 
 
 echo ==============================================
 echo ✅ Generación completada correctamente
