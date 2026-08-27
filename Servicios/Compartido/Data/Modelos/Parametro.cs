@@ -9,5 +9,6 @@ namespace Compartido.Data.Modelos
         public string tipo { get; set; }
         public string valor { get; set; }
         public bool estado { get; set; }
+        public string observacion { get; set; }
     }
 }
