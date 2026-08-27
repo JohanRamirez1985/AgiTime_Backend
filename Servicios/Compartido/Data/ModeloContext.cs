@@ -319,6 +319,10 @@ namespace Compartido.Data
 
             modelBuilder.Entity<Parametro>(entity =>
             {
+                entity.Property(e => e.observacion)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.tipo)
                     .IsRequired()
                     .HasMaxLength(100)
