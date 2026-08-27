@@ -18,7 +18,7 @@ namespace Compartido.Data
         }
 
         public virtual DbSet<Empresa> Empresas { get; set; }
-        public virtual DbSet<Parametro> Parametros { get; set; }
+        public virtual DbSet<ParametrosGenerale> ParametrosGenerales { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,7 +56,7 @@ namespace Compartido.Data
                     .IsUnicode(false);
             });
 
-            modelBuilder.Entity<Parametro>(entity =>
+            modelBuilder.Entity<ParametrosGenerale>(entity =>
             {
                 entity.Property(e => e.tipo)
                     .IsRequired()

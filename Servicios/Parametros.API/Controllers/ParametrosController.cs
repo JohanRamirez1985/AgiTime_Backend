@@ -810,7 +810,7 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var lista = ContextGene.Parametros.Where(e => e.estado == true).OrderBy(o => o.tipo).ToList();
+                var lista = ContextGene.ParametrosGenerales.Where(e => e.estado == true).OrderBy(o => o.tipo).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {
