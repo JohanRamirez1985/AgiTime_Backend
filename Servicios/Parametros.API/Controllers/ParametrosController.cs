@@ -699,7 +699,7 @@ namespace Parametros.API.Controllers
                              join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
                              join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio
                              join u in ContextBD.Usuarios on sr.recurso equals u.id
-                             where s.estado == Estados.Activo && s.cliente == true
+                             where s.estado == Estados.Activo
                              orderby s.orden
                              select new
                              {
@@ -717,7 +717,7 @@ namespace Parametros.API.Controllers
                 else
                 {
                     lista = ContextBD.Servicios
-                            .Where(s => s.estado == Estados.Activo && s.cliente == true)
+                            .Where(s => s.estado == Estados.Activo)
                             .OrderBy(o => o.orden)
                             .Cast<object>()
                             .ToList();
