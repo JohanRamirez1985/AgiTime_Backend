@@ -34,7 +34,7 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpPost("registrarCita")]
-        public async Task<IActionResult> CrearCita([FromBody] CitaDTO dto)
+        public async Task<IActionResult> CrearCitaNormal([FromBody] CitaDTO dto)
         {
             string nombreBase = string.Empty;
             string logo = string.Empty;
@@ -285,7 +285,7 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpPost("guardarCita")]
-        public async Task<IActionResult> GuardarCita([FromBody] PadreDTO dto)
+        public async Task<IActionResult> CrearCitaServicio([FromBody] PadreDTO dto)
         {
             string nombreBase = string.Empty;
             string logo = string.Empty;
@@ -520,6 +520,518 @@ namespace Agendamiento.API.Controllers
                         return Ok(new
                         {
                             mensaje = "Los servicios seleccionados superan el tiempo disponible del usuario.",
+                            exito = false
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                    return StatusCode(500, new
+                    {
+                        mensaje = "Ocurrió un error interno",
+                        exito = false
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("almacenarCitaOrdenNo")]
+        public async Task<IActionResult> CrearCitaOrdenesNo([FromBody] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            string logo = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string nombreSede = string.Empty;
+            int idCliente = 0;
+            string emailCliente = "";
+            string nombreCliente = "";
+            string telefonoCliente = "";
+            //int newHora = 0;
+            bool pago = true;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, nombreBase);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+                using var transaction = ContextBD.Database.BeginTransaction();
+
+                try
+                {
+                    var envioEmailCita = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "Envio_email_cita")?.valor == "true";
+
+                    var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
+                                                           && c.recurso == dto.recurso
+                                                           && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
+                                                           ).FirstOrDefault();
+
+                    if (validaHora == null)
+                    {
+                        if (dto.clienteInfo != null)
+                        {
+                            var user = ContextBD.Clientes
+                                .FirstOrDefault(e => e.telefono == dto.clienteInfo.Telefono);
+
+                            if (user == null)
+                            {
+                                var nueva = new Cliente
+                                {
+                                    nombre = dto.clienteInfo.Nombre,
+                                    correo = dto.clienteInfo.Correo,
+                                    telefono = dto.clienteInfo.Telefono,
+                                    fechaNacimiento = dto.clienteInfo.FechaNacimiento,
+                                    estado = Estados.Activo,
+                                    fechaCreacion = dto.FechaCreacion
+                                };
+
+                                ContextBD.Clientes.Add(nueva);
+                                ContextBD.SaveChanges();
+
+                                idCliente = nueva.id;
+                                nombreCliente = nueva.nombre;
+                                emailCliente = nueva.correo;
+                                telefonoCliente = nueva.telefono;
+                            }
+                            else
+                            {
+                                idCliente = user.id;
+                                nombreCliente = user.nombre;
+                                emailCliente = user.correo;
+                                telefonoCliente = user.telefono;
+                            }
+                        }
+
+                        bool diaCompletoBloqueado = false;
+                        var diaSemana = (int)dto.FechaIni.DayOfWeek;
+                        if (diaSemana == 0) diaSemana = 7;
+
+                        var fechaSolo = dto.FechaIni.Date;
+
+                        var bloqueos = ContextBD.BloqueosHorarios
+                                        .AsEnumerable()
+                                        .Where(b => b.usuario == dto.recurso &&
+                                            b.tipoBloqueo == 3 &&
+                                            b.estado == Estados.Activo &&
+                                            b.diasSemana != null &&
+                                            (
+                                                diaSemana == 7 &&
+                                                b.diasSemana.Split(',')
+                                                            .Select(x => x.Trim())
+                                                            .Contains("7")
+                                            )
+                                        )
+                                        .ToList();
+
+                        foreach (var bloqueo in bloqueos)
+                        {
+                            var inicio = bloqueo.horaInicio;
+                            var fin = bloqueo.horaFin;
+
+                            // Día completo bloqueado
+                            if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
+                            {
+                                diaCompletoBloqueado = true;
+                                break;
+                            }
+                        }
+
+                        if (diaCompletoBloqueado)
+                        {
+                            pago = false;
+                        }
+
+                        var nuevaOrden = new Ordene
+                        {
+                            nombre = nombreCliente,
+                            estado = Estados.Pendiente,
+                            observaciones = null,
+                            usuarioCreacion = dto.UsuarioCreacion,
+                            fechaCreacion = dto.FechaCreacion
+                        };
+
+                        ContextBD.Ordenes.Add(nuevaOrden);
+                        ContextBD.SaveChanges();
+
+                        int idOrden = nuevaOrden.id;
+
+                        for (int i = 1; i <= dto.orden.cantidad; i++)
+                        {
+                            var nuevaSesion = new Sesione
+                            {
+                                numero = i,
+                                orden = idOrden,
+                                estado = Estados.Pendiente
+                            };
+
+                            ContextBD.Sesiones.Add(nuevaSesion);
+                        }
+
+                        ContextBD.SaveChanges();
+
+                        var nuevo = new Cita
+                        {
+                            fechaInicio = dto.FechaIni,
+                            hora = dto.Hora,
+                            fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
+                            recurso = dto.recurso,
+                            cliente = dto.clienteInfo != null ? idCliente : null,
+                            valor = dto.Valor,
+                            estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                            pago = pago,
+                            bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
+                            liquidado = false,
+                            fechaCreacion = dto.FechaCreacion,
+                            usuarioCreacion = dto.UsuarioCreacion,
+                            orden = idOrden
+                        };
+
+                        ContextBD.Citas.Add(nuevo);
+                        ContextBD.SaveChanges();
+
+                        foreach (var detalle in dto.servicios)
+                        {
+                            var nuevoServicio = new CitaServicio
+                            {
+                                cita = nuevo.id,
+                                servicio = detalle.Servicio
+                            };
+
+                            ContextBD.CitaServicios.Add(nuevoServicio);
+                        }
+
+                        ContextBD.SaveChanges();
+
+                        transaction.Commit();
+
+                        if (dto.UsuarioCreacion != "Usuario" && envioEmailCita)
+                        {
+                            var infoRecurso = ContextBD.Usuarios
+                                                .Include(u => u.sedeNavigation)
+                                                .Where(e => e.estado == Estados.Activo
+                                                    && e.recurso == true
+                                                    && e.id == dto.recurso)
+                                                .FirstOrDefault();
+
+                            if (infoRecurso != null)
+                            {
+                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
+
+                                if (!string.IsNullOrEmpty(infoRecurso.correo))
+                                {
+                                    await emailService.SendEmailAsync(
+                                        infoRecurso.correo,
+                                        "Confirmación de cita",
+                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
+                                        isHtml: true
+                                    );
+                                }
+                            }
+                            else
+                            {
+                                var Recurso = ContextBD.Recursos
+                                                .Include(u => u.sedeNavigation)
+                                                .Where(e => e.estado == Estados.Activo)
+                                                .FirstOrDefault();
+                                if (Recurso != null)
+                                {
+                                    nombreSede = infoRecurso.sedeNavigation?.Nombre;
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(emailCliente))
+                            {
+                                await emailService.SendEmailAsync(
+                                    emailCliente,
+                                    "Confirmación de cita",
+                                    agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
+                                    isHtml: true
+                                );
+                            }
+                        }
+
+                        return Ok(new
+                        {
+                            mensaje = "Cita registrada exitosamente",
+                            exito = true
+                        });
+                    }
+                    else
+                    {
+                        return Ok(new
+                        {
+                            mensaje = "Ya hay una cita agendada en ese horario.",
+                            exito = false
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                    return StatusCode(500, new
+                    {
+                        mensaje = "Ocurrió un error interno",
+                        exito = false
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("almacenarCitaOrdenSi")]
+        public async Task<IActionResult> CrearCitaOrdenesSi([FromBody] CitaDTO dto)
+        {
+            string nombreBase = string.Empty;
+            string logo = string.Empty;
+            string nombreEmpresa = string.Empty;
+            string nombreSede = string.Empty;
+            int idCliente = 0;
+            string emailCliente = "";
+            string nombreCliente = "";
+            string telefonoCliente = "";
+            //int newHora = 0;
+            bool pago = true;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+                nombreEmpresa = empresa.nombre;
+                logo = "https://agitime.com.co/assets/img/" + empresa.logo;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, nombreBase);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+                using var transaction = ContextBD.Database.BeginTransaction();
+
+                try
+                {
+                    var envioEmailCita = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "Envio_email_cita")?.valor == "true";
+
+                    var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
+                                                           && c.recurso == dto.recurso
+                                                           && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
+                                                           ).FirstOrDefault();
+
+                    if (validaHora == null)
+                    {
+                        if (dto.clienteInfo != null)
+                        {
+                            var user = ContextBD.Clientes
+                                .FirstOrDefault(e => e.id == dto.clienteInfo.Id);
+
+                            if (user != null)
+                            {
+                                idCliente = user.id;
+                                nombreCliente = user.nombre;
+                                emailCliente = user.correo;
+                                telefonoCliente = user.telefono;
+                            }
+                        }
+
+                        bool diaCompletoBloqueado = false;
+                        var diaSemana = (int)dto.FechaIni.DayOfWeek;
+                        if (diaSemana == 0) diaSemana = 7;
+
+                        var fechaSolo = dto.FechaIni.Date;
+
+                        var bloqueos = ContextBD.BloqueosHorarios
+                                        .AsEnumerable()
+                                        .Where(b => b.usuario == dto.recurso &&
+                                            b.tipoBloqueo == 3 &&
+                                            b.estado == Estados.Activo &&
+                                            b.diasSemana != null &&
+                                            (
+                                                diaSemana == 7 &&
+                                                b.diasSemana.Split(',')
+                                                            .Select(x => x.Trim())
+                                                            .Contains("7")
+                                            )
+                                        )
+                                        .ToList();
+
+                        foreach (var bloqueo in bloqueos)
+                        {
+                            var inicio = bloqueo.horaInicio;
+                            var fin = bloqueo.horaFin;
+
+                            // Día completo bloqueado
+                            if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
+                            {
+                                diaCompletoBloqueado = true;
+                                break;
+                            }
+                        }
+
+                        if (diaCompletoBloqueado)
+                        {
+                            pago = false;
+                        }
+
+                        var nuevo = new Cita
+                        {
+                            fechaInicio = dto.FechaIni,
+                            hora = dto.Hora,
+                            fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
+                            recurso = dto.recurso,
+                            cliente = dto.clienteInfo != null ? idCliente : null,
+                            valor = dto.Valor,
+                            estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                            pago = pago,
+                            bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
+                            liquidado = false,
+                            fechaCreacion = dto.FechaCreacion,
+                            usuarioCreacion = dto.UsuarioCreacion,
+                            orden = dto.orden.Id
+                        };
+
+                        ContextBD.Citas.Add(nuevo);
+                        ContextBD.SaveChanges();
+
+                        foreach (var detalle in dto.servicios)
+                        {
+                            var nuevoServicio = new CitaServicio
+                            {
+                                cita = nuevo.id,
+                                servicio = detalle.Servicio
+                            };
+
+                            ContextBD.CitaServicios.Add(nuevoServicio);
+                        }
+
+                        ContextBD.SaveChanges();
+
+                        transaction.Commit();
+
+                        if (dto.UsuarioCreacion != "Usuario" && envioEmailCita)
+                        {
+                            var infoRecurso = ContextBD.Usuarios
+                                                .Include(u => u.sedeNavigation)
+                                                .Where(e => e.estado == Estados.Activo
+                                                    && e.recurso == true
+                                                    && e.id == dto.recurso)
+                                                .FirstOrDefault();
+
+                            if (infoRecurso != null)
+                            {
+                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
+
+                                if (!string.IsNullOrEmpty(infoRecurso.correo))
+                                {
+                                    await emailService.SendEmailAsync(
+                                        infoRecurso.correo,
+                                        "Confirmación de cita",
+                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
+                                        isHtml: true
+                                    );
+                                }
+                            }
+                            else
+                            {
+                                var Recurso = ContextBD.Recursos
+                                                .Include(u => u.sedeNavigation)
+                                                .Where(e => e.estado == Estados.Activo)
+                                                .FirstOrDefault();
+                                if (Recurso != null)
+                                {
+                                    nombreSede = infoRecurso.sedeNavigation?.Nombre;
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(emailCliente))
+                            {
+                                await emailService.SendEmailAsync(
+                                    emailCliente,
+                                    "Confirmación de cita",
+                                    agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
+                                    isHtml: true
+                                );
+                            }
+                        }
+
+                        return Ok(new
+                        {
+                            mensaje = "Cita registrada exitosamente",
+                            exito = true
+                        });
+                    }
+                    else
+                    {
+                        return Ok(new
+                        {
+                            mensaje = "Ya hay una cita agendada en ese horario.",
                             exito = false
                         });
                     }
@@ -2456,6 +2968,91 @@ namespace Agendamiento.API.Controllers
                 {
                     mensaje = "Bloqueo eliminado correctamente",
                     exito = true
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(
+                    ex,
+                    configuracion,
+                    ContextFact,
+                    nombreBase
+                );
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("ConsultarOrdenes")]
+        public async Task<IActionResult> GestionarOrdenes(int empresa)
+        {
+            string nombreBase = string.Empty;
+
+            try
+            {
+                var empresaBD = ContextGene.Empresas
+                    .FirstOrDefault(e => e.id == empresa && e.estado == Estados.Activo);
+
+                if (empresaBD == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresaBD);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresaBD.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, nombreBase);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var ordenes = await ContextBD.Ordenes
+                    .AsNoTracking()
+                    .Select(o => new OrdenDTO
+                    {
+                        Id = o.id,
+                        Nombre = o.nombre,
+                        Estado = o.estado,
+                        Observaciones = o.observaciones,
+                        UsuarioCreacion = int.Parse(o.usuarioCreacion),
+                        FechaCreacion = o.fechaCreacion,
+
+                        sesiones = ContextBD.Sesiones
+                            .Where(s => s.orden == o.id)
+                            .Select(s => new SesionesDTO
+                            {
+                                Id = s.id,
+                                Numero = s.numero,
+                                Orden = s.orden,
+                                Estado = s.estado
+                            })
+                            .ToList()
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    mensaje = "Órdenes consultadas exitosamente",
+                    exito = true,
+                    data = ordenes
                 });
             }
             catch (Exception ex)

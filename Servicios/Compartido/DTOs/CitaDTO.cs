@@ -31,5 +31,6 @@ namespace Compartido.DTOs
         public string profesional { get; set; }
         public string dia { get; set; }
         public decimal totalDia { get; set; }
+        public OrdenDTO orden { get; set; }
     }
 }

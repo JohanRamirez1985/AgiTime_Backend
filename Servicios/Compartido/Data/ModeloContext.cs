@@ -30,6 +30,7 @@ namespace Compartido.Data
         public virtual DbSet<IngresoMesPrueba> IngresoMesPruebas { get; set; }
         public virtual DbSet<LiquidacionCitum> LiquidacionCita { get; set; }
         public virtual DbSet<Log> Logs { get; set; }
+        public virtual DbSet<Ordene> Ordenes { get; set; }
         public virtual DbSet<Padre> Padres { get; set; }
         public virtual DbSet<Parametro> Parametros { get; set; }
         public virtual DbSet<Producto> Productos { get; set; }
@@ -40,6 +41,7 @@ namespace Compartido.Data
         public virtual DbSet<Servicio> Servicios { get; set; }
         public virtual DbSet<ServiciosParametro> ServiciosParametros { get; set; }
         public virtual DbSet<ServiciosRecurso> ServiciosRecursos { get; set; }
+        public virtual DbSet<Sesione> Sesiones { get; set; }
         public virtual DbSet<TipoDocumento> TipoDocumentos { get; set; }
         public virtual DbSet<Usuario> Usuarios { get; set; }
         public virtual DbSet<VentaDetalle> VentaDetalles { get; set; }
@@ -310,6 +312,27 @@ namespace Compartido.Data
                 entity.Property(e => e.Timestamp).HasColumnType("datetime");
             });
 
+            modelBuilder.Entity<Ordene>(entity =>
+            {
+                entity.Property(e => e.estado)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.fechaCreacion).HasColumnType("datetime");
+
+                entity.Property(e => e.nombre)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.observaciones).IsUnicode(false);
+
+                entity.Property(e => e.usuarioCreacion)
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+            });
+
             modelBuilder.Entity<Padre>(entity =>
             {
                 entity.ToTable("Padre");
@@ -496,6 +519,20 @@ namespace Compartido.Data
                     .WithMany(p => p.ServiciosRecursos)
                     .HasForeignKey(d => d.servicio)
                     .HasConstraintName("FK_ServiciosRecursos_Servicios");
+            });
+
+            modelBuilder.Entity<Sesione>(entity =>
+            {
+                entity.Property(e => e.estado)
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.HasOne(d => d.ordenNavigation)
+                    .WithMany(p => p.Sesiones)
+                    .HasForeignKey(d => d.orden)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Sesiones_Ordenes");
             });
 
             modelBuilder.Entity<TipoDocumento>(entity =>
