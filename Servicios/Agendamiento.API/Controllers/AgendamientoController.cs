@@ -684,6 +684,7 @@ namespace Agendamiento.API.Controllers
                         {
                             nombre = nombreCliente,
                             estado = Estados.Pendiente,
+                            cliente = dto.clienteInfo != null ? idCliente : null,
                             observaciones = null,
                             usuarioCreacion = dto.UsuarioCreacion,
                             fechaCreacion = dto.FechaCreacion
@@ -2988,7 +2989,7 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpGet("ConsultarOrdenes")]
-        public async Task<IActionResult> GestionarOrdenes(int empresa)
+        public async Task<IActionResult> GestionarOrdenes(int empresa, int cliente)
         {
             string nombreBase = string.Empty;
 
@@ -3026,6 +3027,7 @@ namespace Agendamiento.API.Controllers
 
                 var ordenes = await ContextBD.Ordenes
                     .AsNoTracking()
+                    .Where(o => o.cliente == cliente)
                     .Select(o => new OrdenDTO
                     {
                         Id = o.id,

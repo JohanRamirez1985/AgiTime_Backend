@@ -315,6 +315,7 @@ namespace Compartido.Data
             modelBuilder.Entity<Ordene>(entity =>
             {
                 entity.Property(e => e.estado)
+                    .IsRequired()
                     .HasMaxLength(20)
                     .IsUnicode(false);
 

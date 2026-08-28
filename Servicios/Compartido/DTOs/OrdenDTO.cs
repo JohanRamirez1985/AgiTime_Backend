@@ -12,6 +12,7 @@ namespace Compartido.DTOs
         public string Nombre { get; set; }
         public string Estado { get; set; }
         public string Observaciones { get; set; }
+        public int cliente { get; set; }
         public int empresa { get; set; }
         public int UsuarioCreacion { get; set; }
         public DateTime FechaCreacion { get; set; }
