@@ -684,7 +684,7 @@ namespace Agendamiento.API.Controllers
                         {
                             nombre = nombreCliente,
                             estado = Estados.Pendiente,
-                            cliente = dto.clienteInfo != null ? idCliente : null,
+                            cliente = idCliente,
                             observaciones = null,
                             usuarioCreacion = dto.UsuarioCreacion,
                             fechaCreacion = dto.FechaCreacion
@@ -1431,7 +1431,7 @@ namespace Agendamiento.API.Controllers
 
                 if (!diaCompletoBloqueado)
                 {
-                    var recursos = empresa.servicio
+                    var recursos = empresa.servicio == true
                                     ? dto.profesional.Split(',')
                                              .Select(x => int.Parse(x.Trim()))
                                              .ToList()
@@ -1565,7 +1565,7 @@ namespace Agendamiento.API.Controllers
                 //    }
                 //}
 
-                var recursos = empresa.servicio
+                var recursos = empresa.servicio == true
                                 ? dto.profesional.Split(',')
                                             .Select(x => int.Parse(x.Trim()))
                                             .ToList()
@@ -1981,7 +1981,7 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                if (empresa.servicio)
+                if (empresa.servicio == true)
                 {
                     var citas = (from cp in ContextBD.CitaPadres
                                  join c in ContextBD.Citas on cp.cita equals c.id

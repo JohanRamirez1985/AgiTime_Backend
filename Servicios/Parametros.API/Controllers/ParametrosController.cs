@@ -693,7 +693,7 @@ namespace Parametros.API.Controllers
 
                 List<object> lista;
 
-                if (empresa.servicio)
+                if (empresa.servicio == true)
                 {
                     lista = (from s in ContextBD.Servicios
                              join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
