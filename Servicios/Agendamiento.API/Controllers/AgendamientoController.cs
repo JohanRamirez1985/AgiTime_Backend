@@ -1825,7 +1825,7 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                if (empresa.servicio)
+                if (empresa.servicio == true)
                 {
                     lista = ContextBD.Padres
                         .Where(p => p.CitaPadres.Any(cp =>
@@ -2071,7 +2071,7 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                if (empresa.servicio)
+                if (empresa.servicio == true)
                 {
                     var citas = (from cp in ContextBD.CitaPadres
                                  join c in ContextBD.Citas on cp.cita equals c.id
