@@ -13,6 +13,7 @@ namespace Compartido.Data.Modelos
         public int id { get; set; }
         public string nombre { get; set; }
         public string estado { get; set; }
+        public int cliente { get; set; }
         public string observaciones { get; set; }
         public string usuarioCreacion { get; set; }
         public DateTime fechaCreacion { get; set; }
