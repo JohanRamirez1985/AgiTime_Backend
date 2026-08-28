@@ -36,6 +36,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table IngresoMesPrueba ^
 --table LiquidacionCita ^
 --table Logs ^
+--table Ordenes ^
 --table Padre ^
 --table Parametros ^
 --table Producto ^
@@ -46,6 +47,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Servicios ^
 --table ServiciosParametros ^
 --table ServiciosRecursos ^
+--table Sesiones ^
 --table TipoDocumento ^
 --table UsuarioRol ^
 --table Usuarios ^
