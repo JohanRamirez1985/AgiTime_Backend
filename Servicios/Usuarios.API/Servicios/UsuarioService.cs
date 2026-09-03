@@ -69,7 +69,8 @@ namespace Usuarios.API.Servicios
                 Conexion = empresa.conexionBD,
                 Estados = empresa.estado,
                 Servicio = empresa.servicio,
-                Sedes = sedes
+                Sedes = sedes,
+                ordenes = empresa.ordenes
             };
 
             var datos = new
