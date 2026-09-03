@@ -695,20 +695,6 @@ namespace Agendamiento.API.Controllers
 
                         int idOrden = nuevaOrden.id;
 
-                        for (int i = 1; i <= dto.orden.cantidad; i++)
-                        {
-                            var nuevaSesion = new Sesione
-                            {
-                                numero = i,
-                                orden = idOrden,
-                                estado = Estados.Pendiente
-                            };
-
-                            ContextBD.Sesiones.Add(nuevaSesion);
-                        }
-
-                        ContextBD.SaveChanges();
-
                         var nuevo = new Cita
                         {
                             fechaInicio = dto.FechaIni,
@@ -727,6 +713,23 @@ namespace Agendamiento.API.Controllers
                         };
 
                         ContextBD.Citas.Add(nuevo);
+                        ContextBD.SaveChanges();
+
+                        int idCita = nuevo.id;
+
+                        for (int i = 1; i <= dto.orden.cantidad; i++)
+                        {
+                            var nuevaSesion = new Sesione
+                            {
+                                numero = i,
+                                orden = idOrden,
+                                estado = i == 1 ? Estados.Agendada : Estados.Pendiente,
+                                cita = i == 1 ? idCita : null
+                            };
+
+                            ContextBD.Sesiones.Add(nuevaSesion);
+                        }
+
                         ContextBD.SaveChanges();
 
                         foreach (var detalle in dto.servicios)
@@ -3034,7 +3037,7 @@ namespace Agendamiento.API.Controllers
                         Nombre = o.nombre,
                         Estado = o.estado,
                         Observaciones = o.observaciones,
-                        UsuarioCreacion = int.Parse(o.usuarioCreacion),
+                        UsuarioCreacion = o.usuarioCreacion,
                         FechaCreacion = o.fechaCreacion,
 
                         sesiones = ContextBD.Sesiones
