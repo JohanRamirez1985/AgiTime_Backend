@@ -3050,7 +3050,14 @@ namespace Agendamiento.API.Controllers
                                 Id = s.id,
                                 Numero = s.numero,
                                 Orden = s.orden,
-                                Estado = s.estado
+                                Estado = s.estado,
+
+                                FechaCita = s.cita != null
+                                    ? ContextBD.Citas
+                                        .Where(c => c.id == s.cita)
+                                        .Select(c => c.fechaInicio)
+                                        .FirstOrDefault()
+                                    : null
                             })
                             .ToList()
                     })
