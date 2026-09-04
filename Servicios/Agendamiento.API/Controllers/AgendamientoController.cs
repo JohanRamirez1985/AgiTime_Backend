@@ -2186,46 +2186,53 @@ namespace Agendamiento.API.Controllers
                                         orden.estado = Estados.Completada;
                                     }
                                 }
-                            }
 
-                            var servicios = (
-                            from cs in ContextBD.CitaServicios
-                            join s in ContextBD.Servicios on cs.servicio equals s.id
-                            join u in ContextBD.Usuarios on citaId.recurso equals u.id
-                            join se in ContextBD.Sedes on u.sede equals se.id
-                            where cs.cita == citaId.id
-                            select new
-                            {
-                                ServicioValor = s.valor,
-                                Porcentaje = (u.porcentaje ?? 0),
-                                Sede = se.Nombre
-                            }
-                            ).ToList();
+                                bool yaTieneSesionAsistida = ContextBD.Sesiones
+                                                    .Any(s => s.orden == sesion.orden
+                                                           && s.estado == Estados.Asistio
+                                                           && s.id != sesion.id);
 
-                            foreach (var servicio in servicios)
-                            {
-                                decimal valorServicio = servicio.ServicioValor ?? 0m;
-
-                                decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
-
-                                decimal valorEmpresa = valorServicio - valorTrabajador;
-
-                                var liquidacion = new LiquidacionCitum
+                                if (!yaTieneSesionAsistida)
                                 {
-                                    cita = citaId.id,
-                                    valorServicio = servicio.ServicioValor,
-                                    valorBarbero = valorTrabajador,
-                                    valorBarberia = valorEmpresa,
-                                    sede = servicio.Sede,
-                                    fechaCita = citaId.fechaInicio,
-                                    bono = citaId.bono,
-                                    fechaCreacion = dto.FechaCreacion,
-                                    usuarioCreacion = dto.UsuarioCreacion,
-                                    tipo = "Normal",
-                                    numero = 1
-                                };
+                                    var servicios = (from cs in ContextBD.CitaServicios
+                                                     join s in ContextBD.Servicios on cs.servicio equals s.id
+                                                     join u in ContextBD.Usuarios on citaId.recurso equals u.id
+                                                     join se in ContextBD.Sedes on u.sede equals se.id
+                                                     where cs.cita == citaId.id
+                                                     select new
+                                                     {
+                                                         ServicioValor = s.valor,
+                                                         Porcentaje = (u.porcentaje ?? 0),
+                                                         Sede = se.Nombre
+                                                     }
+                                        ).ToList();
 
-                                ContextBD.LiquidacionCita.Add(liquidacion);
+                                    foreach (var servicio in servicios)
+                                    {
+                                        decimal valorServicio = servicio.ServicioValor ?? 0m;
+
+                                        decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
+
+                                        decimal valorEmpresa = valorServicio - valorTrabajador;
+
+                                        var liquidacion = new LiquidacionCitum
+                                        {
+                                            cita = citaId.id,
+                                            valorServicio = servicio.ServicioValor,
+                                            valorBarbero = valorTrabajador,
+                                            valorBarberia = valorEmpresa,
+                                            sede = servicio.Sede,
+                                            fechaCita = citaId.fechaInicio,
+                                            bono = citaId.bono,
+                                            fechaCreacion = dto.FechaCreacion,
+                                            usuarioCreacion = dto.UsuarioCreacion,
+                                            tipo = "Normal",
+                                            numero = 1
+                                        };
+
+                                        ContextBD.LiquidacionCita.Add(liquidacion);
+                                    }
+                                }
                             }
                         }
                         else
