@@ -703,7 +703,7 @@ namespace Agendamiento.API.Controllers
                             recurso = dto.recurso,
                             cliente = dto.clienteInfo != null ? idCliente : null,
                             valor = dto.Valor,
-                            estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                            estado = Estados.Activo,
                             pago = pago,
                             bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
                             liquidado = false,
@@ -950,7 +950,7 @@ namespace Agendamiento.API.Controllers
                             recurso = dto.recurso,
                             cliente = dto.clienteInfo != null ? idCliente : null,
                             valor = dto.Valor,
-                            estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                            estado = Estados.Activo,
                             pago = pago,
                             bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
                             liquidado = false,
@@ -962,18 +962,17 @@ namespace Agendamiento.API.Controllers
                         ContextBD.Citas.Add(nuevo);
                         ContextBD.SaveChanges();
 
-                        foreach (var detalle in dto.servicios)
+                        int idCita = nuevo.id;
+
+                        var sesion = ContextBD.Sesiones
+                                .FirstOrDefault(e => e.id == dto.Sesion);
+
+                        if (sesion != null)
                         {
-                            var nuevoServicio = new CitaServicio
-                            {
-                                cita = nuevo.id,
-                                servicio = detalle.Servicio
-                            };
+                            sesion.cita = idCita;
 
-                            ContextBD.CitaServicios.Add(nuevoServicio);
+                            ContextBD.SaveChanges();
                         }
-
-                        ContextBD.SaveChanges();
 
                         transaction.Commit();
 
