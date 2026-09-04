@@ -36,6 +36,7 @@ namespace Compartido.Data
         public virtual DbSet<Producto> Productos { get; set; }
         public virtual DbSet<ProductoLote> ProductoLotes { get; set; }
         public virtual DbSet<Recurso> Recursos { get; set; }
+        public virtual DbSet<Reporte> Reportes { get; set; }
         public virtual DbSet<Rol> Rols { get; set; }
         public virtual DbSet<Sede> Sedes { get; set; }
         public virtual DbSet<Servicio> Servicios { get; set; }
@@ -426,6 +427,27 @@ namespace Compartido.Data
                     .HasForeignKey(d => d.sede)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Recursos_Sede");
+            });
+
+            modelBuilder.Entity<Reporte>(entity =>
+            {
+                entity.Property(e => e.activo)
+                    .IsRequired()
+                    .HasDefaultValueSql("((1))");
+
+                entity.Property(e => e.descripcion)
+                    .HasMaxLength(500)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.nombre)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.procedimiento)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<Rol>(entity =>

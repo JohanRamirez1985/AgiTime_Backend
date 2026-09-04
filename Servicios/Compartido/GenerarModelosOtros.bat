@@ -42,6 +42,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Producto ^
 --table ProductoLote ^
 --table Recursos ^
+--table Reportes ^
 --table Rol ^
 --table Sede ^
 --table Servicios ^
