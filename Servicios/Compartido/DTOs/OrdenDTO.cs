@@ -16,7 +16,6 @@ namespace Compartido.DTOs
         public int empresa { get; set; }
         public string UsuarioCreacion { get; set; }
         public DateTime FechaCreacion { get; set; }
-        public int cantidad { get; set; }
         public string NombreServicio { get; set; }
         public List<SesionesDTO> sesiones { get; set; } = new();
     }

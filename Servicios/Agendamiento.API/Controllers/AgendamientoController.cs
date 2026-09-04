@@ -714,23 +714,8 @@ namespace Agendamiento.API.Controllers
 
                         ContextBD.Citas.Add(nuevo);
                         ContextBD.SaveChanges();
-
+                        
                         int idCita = nuevo.id;
-
-                        for (int i = 1; i <= dto.orden.cantidad; i++)
-                        {
-                            var nuevaSesion = new Sesione
-                            {
-                                numero = i,
-                                orden = idOrden,
-                                estado = i == 1 ? Estados.Agendada : Estados.Pendiente,
-                                cita = i == 1 ? idCita : null
-                            };
-
-                            ContextBD.Sesiones.Add(nuevaSesion);
-                        }
-
-                        ContextBD.SaveChanges();
 
                         foreach (var detalle in dto.servicios)
                         {
@@ -741,9 +726,22 @@ namespace Agendamiento.API.Controllers
                             };
 
                             ContextBD.CitaServicios.Add(nuevoServicio);
-                        }
 
-                        ContextBD.SaveChanges();
+                            for (int i = 1; i <= detalle.cantidad; i++)
+                            {
+                                var nuevaSesion = new Sesione
+                                {
+                                    numero = i,
+                                    orden = idOrden,
+                                    estado = i == 1 ? Estados.Agendada : Estados.Pendiente,
+                                    cita = i == 1 ? idCita : null
+                                };
+
+                                ContextBD.Sesiones.Add(nuevaSesion);
+                            }
+
+                            ContextBD.SaveChanges();
+                        }
 
                         transaction.Commit();
 
@@ -2137,25 +2135,168 @@ namespace Agendamiento.API.Controllers
                 }
                 else
                 {
-                    var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
+                    if (empresa.ordenes == true)
+                    {
+                        var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
 
-                    if (citaId == null)
-                    {
-                        return Ok(new
+                        if (citaId == null)
                         {
-                            mensaje = "Cita no encontrada",
-                            exito = false
-                        });
-                    }
-                    if (dto.Asistencia)
-                    {
-                        citaId.estado = Estados.Asistio;
-                        citaId.bono = dto.Bono;
+                            return Ok(new
+                            {
+                                mensaje = "Cita no encontrada",
+                                exito = false
+                            });
+                        }
+                        if (dto.Asistencia)
+                        {
+                            citaId.estado = Estados.Asistio;
+                            citaId.bono = dto.Bono;
+
+                            var sesion = ContextBD.Sesiones.FirstOrDefault(s => s.cita == citaId.id);
+
+                            if (sesion != null)
+                            {
+                                sesion.estado = "Finalizada";
+
+                                var sesionesOrden = ContextBD.Sesiones
+                                    .Where(s => s.orden == sesion.orden)
+                                    .ToList();
+
+                                bool todasFinalizadas = sesionesOrden.Any() &&
+                                                        sesionesOrden.All(s => s.estado == "Finalizada");
+
+                                if (todasFinalizadas)
+                                {
+                                    var orden = ContextBD.Ordenes
+                                        .FirstOrDefault(o => o.id == sesion.orden);
+
+                                    if (orden != null)
+                                    {
+                                        orden.estado = "Finalizada";
+                                    }
+                                }
+                            }
+
+                            var servicios = (
+                            from cs in ContextBD.CitaServicios
+                            join s in ContextBD.Servicios on cs.servicio equals s.id
+                            join u in ContextBD.Usuarios on citaId.recurso equals u.id
+                            join se in ContextBD.Sedes on u.sede equals se.id
+                            where cs.cita == citaId.id
+                            select new
+                            {
+                                ServicioValor = s.valor,
+                                Porcentaje = (u.porcentaje ?? 0),
+                                Sede = se.Nombre
+                            }
+                            ).ToList();
+
+                            foreach (var servicio in servicios)
+                            {
+                                decimal valorServicio = servicio.ServicioValor ?? 0m;
+
+                                decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
+
+                                decimal valorEmpresa = valorServicio - valorTrabajador;
+
+                                var liquidacion = new LiquidacionCitum
+                                {
+                                    cita = citaId.id,
+                                    valorServicio = servicio.ServicioValor,
+                                    valorBarbero = valorTrabajador,
+                                    valorBarberia = valorEmpresa,
+                                    sede = servicio.Sede,
+                                    fechaCita = citaId.fechaInicio,
+                                    bono = citaId.bono,
+                                    fechaCreacion = dto.FechaCreacion,
+                                    usuarioCreacion = dto.UsuarioCreacion,
+                                    tipo = "Normal",
+                                    numero = 1
+                                };
+
+                                ContextBD.LiquidacionCita.Add(liquidacion);
+                            }
+                        }
+                        else
+                        {
+                            citaId.estado = Estados.Inasistencia;
+
+                            var sesion = ContextBD.Sesiones
+                                .FirstOrDefault(s => s.cita == citaId.id);
+
+                            if (sesion != null)
+                            {
+                                sesion.cita = null;
+                            }
+                        }
+
+                        ContextBD.SaveChanges();
                     }
                     else
-                        citaId.estado = Estados.Inasistencia;
+                    {
+                        var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
 
-                    ContextBD.SaveChanges();
+                        if (citaId == null)
+                        {
+                            return Ok(new
+                            {
+                                mensaje = "Cita no encontrada",
+                                exito = false
+                            });
+                        }
+                        if (dto.Asistencia)
+                        {
+                            citaId.estado = Estados.Asistio;
+                            citaId.bono = dto.Bono;
+
+                            if (empresa.id != 2)
+                            {
+                                var servicios = (
+                                from cs in ContextBD.CitaServicios
+                                join s in ContextBD.Servicios on cs.servicio equals s.id
+                                join u in ContextBD.Usuarios on citaId.recurso equals u.id
+                                join se in ContextBD.Sedes on u.sede equals se.id
+                                where cs.cita == citaId.id
+                                select new
+                                {
+                                    ServicioValor = s.valor,
+                                    Porcentaje = (u.porcentaje ?? 0),
+                                    Sede = se.Nombre
+                                }
+                                ).ToList();
+
+                                    foreach (var servicio in servicios)
+                                    {
+                                        decimal valorServicio = servicio.ServicioValor ?? 0m;
+
+                                        decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
+
+                                        decimal valorEmpresa = valorServicio - valorTrabajador;
+
+                                        var liquidacion = new LiquidacionCitum
+                                        {
+                                            cita = citaId.id,
+                                            valorServicio = servicio.ServicioValor,
+                                            valorBarbero = valorTrabajador,
+                                            valorBarberia = valorEmpresa,
+                                            sede = servicio.Sede,
+                                            fechaCita = citaId.fechaInicio,
+                                            bono = citaId.bono,
+                                            fechaCreacion = dto.FechaCreacion,
+                                            usuarioCreacion = dto.UsuarioCreacion,
+                                            tipo = "Normal",
+                                            numero = 1
+                                        };
+
+                                        ContextBD.LiquidacionCita.Add(liquidacion);
+                                    }
+                            }
+                        }
+                        else
+                            citaId.estado = Estados.Inasistencia;
+
+                        ContextBD.SaveChanges();
+                    }
                 }
 
                 return Ok(new

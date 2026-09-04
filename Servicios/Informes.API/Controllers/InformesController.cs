@@ -10,8 +10,11 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using System.Data;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ClosedXML.Excel;
 
 namespace Informes.API.Controllers
 {
@@ -1278,6 +1281,323 @@ namespace Informes.API.Controllers
                     mensaje = "Ocurrió un error interno",
                     exito = false
                 });
+            }
+        }
+
+        [HttpPost("EjecutarReporte")]
+        public async Task<IActionResult> EjecutarReporte([FromBody] ReporteDTO dto)
+        {
+            string nombreBase = string.Empty;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                if (dto == null || dto.Id <= 0)
+                {
+                    return BadRequest("Debe enviar un IdReporte válido.");
+                }
+
+                var reporte = await ContextBD.Reportes
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r =>
+                        r.id == dto.Id && r.activo == true);
+
+                if (reporte == null)
+                {
+                    return NotFound("El reporte no existe o se encuentra inactivo.");
+                }
+
+                if (string.IsNullOrWhiteSpace(reporte.procedimiento))
+                {
+                    return BadRequest("El reporte no tiene un procedimiento configurado.");
+                }
+
+                if (!Regex.IsMatch(reporte.procedimiento, @"^[a-zA-Z0-9_]+$"))
+                {
+                    return BadRequest("El procedimiento configurado no es válido.");
+                }
+
+                var resultados = new List<Dictionary<string, object>>();
+
+                var connection = ContextBD.Database.GetDbConnection();
+
+                await using (connection)
+                {
+                    if (connection.State != ConnectionState.Open)
+                        await connection.OpenAsync();
+
+                    await using var command = connection.CreateCommand();
+
+                    command.CommandText = reporte.procedimiento;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandTimeout = 300;
+
+                    await using var reader = await command.ExecuteReaderAsync();
+
+                    while (await reader.ReadAsync())
+                    {
+                        var fila = new Dictionary<string, object>();
+
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var valor = reader.IsDBNull(i)
+                                ? null
+                                : reader.GetValue(i);
+
+                            fila[reader.GetName(i)] = valor;
+                        }
+
+                        resultados.Add(fila);
+                    }
+                }
+
+                return Ok(new
+                {
+                    id = reporte.id,
+                    nombre = reporte.nombre,
+                    descripcion = reporte.descripcion,
+                    columnas = resultados.Count > 0
+                            ? resultados[0].Keys.ToList()
+                            : new List<string>(),
+                    datos = resultados
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        mensaje = "Error al ejecutar el reporte.",
+                        detalle = ex.Message
+                    });
+            }
+        }
+
+        [HttpPost("ExportarReporte")]
+        public async Task<IActionResult> ExportarReporte([FromBody] ReporteDTO dto)
+        {
+            string nombreBase = string.Empty;
+
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultadoValida.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultadoValida.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var reporte = await ContextBD.Reportes
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.id == dto.Id && r.activo == true);
+
+                if (reporte == null)
+                {
+                    return BadRequest(new
+                    {
+                        mensaje = "Reporte no encontrado o inactivo.",
+                        exito = false
+                    });
+                }
+
+                if (string.IsNullOrWhiteSpace(reporte.procedimiento))
+                {
+                    return BadRequest(new
+                    {
+                        mensaje = "El reporte no tiene un procedimiento configurado.",
+                        exito = false
+                    });
+                }
+
+                if (!Regex.IsMatch(reporte.procedimiento,@"^[a-zA-Z0-9_]+$"))
+                {
+                    return BadRequest(new
+                    {
+                        mensaje = "El procedimiento configurado no es válido.",
+                        exito = false
+                    });
+                }
+
+                var resultados = new List<Dictionary<string, object>>();
+
+                var connection = ContextBD.Database.GetDbConnection();
+
+                if (connection.State != ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                await using var command = connection.CreateCommand();
+
+                command.CommandText = reporte.procedimiento;
+
+                command.CommandType = CommandType.StoredProcedure;
+
+                command.CommandTimeout = 300;
+
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var fila =
+                        new Dictionary<string, object>();
+
+                    for (int i = 0;
+                         i < reader.FieldCount;
+                         i++)
+                    {
+                        fila[reader.GetName(i)] =
+                            reader.IsDBNull(i)
+                                ? null
+                                : reader.GetValue(i);
+                    }
+
+                    resultados.Add(fila);
+                }
+
+                // =========================
+                // CREAR EXCEL
+                // =========================
+
+                using var workbook = new XLWorkbook();
+
+                var worksheet = workbook.Worksheets.Add("Reporte");
+
+                if (resultados.Count > 0)
+                {
+                    var columnas = resultados[0].Keys.ToList();
+
+                    // Encabezados
+                    for (int i = 0; i < columnas.Count; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = columnas[i];
+                    }
+
+                    // Datos
+                    for (int fila = 0;
+                         fila < resultados.Count;
+                         fila++)
+                    {
+                        for (int columna = 0;
+                             columna < columnas.Count;
+                             columna++)
+                        {
+                            var valor =
+                                resultados[fila][columnas[columna]];
+
+                            if (valor == null)
+                            {
+                                worksheet.Cell(
+                                    fila + 2,
+                                    columna + 1)
+                                    .Value = "";
+                            }
+                            else
+                            {
+                                worksheet.Cell(
+                                    fila + 2,
+                                    columna + 1)
+                                    .Value = valor.ToString();
+                            }
+                        }
+                    }
+
+                    // Formato
+                    var rango =
+                        worksheet.Range(
+                            1,
+                            1,
+                            resultados.Count + 1,
+                            columnas.Count);
+
+                    rango.CreateTable();
+
+                    worksheet.Columns().AdjustToContents();
+                }
+
+                // Congelar encabezado
+                worksheet.SheetView.FreezeRows(1);
+
+                using var stream =
+                    new MemoryStream();
+
+                workbook.SaveAs(stream);
+
+                stream.Position = 0;
+
+                var nombreArchivo =
+                    $"{reporte.nombre}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+                return File(
+                    stream.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    nombreArchivo);
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        exito = false,
+                        mensaje = "Error al exportar el reporte.",
+                        detalle = ex.Message
+                    });
             }
         }
 
