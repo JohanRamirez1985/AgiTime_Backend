@@ -2013,6 +2013,18 @@ namespace Agendamiento.API.Controllers
                     citaId.fechaCancelacion = dto.FechaCancelacion;
                     citaId.usuarioCancelacion = dto.UsuarioCancelacion;
                     citaId.estado = Estados.Cancelada;
+
+                    if (empresa.ordenes == true)
+                    {
+                        var sesion = ContextBD.Sesiones
+                                    .FirstOrDefault(s => s.cita == citaId.id);
+
+                        if (sesion != null)
+                        {
+                            sesion.cita = null;
+                        }
+                    }
+
                 }
 
                 ContextBD.SaveChanges();
