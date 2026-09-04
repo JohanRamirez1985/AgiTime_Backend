@@ -2155,14 +2155,14 @@ namespace Agendamiento.API.Controllers
 
                             if (sesion != null)
                             {
-                                sesion.estado = "Finalizada";
+                                sesion.estado = Estados.Asistio;
 
                                 var sesionesOrden = ContextBD.Sesiones
                                     .Where(s => s.orden == sesion.orden)
                                     .ToList();
 
                                 bool todasFinalizadas = sesionesOrden.Any() &&
-                                                        sesionesOrden.All(s => s.estado == "Finalizada");
+                                                        sesionesOrden.All(s => s.estado == Estados.Asistio);
 
                                 if (todasFinalizadas)
                                 {
@@ -2171,7 +2171,7 @@ namespace Agendamiento.API.Controllers
 
                                     if (orden != null)
                                     {
-                                        orden.estado = "Finalizada";
+                                        orden.estado = Estados.Completada;
                                     }
                                 }
                             }
