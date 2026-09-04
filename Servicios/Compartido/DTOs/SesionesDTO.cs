@@ -13,6 +13,6 @@ namespace Compartido.DTOs
         public int Numero { get; set; }
         public int Orden { get; set; }
         public int Cita { get; set; }
-        public DateTime FechaCita { get; set; }
+        public DateTime? FechaCita { get; set; }
     }
 }
