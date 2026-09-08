@@ -693,7 +693,7 @@ namespace Parametros.API.Controllers
 
                 List<object> lista;
 
-                if (empresa.servicio)
+                if (empresa.servicio == true)
                 {
                     lista = (from s in ContextBD.Servicios
                              join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
@@ -804,6 +804,67 @@ namespace Parametros.API.Controllers
             }
         }
 
+        [HttpGet("clientes")]
+        public IActionResult ObtenerClientes([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                List<object> lista;
+
+
+                lista = ContextBD.Clientes
+                        .Where(s => s.estado == Estados.Activo)
+                        .Cast<object>()
+                        .ToList();
+
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay clientes registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
         [HttpGet("parametrosGenerales")]
         public IActionResult ObtenerParametrosGenerales()
         {
@@ -817,6 +878,60 @@ namespace Parametros.API.Controllers
                     return Ok(new
                     {
                         mensaje = "No hay parametros registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("reportes")]
+        public IActionResult ObtenerReportes([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Reportes.ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay reportes registrados",
                         exito = false
                     });
                 }

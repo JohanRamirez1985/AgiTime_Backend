@@ -11,5 +11,6 @@ namespace Compartido.DTOs
         public int Id { get; set; }
         public int Cita { get; set; }
         public int Servicio { get; set; }
+        public int cantidad { get; set; }
     }
 }

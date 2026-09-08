@@ -14,5 +14,8 @@ namespace Compartido.Constantes
         public const string Asistio = "Asistio";
         public const string Inasistencia = "Inasistencia";
         public const string Agotado = "Agotado";
+        public const string Completada = "Completada";
+        public const string Pendiente = "Pendiente";
+        public const string Agendada = "Agendada";
     }
 }
