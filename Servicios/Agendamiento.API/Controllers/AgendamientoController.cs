@@ -970,6 +970,7 @@ namespace Agendamiento.API.Controllers
                         if (sesion != null)
                         {
                             sesion.cita = idCita;
+                            sesion.estado = Estados.Agendada;
 
                             ContextBD.SaveChanges();
                         }
@@ -3202,6 +3203,11 @@ namespace Agendamiento.API.Controllers
                                           join cs in ContextBD.CitaServicios on c.id equals cs.cita 
                                           join servicio in ContextBD.Servicios on cs.servicio equals servicio.id 
                                           where c.orden == o.id select servicio.nombre).FirstOrDefault(),
+                        idServicio = (from c in ContextBD.Citas
+                                          join cs in ContextBD.CitaServicios on c.id equals cs.cita
+                                          join servicio in ContextBD.Servicios on cs.servicio equals servicio.id
+                                          where c.orden == o.id
+                                          select servicio.id).FirstOrDefault(),
                         sesiones = ContextBD.Sesiones
                             .Where(s => s.orden == o.id)
                             .Select(s => new SesionesDTO
