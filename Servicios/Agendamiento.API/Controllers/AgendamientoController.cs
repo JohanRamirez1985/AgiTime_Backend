@@ -2023,6 +2023,7 @@ namespace Agendamiento.API.Controllers
                         if (sesion != null)
                         {
                             sesion.cita = null;
+                            sesion.estado = Estados.Pendiente;
                         }
                     }
 
