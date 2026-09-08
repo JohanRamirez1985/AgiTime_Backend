@@ -7,6 +7,7 @@ using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Intrinsics.X86;
@@ -39,7 +40,6 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             string logo = string.Empty;
             string nombreEmpresa = string.Empty;
-            string nombreSede = string.Empty;
             int idCliente = 0;
             string emailCliente = "";
             string nombreCliente = "";
@@ -83,7 +83,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var envioEmailCita = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "Envio_email_cita")?.valor == "true";
+                    var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
+                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
 
                     var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni 
                                                            && c.recurso == dto.recurso
@@ -199,50 +200,29 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        if (dto.UsuarioCreacion != "Usuario" && envioEmailCita)
+                        var infoRecurso = GetInfoRecurso(dto.recurso, ContextBD);
+
+                        if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         {
-                            var infoRecurso = ContextBD.Usuarios
-                                                .Include(u => u.sedeNavigation)
-                                                .Where(e => e.estado == Estados.Activo
-                                                    && e.recurso == true
-                                                    && e.id == dto.recurso)
-                                                .FirstOrDefault();
-
-                            if (infoRecurso != null)
-                            {
-                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
-
-                                if (!string.IsNullOrEmpty(infoRecurso.correo))
-                                {
-                                    await emailService.SendEmailAsync(
-                                        infoRecurso.correo,
-                                        "Confirmación de cita",
-                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
-                                        isHtml: true
-                                    );
-                                }
-                            }
-                            else
-                            {
-                                var Recurso = ContextBD.Recursos
-                                                .Include(u => u.sedeNavigation)
-                                                .Where(e => e.estado == Estados.Activo)
-                                                .FirstOrDefault();
-                                if (Recurso != null)
-                                {
-                                    nombreSede = infoRecurso.sedeNavigation?.Nombre;
-                                }
-                            }
-
-                            if (!string.IsNullOrEmpty(emailCliente))
+                            if (!string.IsNullOrEmpty(infoRecurso.Correo))
                             {
                                 await emailService.SendEmailAsync(
-                                    emailCliente,
+                                    infoRecurso.Correo,
                                     "Confirmación de cita",
-                                    agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
+                                    agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.Nombre, dto.FechaIni, logo),
                                     isHtml: true
                                 );
                             }
+                        }
+
+                        if (!string.IsNullOrEmpty(emailCliente) && EnvioEmailCitaCliente)
+                        {
+                            await emailService.SendEmailAsync(
+                                emailCliente,
+                                "Confirmación de cita",
+                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, infoRecurso.NombreSede, logo),
+                                isHtml: true
+                            );
                         }
 
                         return Ok(new
@@ -290,7 +270,6 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             string logo = string.Empty;
             string nombreEmpresa = string.Empty;
-            string nombreSede = string.Empty;
             int idCliente = 0;
             string emailCliente = "";
             string nombreCliente = "";
@@ -334,6 +313,9 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
+                    var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
+                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
+
                     if (dto.validaHorario)
                         validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
@@ -463,50 +445,29 @@ namespace Agendamiento.API.Controllers
                         ContextBD.SaveChanges();
                         transaction.Commit();
 
-                        if (dto.UsuarioCreacion != "Usuario")
+                        var infoRecurso = GetInfoRecurso(8, ContextBD);
+
+                        if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         {
-                            var infoRecurso = ContextBD.Usuarios
-                                                .Include(u => u.sedeNavigation)
-                                                .Where(e => e.estado == Estados.Activo
-                                                    && e.recurso == true
-                                                    && e.id == 8)
-                                                .FirstOrDefault();
-
-                            if (infoRecurso != null)
+                            if (!string.IsNullOrEmpty(infoRecurso.Correo))
                             {
-                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
-
-                                if (!string.IsNullOrEmpty(infoRecurso.correo))
-                                {
-                                    await emailService.SendEmailAsync(
-                                        infoRecurso.correo,
-                                        "Confirmación de cita",
-                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
-                                        isHtml: true
-                                    );
-                                }
+                                await emailService.SendEmailAsync(
+                                    infoRecurso.Correo,
+                                    "Confirmación de cita",
+                                    agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.Nombre, dto.FechaIni, logo),
+                                    isHtml: true
+                                );
                             }
-                            //else
-                            //{
-                            //    var Recurso = ContextBD.Recursos
-                            //                    .Include(u => u.sedeNavigation)
-                            //                    .Where(e => e.estado == Estados.Activo)
-                            //                    .FirstOrDefault();
-                            //    if (Recurso != null)
-                            //    {
-                            //        nombreSede = infoRecurso.sedeNavigation?.Nombre;
-                            //    }
-                            //}
+                        }
 
-                            //if (!string.IsNullOrEmpty(emailCliente))
-                            //{
-                            //    await emailService.SendEmailAsync(
-                            //        emailCliente,
-                            //        "Confirmación de cita",
-                            //        agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
-                            //        isHtml: true
-                            //    );
-                            //}
+                        if (!string.IsNullOrEmpty(emailCliente) && EnvioEmailCitaCliente)
+                        {
+                            await emailService.SendEmailAsync(
+                                emailCliente,
+                                "Confirmación de cita",
+                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, infoRecurso.NombreSede, logo),
+                                isHtml: true
+                            );
                         }
 
                         return Ok(new
@@ -554,7 +515,6 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             string logo = string.Empty;
             string nombreEmpresa = string.Empty;
-            string nombreSede = string.Empty;
             int idCliente = 0;
             string emailCliente = "";
             string nombreCliente = "";
@@ -598,7 +558,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var envioEmailCita = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "Envio_email_cita")?.valor == "true";
+                    var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
+                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
 
                     var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
                                                            && c.recurso == dto.recurso
@@ -745,50 +706,29 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        if (dto.UsuarioCreacion != "Usuario" && envioEmailCita)
+                        var infoRecurso = GetInfoRecurso(dto.recurso, ContextBD);
+
+                        if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         {
-                            var infoRecurso = ContextBD.Usuarios
-                                                .Include(u => u.sedeNavigation)
-                                                .Where(e => e.estado == Estados.Activo
-                                                    && e.recurso == true
-                                                    && e.id == dto.recurso)
-                                                .FirstOrDefault();
-
-                            if (infoRecurso != null)
-                            {
-                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
-
-                                if (!string.IsNullOrEmpty(infoRecurso.correo))
-                                {
-                                    await emailService.SendEmailAsync(
-                                        infoRecurso.correo,
-                                        "Confirmación de cita",
-                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
-                                        isHtml: true
-                                    );
-                                }
-                            }
-                            else
-                            {
-                                var Recurso = ContextBD.Recursos
-                                                .Include(u => u.sedeNavigation)
-                                                .Where(e => e.estado == Estados.Activo)
-                                                .FirstOrDefault();
-                                if (Recurso != null)
-                                {
-                                    nombreSede = infoRecurso.sedeNavigation?.Nombre;
-                                }
-                            }
-
-                            if (!string.IsNullOrEmpty(emailCliente))
+                            if (!string.IsNullOrEmpty(infoRecurso.Correo))
                             {
                                 await emailService.SendEmailAsync(
-                                    emailCliente,
+                                    infoRecurso.Correo,
                                     "Confirmación de cita",
-                                    agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
+                                    agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.Nombre, dto.FechaIni, logo),
                                     isHtml: true
                                 );
                             }
+                        }
+
+                        if (!string.IsNullOrEmpty(emailCliente) && EnvioEmailCitaCliente)
+                        {
+                            await emailService.SendEmailAsync(
+                                emailCliente,
+                                "Confirmación de cita",
+                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, infoRecurso.NombreSede, logo),
+                                isHtml: true
+                            );
                         }
 
                         return Ok(new
@@ -836,7 +776,6 @@ namespace Agendamiento.API.Controllers
             string nombreBase = string.Empty;
             string logo = string.Empty;
             string nombreEmpresa = string.Empty;
-            string nombreSede = string.Empty;
             int idCliente = 0;
             string emailCliente = "";
             string nombreCliente = "";
@@ -880,7 +819,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var envioEmailCita = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "Envio_email_cita")?.valor == "true";
+                    //var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
+                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
 
                     var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
                                                            && c.recurso == dto.recurso
@@ -977,50 +917,29 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        if (dto.UsuarioCreacion != "Usuario" && envioEmailCita)
+                        var infoRecurso = GetInfoRecurso(dto.recurso, ContextBD);
+
+                        //if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
+                        //{
+                        //    if (!string.IsNullOrEmpty(infoRecurso.Correo))
+                        //    {
+                        //        await emailService.SendEmailAsync(
+                        //            infoRecurso.Correo,
+                        //            "Confirmación de cita",
+                        //            agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.Nombre, dto.FechaIni, logo),
+                        //            isHtml: true
+                        //        );
+                        //    }
+                        //}
+
+                        if (!string.IsNullOrEmpty(emailCliente) && EnvioEmailCitaCliente)
                         {
-                            var infoRecurso = ContextBD.Usuarios
-                                                .Include(u => u.sedeNavigation)
-                                                .Where(e => e.estado == Estados.Activo
-                                                    && e.recurso == true
-                                                    && e.id == dto.recurso)
-                                                .FirstOrDefault();
-
-                            if (infoRecurso != null)
-                            {
-                                nombreSede = infoRecurso.sedeNavigation?.Nombre;
-
-                                if (!string.IsNullOrEmpty(infoRecurso.correo))
-                                {
-                                    await emailService.SendEmailAsync(
-                                        infoRecurso.correo,
-                                        "Confirmación de cita",
-                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
-                                        isHtml: true
-                                    );
-                                }
-                            }
-                            else
-                            {
-                                var Recurso = ContextBD.Recursos
-                                                .Include(u => u.sedeNavigation)
-                                                .Where(e => e.estado == Estados.Activo)
-                                                .FirstOrDefault();
-                                if (Recurso != null)
-                                {
-                                    nombreSede = infoRecurso.sedeNavigation?.Nombre;
-                                }
-                            }
-
-                            if (!string.IsNullOrEmpty(emailCliente))
-                            {
-                                await emailService.SendEmailAsync(
-                                    emailCliente,
-                                    "Confirmación de cita",
-                                    agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, nombreSede, logo),
-                                    isHtml: true
-                                );
-                            }
+                            await emailService.SendEmailAsync(
+                                emailCliente,
+                                "Confirmación de cita",
+                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, infoRecurso.NombreSede, logo),
+                                isHtml: true
+                            );
                         }
 
                         return Ok(new
@@ -3251,6 +3170,43 @@ namespace Agendamiento.API.Controllers
                     exito = false
                 });
             }
+        }
+
+        private UsuarioDTO GetInfoRecurso(int recurso, ModeloContext ContextBD)
+        {
+            var infoRecurso = ContextBD.Usuarios
+                                .Include(u => u.sedeNavigation)
+                                .Where(e => e.estado == Estados.Activo
+                                    && e.recurso == true
+                                    && e.id == recurso)
+                                .FirstOrDefault();
+
+            if (infoRecurso != null)
+            {
+                return new UsuarioDTO
+                {
+                    Nombre = infoRecurso.nombre,
+                    NombreSede = infoRecurso.sedeNavigation?.Nombre,
+                    Correo = infoRecurso.correo
+                };
+            }
+            else
+            {
+                var Recurso = ContextBD.Recursos
+                                .Include(u => u.sedeNavigation)
+                                .Where(e => e.estado == Estados.Activo
+                                    && e.id == recurso)
+                                .FirstOrDefault();
+                if (Recurso != null)
+                {
+                    return new UsuarioDTO
+                    {
+                        NombreSede = Recurso.sedeNavigation?.Nombre
+                    };
+                }
+            }
+
+            return null;
         }
     }
 }

@@ -317,20 +317,6 @@ namespace Informes.API.Controllers
             List<Usuario> usuarios;
             List<int> listaBarberos = new();
 
-            int can1 = 0;
-            int can2 = 0;
-            int can3 = 0;
-            int can4 = 0;
-            decimal val1 = 0;
-            decimal val2 = 0;
-            decimal val3 = 0;
-            decimal val4 = 0;
-            //decimal inasistencia = 0;
-            //decimal inasistencia_trailer = 0;
-            decimal valAntiguo = 0;
-            decimal valGeneral = 0;
-            bool esAntiguo = false;
-            bool esBarberoGeneral = false;
             decimal bono = 0;
             decimal descuentoBono = 0;
 
@@ -435,121 +421,25 @@ namespace Informes.API.Controllers
                         }
                     }
 
-                    if (u.id != 3 && u.id != 4)
-                    {
-                        can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
-                        can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
-                        can3 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_3"));
-                        can4 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_4"));
+                    //porcentaje = total <= int.Parse(can1.valor)
+                    //            ? u.porcentaje
+                    //            : (total > int.Parse(can1.valor) && total <= int.Parse(can2.valor))
+                    //                ? decimal.Parse(par1.valor)
+                    //                : (total > int.Parse(can2.valor))
+                    //                    ? decimal.Parse(par2.valor)
+                    //                    : 0;
+                    //porcentajeBarber = 100 - porcentaje;
 
-                        var antiguo = ContextBD.Parametros.Where(p => p.tipo == "Antiguo" && p.estado == true).FirstOrDefault();
-                        esAntiguo = antiguo.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
+                    bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
 
-                        valAntiguo = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Antiguo"));
-
-                        var BarberoGeneral = ContextBD.Parametros.Where(p => p.tipo == "Barbero_General" && p.estado == true).FirstOrDefault();
-                        esBarberoGeneral = BarberoGeneral.valor.Split(',').Any(x => x.Trim() == u.id.ToString());
-
-                        valGeneral = u.porcentaje ?? 0m;
-
-                        switch (u.sede)
-                        {
-                            case 1:
-                                val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
-                                val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_2"));
-                                val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_3"));
-                                val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_4"));
-                                break;
-
-                            case 2:
-                            case 3:
-                                val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_1"));
-                                val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_2"));
-                                val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_3"));
-                                val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_4"));
-                                break;
-
-                            default:
-                                break;
-                        }
-
-                        //porcentaje = total <= int.Parse(can1.valor)
-                        //            ? u.porcentaje
-                        //            : (total > int.Parse(can1.valor) && total <= int.Parse(can2.valor))
-                        //                ? decimal.Parse(par1.valor)
-                        //                : (total > int.Parse(can2.valor))
-                        //                    ? decimal.Parse(par2.valor)
-                        //                    : 0;
-                        //porcentajeBarber = 100 - porcentaje;
-
-                        bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
-                        //inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
-                        //inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
-
-                        if (validaBarberos)
-                        {
-                            valorDescuentoPorCorte = u.incumplimiento ?? 0m;
-                            //switch (u.sede)
-                            //{
-                            //    case 1:
-                            //        valorDescuentoPorCorte = inasistencia;
-                            //        break;
-
-                            //    case 2:
-                            //    case 3:
-                            //        valorDescuentoPorCorte = inasistencia_trailer;
-                            //        break;
-
-                            //    default:
-                            //        break;
-                            //}
-                        }
-                        else
-                        {
-                            if (esAntiguo)
-                            {
-                                valorDescuentoPorCorte = valAntiguo;
-                            }
-                            else
-                            {
-                                if (esBarberoGeneral)
-                                {
-                                    valorDescuentoPorCorte = valGeneral;
-                                }
-                                else
-                                {
-                                    switch (u.sede)
-                                    {
-                                        case 1:
-                                            if (total <= can1)
-                                                valorDescuentoPorCorte = val1;
-                                            else if (total >= can2 && total < can3)
-                                                valorDescuentoPorCorte = val2;
-                                            else if (total >= can3)
-                                                valorDescuentoPorCorte = val3;
-                                            break;
-
-                                        case 2:
-                                        case 3:
-                                            if (total <= can1)
-                                                valorDescuentoPorCorte = val1;
-                                            else if (total >= can2 && total < can3)
-                                                valorDescuentoPorCorte = val2;
-                                            else if (total >= can3)
-                                                valorDescuentoPorCorte = val3;
-                                            break;
-
-                                        default:
-                                            break;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    if (validaBarberos)
+                        valorDescuentoPorCorte = u.incumplimiento ?? 0m;
+                    else
+                        valorDescuentoPorCorte = u.porcentaje ?? 0m;
 
                     decimal? totalPlata = pagas.Sum(s => s.valor);
-                    decimal totalDescuento = (u.id == 3 || u.id == 4) ? 0 : total * valorDescuentoPorCorte - (bonos.Count * descuentoBono);
-                    decimal? totalEmpleado = (u.id == 3 || u.id == 4) ? totalPlata : totalPlata - totalDescuento;
+                    decimal totalDescuento = total * valorDescuentoPorCorte - (bonos.Count * descuentoBono);
+                    decimal? totalEmpleado = totalPlata - totalDescuento;
 
                     var comisionVentas = (
                             from v in ContextBD.Venta
@@ -713,8 +603,7 @@ namespace Informes.API.Controllers
                         cita.liquidado = true;
                     }
 
-                    if (u.id != 3 && u.id != 4)
-                        valorDescuentoPorCorte = GetValorDescuento(info, parametros, listaBarberos, u);
+                    valorDescuentoPorCorte = GetValorDescuento(info, parametros, listaBarberos, u);
 
                     foreach (var item in info)
                     {
@@ -725,8 +614,8 @@ namespace Informes.API.Controllers
                         if (item.pagoCita == true && item.pagoServicio == true)
                         {
                             tipo = "Normal";
-                            valorBarberia = (u.id == 3 || u.id == 4) ? 0 : (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
-                            valorBarbero = (u.id == 3 || u.id == 4) ? item.valor : item.valor - valorBarberia;
+                            valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
+                            valorBarbero = item.valor - valorBarberia;
                         }
                         else
                         {
@@ -1411,7 +1300,14 @@ namespace Informes.API.Controllers
 
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                // =========================================================
+                // VALIDAR EMPRESA
+                // =========================================================
+
+                var empresa = await ContextGene.Empresas
+                    .FirstOrDefaultAsync(e =>
+                        e.id == dto.empresa &&
+                        e.estado == Estados.Activo);
 
                 if (empresa == null)
                 {
@@ -1422,7 +1318,8 @@ namespace Informes.API.Controllers
                     });
                 }
 
-                var resultadoValida = ValidacionEmpresa.ValidarEmpresa(empresa);
+                var resultadoValida =
+                    ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultadoValida.Exito)
                 {
@@ -1435,14 +1332,30 @@ namespace Informes.API.Controllers
 
                 nombreBase = empresa.conexionBD;
 
-                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
-                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+                // =========================================================
+                // CREAR CONTEXTO DE LA BASE DE DATOS DEL CLIENTE
+                // =========================================================
 
-                using var ContextBD = ContextFact.Create(connectionString);
+                var connectionTemplate =
+                    configuracion["ConnectionStrings:ConnectionFactory"];
+
+                var connectionString =
+                    string.Format(
+                        connectionTemplate,
+                        empresa.conexionBD);
+
+                using var ContextBD =
+                    ContextFact.Create(connectionString);
+
+                // =========================================================
+                // BUSCAR REPORTE
+                // =========================================================
 
                 var reporte = await ContextBD.Reportes
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(r => r.id == dto.Id && r.activo == true);
+                    .FirstOrDefaultAsync(r =>
+                        r.id == dto.Id &&
+                        r.activo == true);
 
                 if (reporte == null)
                 {
@@ -1453,6 +1366,10 @@ namespace Informes.API.Controllers
                     });
                 }
 
+                // =========================================================
+                // VALIDAR PROCEDIMIENTO
+                // =========================================================
+
                 if (string.IsNullOrWhiteSpace(reporte.procedimiento))
                 {
                     return BadRequest(new
@@ -1462,7 +1379,9 @@ namespace Informes.API.Controllers
                     });
                 }
 
-                if (!Regex.IsMatch(reporte.procedimiento,@"^[a-zA-Z0-9_]+$"))
+                if (!Regex.IsMatch(
+                        reporte.procedimiento,
+                        @"^[a-zA-Z0-9_]+$"))
                 {
                     return BadRequest(new
                     {
@@ -1471,62 +1390,114 @@ namespace Informes.API.Controllers
                     });
                 }
 
-                var resultados = new List<Dictionary<string, object>>();
+                // =========================================================
+                // EJECUTAR PROCEDIMIENTO
+                // =========================================================
 
-                var connection = ContextBD.Database.GetDbConnection();
+                var resultados =
+                    new List<Dictionary<string, object>>();
+
+                var connection =
+                    ContextBD.Database.GetDbConnection();
 
                 if (connection.State != ConnectionState.Open)
                 {
                     await connection.OpenAsync();
                 }
 
-                await using var command = connection.CreateCommand();
+                await using var command =
+                    connection.CreateCommand();
 
-                command.CommandText = reporte.procedimiento;
+                command.CommandText =
+                    reporte.procedimiento;
 
-                command.CommandType = CommandType.StoredProcedure;
+                command.CommandType =
+                    CommandType.StoredProcedure;
 
                 command.CommandTimeout = 300;
 
-                await using var reader = await command.ExecuteReaderAsync();
+                await using var reader =
+                    await command.ExecuteReaderAsync();
 
-                while (await reader.ReadAsync())
+                // =========================================================
+                // LEER RESULTADOS
+                // =========================================================
+
+                do
                 {
-                    var fila =
-                        new Dictionary<string, object>();
-
-                    for (int i = 0;
-                         i < reader.FieldCount;
-                         i++)
+                    if (reader.FieldCount == 0)
                     {
-                        fila[reader.GetName(i)] =
-                            reader.IsDBNull(i)
-                                ? null
-                                : reader.GetValue(i);
+                        continue;
                     }
 
-                    resultados.Add(fila);
-                }
+                    while (await reader.ReadAsync())
+                    {
+                        var fila =
+                            new Dictionary<string, object>();
 
-                // =========================
+                        for (int i = 0;
+                             i < reader.FieldCount;
+                             i++)
+                        {
+                            var nombreColumna =
+                                reader.GetName(i);
+
+                            var valor =
+                                reader.GetValue(i);
+
+                            fila[nombreColumna] =
+                                valor == DBNull.Value
+                                    ? null
+                                    : valor;
+                        }
+
+                        resultados.Add(fila);
+                    }
+
+                } while (await reader.NextResultAsync());
+
+                // =========================================================
                 // CREAR EXCEL
-                // =========================
+                // =========================================================
 
-                using var workbook = new XLWorkbook();
+                using var workbook =
+                    new XLWorkbook();
 
-                var worksheet = workbook.Worksheets.Add("Reporte");
+                var worksheet =
+                    workbook.Worksheets.Add("Reporte");
+
+                // =========================================================
+                // ENCABEZADOS Y DATOS
+                // =========================================================
 
                 if (resultados.Count > 0)
                 {
-                    var columnas = resultados[0].Keys.ToList();
+                    var columnas =
+                        resultados[0]
+                            .Keys
+                            .ToList();
 
-                    // Encabezados
-                    for (int i = 0; i < columnas.Count; i++)
+                    // -----------------------------------------------------
+                    // ENCABEZADOS
+                    // -----------------------------------------------------
+
+                    for (int i = 0;
+                         i < columnas.Count;
+                         i++)
                     {
-                        worksheet.Cell(1, i + 1).Value = columnas[i];
+                        var celda =
+                            worksheet.Cell(1, i + 1);
+
+                        celda.Value =
+                            columnas[i];
+
+                        celda.Style.Font.Bold = true;
                     }
 
-                    // Datos
+                    // -----------------------------------------------------
+                    // DATOS
+                    // -----------------------------------------------------
+
                     for (int fila = 0;
                          fila < resultados.Count;
                          fila++)
@@ -1538,24 +1509,54 @@ namespace Informes.API.Controllers
                             var valor =
                                 resultados[fila][columnas[columna]];
 
-                            if (valor == null)
-                            {
+                            var celda =
                                 worksheet.Cell(
                                     fila + 2,
-                                    columna + 1)
-                                    .Value = "";
+                                    columna + 1);
+
+                            if (valor == null)
+                            {
+                                celda.Value = "";
+                            }
+                            else if (valor is DateTime fecha)
+                            {
+                                celda.Value = fecha;
+
+                                celda.Style.DateFormat.Format =
+                                    "dd/MM/yyyy HH:mm:ss";
+                            }
+                            else if (valor is decimal ||
+                                     valor is double ||
+                                     valor is float)
+                            {
+                                celda.Value =
+                                    Convert.ToDouble(valor);
+                            }
+                            else if (valor is int ||
+                                     valor is long ||
+                                     valor is short ||
+                                     valor is byte)
+                            {
+                                celda.Value =
+                                    Convert.ToInt64(valor);
+                            }
+                            else if (valor is bool booleano)
+                            {
+                                celda.Value =
+                                    booleano ? "Sí" : "No";
                             }
                             else
                             {
-                                worksheet.Cell(
-                                    fila + 2,
-                                    columna + 1)
-                                    .Value = valor.ToString();
+                                celda.Value =
+                                    valor.ToString();
                             }
                         }
                     }
 
-                    // Formato
+                    // -----------------------------------------------------
+                    // CREAR TABLA
+                    // -----------------------------------------------------
+
                     var rango =
                         worksheet.Range(
                             1,
@@ -1565,11 +1566,31 @@ namespace Informes.API.Controllers
 
                     rango.CreateTable();
 
-                    worksheet.Columns().AdjustToContents();
+                    // -----------------------------------------------------
+                    // AJUSTAR COLUMNAS
+                    // -----------------------------------------------------
+
+                    worksheet.Columns()
+                        .AdjustToContents();
+                }
+                else
+                {
+                    worksheet.Cell(1, 1).Value =
+                        "El reporte no contiene información.";
+
+                    worksheet.Cell(1, 1)
+                        .Style.Font.Bold = true;
                 }
 
-                // Congelar encabezado
+                // =========================================================
+                // CONGELAR ENCABEZADO
+                // =========================================================
+
                 worksheet.SheetView.FreezeRows(1);
+
+                // =========================================================
+                // GENERAR ARCHIVO
+                // =========================================================
 
                 using var stream =
                     new MemoryStream();
@@ -1581,6 +1602,10 @@ namespace Informes.API.Controllers
                 var nombreArchivo =
                     $"{reporte.nombre}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
 
+                // =========================================================
+                // RETORNAR EXCEL
+                // =========================================================
+
                 return File(
                     stream.ToArray(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1588,7 +1613,15 @@ namespace Informes.API.Controllers
             }
             catch (Exception ex)
             {
-                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+                // =========================================================
+                // GUARDAR ERROR
+                // =========================================================
+
+                LogsCatch.GuardarError(
+                    ex,
+                    configuracion,
+                    ContextFact,
+                    nombreBase);
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
@@ -1626,63 +1659,9 @@ namespace Informes.API.Controllers
         private decimal GetValorDescuento(List<InfoCitaDTO> info,List<Parametro> parametros,List<int> listaBarberos, Usuario u)
         {
             int total = 0;
-            int can1 = 0;
-            int can2 = 0;
-            int can3 = 0;
-            int can4 = 0;
-            decimal val1 = 0;
-            decimal val2 = 0;
-            decimal val3 = 0;
-            decimal val4 = 0;
-            //decimal inasistencia = 0;
-            //decimal inasistencia_trailer = 0;
-            decimal valAntiguo = 0;
-            decimal valGeneral = 0;
-            bool esAntiguo = false;
-            bool esBarberoGeneral = false;
             decimal valorDescuentoPorCorte = 0;       
 
             var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
-
-            can1 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_1"));
-            can2 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_2"));
-            can3 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_3"));
-            can4 = GetInt(parametros.FirstOrDefault(p => p.tipo == "Total_Cortes_4"));
-
-            var antiguo = parametros.FirstOrDefault(p => p.tipo == "Antiguo" && p.estado);
-            esAntiguo = antiguo?.valor?
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Any(x => x.Trim() == u.id.ToString()) ?? false;
-
-            valAntiguo = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Antiguo"));
-
-            var barberoGeneral = parametros.FirstOrDefault(p => p.tipo == "Barbero_General" && p.estado);
-            esBarberoGeneral = barberoGeneral?.valor?
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Any(x => x.Trim() == u.id.ToString()) ?? false;
-
-            valGeneral = u.porcentaje ?? 0m;
-
-            switch (u.sede)
-            {
-                case 1:
-                    val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_1"));
-                    val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_2"));
-                    val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_3"));
-                    val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_4"));
-                    break;
-
-                case 2:
-                case 3:
-                    val1 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_1"));
-                    val2 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_2"));
-                    val3 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_3"));
-                    val4 = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Corte_Trailer_4"));
-                    break;
-
-                default:
-                    break;
-            }
 
             total = pagas.Count;
 
@@ -1695,68 +1674,11 @@ namespace Informes.API.Controllers
             }
 
             bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
-            //inasistencia = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia"));
-            //inasistencia_trailer = GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Inasistencia_Trailer"));
 
             if (validaBarberos)
-            {
                 valorDescuentoPorCorte = u.incumplimiento ?? 0m;
-                //switch (u.sede)
-                //{
-                //    case 1:
-                //        valorDescuentoPorCorte = inasistencia;
-                //        break;
-
-                //    case 2:
-                //    case 3:
-                //        valorDescuentoPorCorte = inasistencia_trailer;
-                //        break;
-
-                //    default:
-                //        break;
-                //}
-            }
             else
-            {
-                if (esAntiguo)
-                {
-                    valorDescuentoPorCorte = valAntiguo;
-                }
-                else
-                {
-                    if (esBarberoGeneral)
-                    {
-                        valorDescuentoPorCorte = valGeneral;
-                    }
-                    else
-                    {
-                        switch (u.sede)
-                        {
-                            case 1:
-                                if (total <= can1)
-                                    valorDescuentoPorCorte = val1;
-                                else if (total >= can2 && total < can3)
-                                    valorDescuentoPorCorte = val2;
-                                else if (total >= can3)
-                                    valorDescuentoPorCorte = val3;
-                                break;
-
-                            case 2:
-                            case 3:
-                                if (total <= can1)
-                                    valorDescuentoPorCorte = val1;
-                                else if (total >= can2 && total < can3)
-                                    valorDescuentoPorCorte = val2;
-                                else if (total >= can3)
-                                    valorDescuentoPorCorte = val3;
-                                break;
-
-                            default:
-                                break;
-                        }
-                    }
-                }
-            }
+                valorDescuentoPorCorte = u.porcentaje ?? 0m;
 
             return valorDescuentoPorCorte;
         }
