@@ -83,8 +83,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
-                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
+                    var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
+                    var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
 
                     var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni 
                                                            && c.recurso == dto.recurso
@@ -313,8 +313,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
-                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
+                    var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
+                    var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
 
                     if (dto.validaHorario)
                         validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
@@ -558,8 +558,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
-                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
+                    var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
+                    var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
 
                     var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
                                                            && c.recurso == dto.recurso
@@ -819,8 +819,8 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
-                    //var EnvioEmailCitaUsuario = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor == "true";
-                    var EnvioEmailCitaCliente = ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor == "true";
+                    //var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
+                    var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
 
                     var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
                                                            && c.recurso == dto.recurso
