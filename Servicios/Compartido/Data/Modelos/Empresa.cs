@@ -14,5 +14,6 @@ namespace Compartido.Data.Modelos
         public string telefono { get; set; }
         public bool? servicio { get; set; }
         public bool? ordenes { get; set; }
+        public bool? recursoMultiple { get; set; }
     }
 }
