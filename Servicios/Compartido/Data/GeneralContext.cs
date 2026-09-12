@@ -51,6 +51,10 @@ namespace Compartido.Data
                     .HasMaxLength(100)
                     .IsUnicode(false);
 
+                entity.Property(e => e.subDominio)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.telefono)
                     .HasMaxLength(15)
                     .IsUnicode(false);
