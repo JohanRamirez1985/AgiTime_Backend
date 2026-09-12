@@ -28,6 +28,7 @@ namespace Compartido.Data.Modelos
         public DateTime? fechaCancelacion { get; set; }
         public string usuarioCancelacion { get; set; }
         public int? orden { get; set; }
+        public string metodoPago { get; set; }
 
         public virtual ICollection<CitaPadre> CitaPadres { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
