@@ -30,6 +30,7 @@ namespace Compartido.Data
         public virtual DbSet<IngresoMesPrueba> IngresoMesPruebas { get; set; }
         public virtual DbSet<LiquidacionCitum> LiquidacionCita { get; set; }
         public virtual DbSet<Log> Logs { get; set; }
+        public virtual DbSet<MetodosPago> MetodosPagos { get; set; }
         public virtual DbSet<Ordene> Ordenes { get; set; }
         public virtual DbSet<Padre> Padres { get; set; }
         public virtual DbSet<Parametro> Parametros { get; set; }
@@ -107,6 +108,10 @@ namespace Compartido.Data
                 entity.Property(e => e.fechaFin).HasColumnType("datetime");
 
                 entity.Property(e => e.fechaInicio).HasColumnType("datetime");
+
+                entity.Property(e => e.metodoPago)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.pago).HasDefaultValueSql("((0))");
 
@@ -313,6 +318,16 @@ namespace Compartido.Data
                 entity.Property(e => e.Timestamp).HasColumnType("datetime");
             });
 
+            modelBuilder.Entity<MetodosPago>(entity =>
+            {
+                entity.ToTable("MetodosPago");
+
+                entity.Property(e => e.nombre)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+            });
+
             modelBuilder.Entity<Ordene>(entity =>
             {
                 entity.Property(e => e.estado)
@@ -431,10 +446,6 @@ namespace Compartido.Data
 
             modelBuilder.Entity<Reporte>(entity =>
             {
-                entity.Property(e => e.activo)
-                    .IsRequired()
-                    .HasDefaultValueSql("((1))");
-
                 entity.Property(e => e.descripcion)
                     .HasMaxLength(500)
                     .IsUnicode(false);

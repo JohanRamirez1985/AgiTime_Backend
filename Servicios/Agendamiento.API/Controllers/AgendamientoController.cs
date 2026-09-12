@@ -2158,6 +2158,7 @@ namespace Agendamiento.API.Controllers
                         {
                             citaId.estado = Estados.Asistio;
                             citaId.bono = dto.Bono;
+                            citaId.metodoPago = dto.metodoPago;
 
                             if (empresa.id != 2)
                             {
