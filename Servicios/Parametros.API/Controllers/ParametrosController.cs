@@ -25,12 +25,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("tipodocumento")]
-        public IActionResult ObtenerTiposDocumento([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerTiposDocumento([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -79,12 +92,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("ciudades")]
-        public IActionResult ObtenerCiudades([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerCiudades([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -133,12 +159,27 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("genero")]
-        public IActionResult ObtenerGeneros([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerGeneros([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                //nombreBase = empresa.conexionBD;
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -149,8 +190,6 @@ namespace Parametros.API.Controllers
                         exito = false
                     });
                 }
-
-                nombreBase = empresa.conexionBD;
 
                 var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
                 var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
@@ -187,12 +226,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("rol")]
-        public IActionResult ObtenerRoles([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerRoles([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -241,12 +293,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("sede")]
-        public IActionResult ObtenerSedes([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerSedes([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -295,12 +360,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("allSedes")]
-        public IActionResult AllSedes([FromQuery] int emp)
+        public async Task<IActionResult> AllSedes([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -349,12 +427,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("agenda")]
-        public IActionResult ObtenerAgenda([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerAgenda([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -403,12 +494,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("usuarios")]
-        public IActionResult ObtenerUsuarios([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerUsuarios([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -496,12 +600,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("recursos")]
-        public IActionResult ObtenerRecursos([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerRecursos([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -552,7 +669,7 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("recursosAgenda")]
-        public IActionResult ObtenerRecursosAgenda([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerRecursosAgenda([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             bool valida = false;
@@ -560,7 +677,20 @@ namespace Parametros.API.Controllers
 
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -667,12 +797,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("servicios")]
-        public IActionResult ObtenerServicios([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerServicios([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -773,12 +916,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("parametros")]
-        public IActionResult ObtenerParametros([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerParametros([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -827,12 +983,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("clientes")]
-        public IActionResult ObtenerClientes([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerClientes([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -923,12 +1092,24 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("reportes")]
-        public IActionResult ObtenerReportes([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerReportes([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -977,12 +1158,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("metodosPago")]
-        public IActionResult MetodosPago([FromQuery] int emp)
+        public async Task<IActionResult> MetodosPago([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
-                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                //if (!resultado.Exito)
+                //{
+                //    return Ok(new
+                //    {
+                //        mensaje = resultado.Mensaje,
+                //        exito = false
+                //    });
+                //}
+
+                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
