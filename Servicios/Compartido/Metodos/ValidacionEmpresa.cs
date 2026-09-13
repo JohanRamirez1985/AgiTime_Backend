@@ -1,7 +1,4 @@
-﻿using Compartido.Constantes;
-using Compartido.Data;
-using Compartido.Data.Modelos;
-using Microsoft.EntityFrameworkCore;
+﻿using Compartido.Data.Modelos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,27 +37,6 @@ namespace Compartido.Metodos
             }
 
             return ResultadoValidacion.Ok();
-        }
-
-        public static async Task<Empresa> ObtenerEmpresaPorSubdominio(string host, GeneralContext contextGene)
-        {
-            if (string.IsNullOrWhiteSpace(host))
-                return null;
-
-            var partes = host.Split('.');
-
-            if (partes.Length < 3)
-                return null;
-
-            var subdominio = partes[0];
-
-            if (subdominio.Equals("www", StringComparison.OrdinalIgnoreCase))
-                return null;
-
-            return await contextGene.Empresas
-                .FirstOrDefaultAsync(e =>
-                    e.subDominio == subdominio &&
-                    e.estado == Estados.Activo);
         }
     }
 }
