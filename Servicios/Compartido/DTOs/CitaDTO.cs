@@ -33,5 +33,7 @@ namespace Compartido.DTOs
         public decimal totalDia { get; set; }
         public OrdenDTO orden { get; set; }
         public int Sesion { get; set; }
+
+        public string metodoPago { get; set; }
     }
 }

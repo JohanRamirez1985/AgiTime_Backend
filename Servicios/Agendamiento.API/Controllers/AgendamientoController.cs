@@ -355,52 +355,20 @@ namespace Agendamiento.API.Controllers
                             }
                         }
 
-                        //bool diaCompletoBloqueado = false;
-                        //var diaSemana = (int)dto.FechaIni.DayOfWeek;
-                        //if (diaSemana == 0) diaSemana = 7;
+                        int padreNuevo = 0;
 
-                        //var fechaSolo = dto.FechaIni.Date;
-
-                        //var bloqueos = ContextBD.BloqueosHorarios
-                        //                .AsEnumerable()
-                        //                .Where(b => b.usuario == dto.recurso &&
-                        //                    b.tipoBloqueo == 3 &&
-                        //                    b.estado == Estados.Activo &&
-                        //                    b.diasSemana != null &&
-                        //                    (
-                        //                        diaSemana == 7 &&
-                        //                        b.diasSemana.Split(',')
-                        //                                    .Select(x => x.Trim())
-                        //                                    .Contains("7")
-                        //                    )
-                        //                )
-                        //                .ToList();
-
-                        //foreach (var bloqueo in bloqueos)
-                        //{
-                        //    var inicio = bloqueo.horaInicio;
-                        //    var fin = bloqueo.horaFin;
-
-                        //    // Día completo bloqueado
-                        //    if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
-                        //    {
-                        //        diaCompletoBloqueado = true;
-                        //        break;
-                        //    }
-                        //}
-
-                        //if (diaCompletoBloqueado)
-                        //{
-                        //    pago = false;
-                        //}
-
-                        var nuevoPadre = new Padre
+                        if (empresa.servicio == true)
                         {
-                            fechaCita = dto.FechaIni
-                        };
+                            var nuevoPadre = new Padre
+                            {
+                                fechaCita = dto.FechaIni
+                            };
 
-                        ContextBD.Padres.Add(nuevoPadre);
-                        ContextBD.SaveChanges();
+                            ContextBD.Padres.Add(nuevoPadre);
+                            ContextBD.SaveChanges();
+
+                            padreNuevo = nuevoPadre.id;
+                        }
 
                         foreach (var detalleCita in dto.Citas)
                         {
@@ -412,7 +380,7 @@ namespace Agendamiento.API.Controllers
                                 recurso = detalleCita.recurso,
                                 cliente = dto.clienteInfo != null ? idCliente : null,
                                 valor = detalleCita.Valor,
-                                estado = empresa.servicio == true ? Estados.Activo : dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                                estado = (empresa.servicio == true || empresa.recursoMultiple == true) ? Estados.Activo : dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
                                 pago = pago,
                                 bono = dto.UsuarioCreacion == "Usuario" ? detalleCita.Bono : null,
                                 liquidado = false,
@@ -434,13 +402,16 @@ namespace Agendamiento.API.Controllers
                                 ContextBD.CitaServicios.Add(nuevoServicio);
                             }
 
-                            var citaPadre = new CitaPadre
+                            if (empresa.servicio == true)
                             {
-                                cita = nuevaCita.id,
-                                padre = nuevoPadre.id,
-                            };
+                                var citaPadre = new CitaPadre
+                                {
+                                    cita = nuevaCita.id,
+                                    padre = padreNuevo,
+                                };
 
-                            ContextBD.CitaPadres.Add(citaPadre);
+                                ContextBD.CitaPadres.Add(citaPadre);
+                            }
                         }
                         ContextBD.SaveChanges();
                         transaction.Commit();
@@ -2187,6 +2158,7 @@ namespace Agendamiento.API.Controllers
                         {
                             citaId.estado = Estados.Asistio;
                             citaId.bono = dto.Bono;
+                            citaId.metodoPago = dto.metodoPago;
 
                             if (empresa.id != 2)
                             {
@@ -2204,31 +2176,31 @@ namespace Agendamiento.API.Controllers
                                 }
                                 ).ToList();
 
-                                    foreach (var servicio in servicios)
+                                foreach (var servicio in servicios)
+                                {
+                                    decimal valorServicio = servicio.ServicioValor ?? 0m;
+
+                                    decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
+
+                                    decimal valorEmpresa = valorServicio - valorTrabajador;
+
+                                    var liquidacion = new LiquidacionCitum
                                     {
-                                        decimal valorServicio = servicio.ServicioValor ?? 0m;
+                                        cita = citaId.id,
+                                        valorServicio = servicio.ServicioValor,
+                                        valorBarbero = valorTrabajador,
+                                        valorBarberia = valorEmpresa,
+                                        sede = servicio.Sede,
+                                        fechaCita = citaId.fechaInicio,
+                                        bono = citaId.bono,
+                                        fechaCreacion = dto.FechaCreacion,
+                                        usuarioCreacion = dto.UsuarioCreacion,
+                                        tipo = "Normal",
+                                        numero = 1
+                                    };
 
-                                        decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
-
-                                        decimal valorEmpresa = valorServicio - valorTrabajador;
-
-                                        var liquidacion = new LiquidacionCitum
-                                        {
-                                            cita = citaId.id,
-                                            valorServicio = servicio.ServicioValor,
-                                            valorBarbero = valorTrabajador,
-                                            valorBarberia = valorEmpresa,
-                                            sede = servicio.Sede,
-                                            fechaCita = citaId.fechaInicio,
-                                            bono = citaId.bono,
-                                            fechaCreacion = dto.FechaCreacion,
-                                            usuarioCreacion = dto.UsuarioCreacion,
-                                            tipo = "Normal",
-                                            numero = 1
-                                        };
-
-                                        ContextBD.LiquidacionCita.Add(liquidacion);
-                                    }
+                                    ContextBD.LiquidacionCita.Add(liquidacion);
+                                }
                             }
                         }
                         else

@@ -10,9 +10,11 @@ namespace Compartido.Data.Modelos
         public string nit { get; set; }
         public string logo { get; set; }
         public string conexionBD { get; set; }
+        public string subDominio { get; set; }
         public string estado { get; set; }
         public string telefono { get; set; }
         public bool? servicio { get; set; }
         public bool? ordenes { get; set; }
+        public bool? recursoMultiple { get; set; }
     }
 }

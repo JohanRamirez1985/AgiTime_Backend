@@ -25,13 +25,25 @@ namespace Parametros.API.Controllers
         }
 
         [HttpGet("tipodocumento")]
-        public IActionResult ObtenerTiposDocumento([FromQuery] int emp)
+        public async Task<IActionResult> ObtenerTiposDocumento([FromQuery] int emp)
         {
             string nombreBase = string.Empty;
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                //var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
                 {
@@ -716,11 +728,33 @@ namespace Parametros.API.Controllers
                 }
                 else
                 {
-                    lista = ContextBD.Servicios
-                            .Where(s => s.estado == Estados.Activo)
-                            .OrderBy(o => o.orden)
-                            .Cast<object>()
-                            .ToList();
+                    if (empresa.recursoMultiple == true)
+                    {
+                        lista = (from s in ContextBD.Servicios
+                                 join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
+                                 join u in ContextBD.Usuarios on sr.recurso equals u.id
+                                 where s.estado == Estados.Activo
+                                 orderby s.orden
+                                 select new
+                                 {
+                                     s.id,
+                                     s.nombre,
+                                     s.valor,
+                                     s.tiempo,
+                                     s.sede,
+                                     recurso = u.id,
+                                     nombre_recurso = u.nombre,
+                                     s.cliente
+                                 }).Cast<object>().ToList();
+                    }
+                    else
+                    {
+                        lista = ContextBD.Servicios
+                                .Where(s => s.estado == Estados.Activo)
+                                .OrderBy(o => o.orden)
+                                .Cast<object>()
+                                .ToList();
+                    }
                 }
 
                 if (lista == null || lista.Count == 0)
@@ -932,6 +966,60 @@ namespace Parametros.API.Controllers
                     return Ok(new
                     {
                         mensaje = "No hay reportes registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("metodosPago")]
+        public IActionResult MetodosPago([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.MetodosPagos.ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay metodos de pago registrados",
                         exito = false
                     });
                 }
