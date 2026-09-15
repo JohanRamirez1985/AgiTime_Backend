@@ -30,21 +30,20 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                //var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
-                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
-
-                //if (!resultado.Exito)
-                //{
-                //    return Ok(new
-                //    {
-                //        mensaje = resultado.Mensaje,
-                //        exito = false
-                //    });
-                //}
-
-                var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
-
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                //var empresa = await ValidacionEmpresa.ObtenerEmpresaPorSubdominio(Request.Host.Host, ContextGene);
+                //var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
                 {
