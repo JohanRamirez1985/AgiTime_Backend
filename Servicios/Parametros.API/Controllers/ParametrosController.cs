@@ -744,7 +744,8 @@ namespace Parametros.API.Controllers
                                      s.sede,
                                      recurso = u.id,
                                      nombre_recurso = u.nombre,
-                                     s.cliente
+                                     s.cliente,
+                                     s.observaciones,
                                  }).Cast<object>().ToList();
                     }
                     else
