@@ -528,6 +528,8 @@ namespace Compartido.Data
 
                 entity.Property(e => e.observaciones).IsUnicode(false);
 
+                entity.Property(e => e.validaciones).IsUnicode(false);
+
                 entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
 
                 entity.HasOne(d => d.sedeNavigation)
