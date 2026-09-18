@@ -3,6 +3,7 @@ using Compartido.Data;
 using Compartido.Data.Modelos;
 using Compartido.DTOs;
 using Compartido.Metodos;
+using Microsoft.EntityFrameworkCore;
 
 namespace Agendamiento.API.Servicios
 {
@@ -122,7 +123,7 @@ namespace Agendamiento.API.Servicios
             return mensaje;
         }
 
-        public bool ValidarDisponibilidad(ModeloContext ContextBD, List<CitaDTO> citas)
+        public RespuestaDTO ValidarDisponibilidad(ModeloContext ContextBD, List<CitaDTO> citas)
         {
             foreach (var detalleCita in citas)
             {
@@ -133,8 +134,7 @@ namespace Agendamiento.API.Servicios
                     .Where(c =>
                         c.recurso == detalleCita.recurso &&
                         (c.estado == Estados.Activo ||
-                         c.estado == Estados.Asistio ||
-                         c.estado == Estados.Inasistencia) &&
+                         c.estado == Estados.Asistio) &&
 
                         fechaInicio < c.fechaFin &&
                         fechaFin > c.fechaInicio
@@ -148,12 +148,102 @@ namespace Agendamiento.API.Servicios
                         .Select(u => u.nombre)
                         .FirstOrDefault();
 
-                    return false;
-                    //Mensaje = $"El usuario {nombreUsuario} ya está ocupado en ese horario"
+                    return new RespuestaDTO
+                    {
+                        Disponible = false,
+                        EnvioMensaje = false
+                    };
                 }
             }
 
-            return true;
+            return new RespuestaDTO
+            {
+                Disponible = true,
+                EnvioMensaje = false
+            };
+        }
+
+        public RespuestaDTO ValidarDisponibilidadMultiple(ModeloContext ContextBD, List<CitaDTO> citas)
+        {
+            int indice = 0;
+
+            foreach (var detalleCita in citas)
+            {
+                var fechaInicio = detalleCita.FechaIni;
+                var fechaFin = detalleCita.FechaIni.AddMinutes(detalleCita.Hora);
+
+                var validaHora = ContextBD.Citas
+                    .Where(c =>
+                        c.recurso == detalleCita.recurso &&
+                        (c.estado == Estados.Activo ||
+                         c.estado == Estados.Asistio) &&
+
+                        fechaInicio < c.fechaFin &&
+                        fechaFin > c.fechaInicio
+                    )
+                    .FirstOrDefault();
+
+                if (validaHora != null)
+                {
+                    if (indice == 0)
+                    {
+                        return new RespuestaDTO
+                        {
+                            Disponible = false,
+                            EnvioMensaje = false
+                        };
+                    }
+                    else
+                    {
+                        return new RespuestaDTO
+                        {
+                            Disponible = true,
+                            EnvioMensaje = true
+                        };
+                    }
+                }
+            }
+
+            return new RespuestaDTO
+            {
+                Disponible = true,
+                EnvioMensaje = false
+            };
+        }
+        public UsuarioDTO GetInfoRecurso(int recurso, ModeloContext ContextBD)
+        {
+            var infoRecurso = ContextBD.Usuarios
+                                .Include(u => u.sedeNavigation)
+                                .Where(e => e.estado == Estados.Activo
+                                    && e.id == recurso)
+                                .FirstOrDefault();
+
+            if (infoRecurso != null)
+            {
+                return new UsuarioDTO
+                {
+                    Nombre = infoRecurso.nombre,
+                    NombreSede = infoRecurso.sedeNavigation?.Nombre,
+                    Correo = infoRecurso.correo
+                };
+            }
+            else
+            {
+                var Recurso = ContextBD.Recursos
+                                .Include(u => u.sedeNavigation)
+                                .Where(e => e.estado == Estados.Activo
+                                    && e.id == recurso)
+                                .FirstOrDefault();
+                if (Recurso != null)
+                {
+                    return new UsuarioDTO
+                    {
+                        NombreSede = Recurso.sedeNavigation?.Nombre
+                    };
+                }
+            }
+
+            return null;
         }
     }
 }

@@ -200,7 +200,7 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        var infoRecurso = GetInfoRecurso(dto.recurso, ContextBD);
+                        var infoRecurso = agendaService.GetInfoRecurso(dto.recurso, ContextBD);
 
                         if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         {
@@ -275,7 +275,7 @@ namespace Agendamiento.API.Controllers
             string nombreCliente = "";
             string telefonoCliente = "";
             bool pago = true;
-            bool validacion = true;
+            int rec = 0;
 
             try
             {
@@ -313,13 +313,25 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
+                    RespuestaDTO validacion = new RespuestaDTO
+                    {
+                        Disponible = true,
+                        EnvioMensaje = false
+                    };
+
                     var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
                     var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
 
                     if (dto.validaHorario)
-                        validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
+                    {
+                        if (empresa.servicio == true)
+                            validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
-                    if (validacion)
+                        if (empresa.recursoMultiple == true)
+                            validacion = agendaService.ValidarDisponibilidadMultiple(ContextBD, dto.Citas);
+                    }
+
+                    if (validacion.Disponible)
                     {
                         if (dto.clienteInfo != null)
                         {
@@ -416,7 +428,15 @@ namespace Agendamiento.API.Controllers
                         ContextBD.SaveChanges();
                         transaction.Commit();
 
-                        var infoRecurso = GetInfoRecurso(8, ContextBD);
+                        if (empresa.servicio == true)
+                            rec = 8;
+                        else
+                        {
+                            if (empresa.recursoMultiple == true)
+                                rec = 7;
+                        }
+                       
+                        var infoRecurso = agendaService.GetInfoRecurso(rec, ContextBD);
 
                         if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         {
@@ -444,6 +464,7 @@ namespace Agendamiento.API.Controllers
                         return Ok(new
                         {
                             mensaje = "Cita registrada exitosamente",
+                            envioMensaje = validacion.EnvioMensaje,
                             exito = true
                         });
                     }
@@ -677,7 +698,7 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        var infoRecurso = GetInfoRecurso(dto.recurso, ContextBD);
+                        var infoRecurso = agendaService.GetInfoRecurso(dto.recurso, ContextBD);
 
                         if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         {
@@ -888,7 +909,7 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        var infoRecurso = GetInfoRecurso(dto.recurso, ContextBD);
+                        var infoRecurso = agendaService. GetInfoRecurso(dto.recurso, ContextBD);
 
                         //if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         //{
@@ -2599,7 +2620,6 @@ namespace Agendamiento.API.Controllers
             string telefonoCliente = "";
             bool pago = true;
             bool cliente = true;
-            bool validacion = true;
 
             try
             {
@@ -2637,6 +2657,12 @@ namespace Agendamiento.API.Controllers
 
                 try
                 {
+                    RespuestaDTO validacion = new RespuestaDTO
+                    {
+                        Disponible = true,
+                        EnvioMensaje = false
+                    };
+
                     var cita = ContextBD.Padres.Where(p => p.id == dto.Id).FirstOrDefault();
 
                     if (cita != null)
@@ -2665,7 +2691,7 @@ namespace Agendamiento.API.Controllers
                             if (dto.validaHorario)
                                 validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
 
-                            if (validacion)
+                            if (validacion.Disponible)
                             {
                                 cita.fechaCita = dto.FechaIni;
 
@@ -3142,43 +3168,6 @@ namespace Agendamiento.API.Controllers
                     exito = false
                 });
             }
-        }
-
-        private UsuarioDTO GetInfoRecurso(int recurso, ModeloContext ContextBD)
-        {
-            var infoRecurso = ContextBD.Usuarios
-                                .Include(u => u.sedeNavigation)
-                                .Where(e => e.estado == Estados.Activo
-                                    && e.recurso == true
-                                    && e.id == recurso)
-                                .FirstOrDefault();
-
-            if (infoRecurso != null)
-            {
-                return new UsuarioDTO
-                {
-                    Nombre = infoRecurso.nombre,
-                    NombreSede = infoRecurso.sedeNavigation?.Nombre,
-                    Correo = infoRecurso.correo
-                };
-            }
-            else
-            {
-                var Recurso = ContextBD.Recursos
-                                .Include(u => u.sedeNavigation)
-                                .Where(e => e.estado == Estados.Activo
-                                    && e.id == recurso)
-                                .FirstOrDefault();
-                if (Recurso != null)
-                {
-                    return new UsuarioDTO
-                    {
-                        NombreSede = Recurso.sedeNavigation?.Nombre
-                    };
-                }
-            }
-
-            return null;
         }
     }
 }
