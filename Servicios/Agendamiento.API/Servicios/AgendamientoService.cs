@@ -202,6 +202,8 @@ namespace Agendamiento.API.Servicios
                         };
                     }
                 }
+
+                indice++;
             }
 
             return new RespuestaDTO
