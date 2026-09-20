@@ -23,6 +23,7 @@ namespace Compartido.Data.Modelos
         public string observaciones { get; set; }
         public bool? cliente { get; set; }
         public int? sesiones { get; set; }
+        public string validaciones { get; set; }
 
         public virtual Sede sedeNavigation { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
