@@ -70,7 +70,8 @@ namespace Usuarios.API.Servicios
                 Estados = empresa.estado,
                 Servicio = empresa.servicio,
                 Sedes = sedes,
-                ordenes = empresa.ordenes
+                ordenes = empresa.ordenes,
+                multiple = empresa.recursoMultiple
             };
 
             var datos = new
