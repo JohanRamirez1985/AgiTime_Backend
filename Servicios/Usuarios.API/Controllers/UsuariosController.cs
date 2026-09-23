@@ -105,8 +105,6 @@ namespace Usuarios.API.Controllers
         public IActionResult CrearUsuario([FromBody] UsuarioDTO dto)
         {
             string nombreBase = string.Empty;
-            var zonaHorariaColombia = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
-            var fecha = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHorariaColombia);
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
@@ -128,13 +126,13 @@ namespace Usuarios.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var valida = ContextBD.Usuarios.Where(e => e.documento == dto.Documento).FirstOrDefault();
+                var valida = ContextBD.Usuarios.Where(e => e.telefono == dto.Telefono).FirstOrDefault();
 
                 if(valida != null)
                 {
                     return Ok(new
                     {
-                        mensaje = "Ya hay un usuario creado con el número de identificación: " + dto.Documento,
+                        mensaje = "Ya hay un usuario creado con el número de celular: " + dto.Telefono,
                         exito = false
                     });
                 }
@@ -175,6 +173,65 @@ namespace Usuarios.API.Controllers
                     mensaje = "Usuario registrado exitosamente",
                     exito = true,
                     clienteId = nuevoUsuario.id
+                });
+
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("editarContrasena")]
+        public IActionResult editarContrasena([FromBody] UsuarioDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var usuario = ContextBD.Usuarios.Where(e => e.id == dto.Id).FirstOrDefault();
+
+                if (usuario == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "El usuario no existe",
+                        exito = false
+                    });
+                }
+
+                usuario.password = EncripPassword.EncriptarPassword(dto.Documento);
+
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Contraseña actualizada correctamente.",
+                    exito = true
                 });
 
             }

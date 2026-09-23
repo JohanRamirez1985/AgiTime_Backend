@@ -13,7 +13,7 @@ namespace Compartido.DTOs
         public DateTime FechaFin { get; set; }
         public int recurso { get; set; }
         public int Cliente { get; set; }
-        public decimal Valor { get; set; }
+        public decimal? Valor { get; set; }
         public string Estado { get; set; }
         public string UsuarioCreacion { get; set; }
         public DateTime FechaCreacion { get; set; }
@@ -23,6 +23,7 @@ namespace Compartido.DTOs
         public int empresa { get; set; }
         public bool Asistencia { get; set; }
         public bool Bono { get; set; }
+        public bool Fidelidad { get; set; }
         public string NombreCliente { get; set; }
         public string NombreServicio { get; set; }
         public List<CitaServiciosDTO> servicios { get; set; } = new();

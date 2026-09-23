@@ -30,6 +30,8 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table CitaServicios ^
 --table Ciudad ^
 --table Clientes ^
+--table Fidelidad ^
+--table FidelidadParametro ^
 --table Funcionalidades ^
 --table FuncionalidadesSet ^
 --table Genero ^
