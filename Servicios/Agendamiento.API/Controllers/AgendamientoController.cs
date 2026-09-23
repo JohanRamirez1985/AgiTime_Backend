@@ -467,18 +467,18 @@ namespace Agendamiento.API.Controllers
                         {
                             var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
 
-                            if (fidelidadCliente != null && (fidelidadCliente.cantidad == 4 || fidelidadCliente.cantidad == 9))
+                            if (fidelidadCliente != null)
                             {
-                                var siguienteCantidad = fidelidadCliente.cantidad + 1;
+                                var siguienteParametro = ContextBD.FidelidadParametros
+                                                        .Where(p =>
+                                                            p.estado &&
+                                                            p.cantidad > fidelidadCliente.cantidad)
+                                                        .OrderBy(p => p.cantidad)
+                                                        .FirstOrDefault();
 
-                                var fidelidadParametro = ContextBD.FidelidadParametros
-                                    .FirstOrDefault(p =>
-                                        p.cantidad == siguienteCantidad &&
-                                        p.estado);
-
-                                if (fidelidadParametro != null)
+                                if (siguienteParametro != null && siguienteParametro.cantidad == fidelidadCliente.cantidad + 1)
                                 {
-                                    fidelidadMensaje = $"Es tu {siguienteCantidad} visita, tienes un {fidelidadParametro.porcentaje:0}% de descuento";
+                                    fidelidadMensaje = $"Es tu {siguienteParametro.cantidad} visita, " + $"tienes un {siguienteParametro.porcentaje:0}% de descuento";
                                 }
                             }
                         }
@@ -1763,55 +1763,160 @@ namespace Agendamiento.API.Controllers
                 if (empresa.servicio == true)
                 {
                     lista = ContextBD.Padres
-                        .Where(p => p.CitaPadres.Any(cp =>
-                            cp.citaNavigation.fechaInicio >= dto.FechaIni &&
-                            cp.citaNavigation.fechaFin <= dto.FechaFin &&
-                            (cp.citaNavigation.estado == Estados.Activo ||
-                             cp.citaNavigation.estado == Estados.Asistio)))
-                        .Select(p => new
+                    .Where(p => p.CitaPadres.Any(cp =>
+                        cp.citaNavigation.fechaInicio >= dto.FechaIni &&
+                        cp.citaNavigation.fechaFin <= dto.FechaFin &&
+                        (cp.citaNavigation.estado == Estados.Activo ||
+                         cp.citaNavigation.estado == Estados.Asistio)))
+                    .Select(p => new
+                    {
+                        Padre = p.id,
+
+                        Citas = p.CitaPadres
+                            .Where(cp =>
+                                cp.citaNavigation.fechaInicio >= dto.FechaIni &&
+                                cp.citaNavigation.fechaFin <= dto.FechaFin &&
+                                (cp.citaNavigation.estado == Estados.Activo ||
+                                 cp.citaNavigation.estado == Estados.Asistio))
+                            .Select(cp => new
+                            {
+                                cp.citaNavigation.id,
+                                cp.citaNavigation.fechaInicio,
+                                cp.citaNavigation.estado,
+                                cp.citaNavigation.recurso,
+                                cp.citaNavigation.cliente,
+                                cp.citaNavigation.bono,
+                                cp.citaNavigation.fidelidad,
+
+                                NombreRecurso = ContextBD.Usuarios
+                                    .Where(u => u.id == cp.citaNavigation.recurso)
+                                    .Select(u => u.nombre)
+                                    .FirstOrDefault(),
+
+                                Cliente = ContextBD.Clientes
+                                    .Where(cl => cl.id == cp.citaNavigation.cliente)
+                                    .Select(cl => new
+                                    {
+                                        NombreCliente = cl.nombre,
+                                        TelefonoCliente = cl.telefono
+                                    })
+                                    .FirstOrDefault(),
+
+                                FidelidadCantidad = ContextBD.Fidelidads
+                                    .Where(f => f.cliente == cp.citaNavigation.cliente)
+                                    .Select(f => (int?)f.cantidad)
+                                    .FirstOrDefault(),
+
+                                Servicios = cp.citaNavigation.CitaServicios
+                                    .Select(cs => new
+                                    {
+                                        Id = cs.servicioNavigation.id,
+                                        Nombre = cs.servicioNavigation.nombre,
+                                        Valor = cs.servicioNavigation.nombre == "Otro"
+                                                || cp.citaNavigation.bono == true
+                                                || cp.citaNavigation.fidelidad == true
+                                                || cs.servicioNavigation.valor == 0
+                                            ? (cp.citaNavigation.valor ?? 0)
+                                            : (cs.servicioNavigation.valor ?? 0)
+                                    })
+                                    .ToList()
+                            })
+                            .ToList()
+                    })
+                    .AsEnumerable()
+                    .Select(p => new
+                    {
+                        p.Padre,
+
+                        Citas = p.Citas.Select(c =>
                         {
-                            Padre = p.id,
+                            string fidelidadMensaje = string.Empty;
 
-                            Citas = p.CitaPadres
-                                .Where(cp =>
-                                    cp.citaNavigation.fechaInicio >= dto.FechaIni &&
-                                    cp.citaNavigation.fechaFin <= dto.FechaFin &&
-                                    (cp.citaNavigation.estado == Estados.Activo ||
-                                     cp.citaNavigation.estado == Estados.Asistio))
-                                .Select(cp => new
+                            if (c.FidelidadCantidad.HasValue && c.Cliente != null)
+                            {
+                                var fidelidadParametro = ContextBD.FidelidadParametros
+                                    .FirstOrDefault(fp =>
+                                        fp.cantidad == c.FidelidadCantidad.Value &&
+                                        fp.estado);
+
+                                if (fidelidadParametro != null)
                                 {
-                                    cp.citaNavigation.id,
-                                    cp.citaNavigation.fechaInicio,
-                                    cp.citaNavigation.estado,
-                                    cp.citaNavigation.recurso,
+                                    var valorServicios = c.Servicios.Sum(s => s.Valor);
 
-                                    NombreRecurso = ContextBD.Usuarios
-                                            .Where(u => u.id == cp.citaNavigation.recurso)
-                                            .Select(u => u.nombre)
-                                            .FirstOrDefault(),
+                                    var valorFinal = valorServicios - (valorServicios * fidelidadParametro.porcentaje / 100);
 
-                                    Cliente = ContextBD.Clientes
-                                            .Where(cl => cl.id == cp.citaNavigation.cliente)
-                                            .Select(cl => new
-                                            {
-                                                NombreCliente = cl.nombre,
-                                                TelefonoCliente = cl.telefono
-                                            })
-                                            .FirstOrDefault(),
+                                    fidelidadMensaje =
+                                        $"Es la {c.FidelidadCantidad.Value} visita de la clienta " +
+                                        $"{c.Cliente.NombreCliente} y tiene un " +
+                                        $"{fidelidadParametro.porcentaje:0}% de descuento para un total de " +
+                                        $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
+                                }
+                            }
 
-                                    Servicios = cp.citaNavigation.CitaServicios
-                                        .Select(cs => new
-                                        {
-                                            Id = cs.servicioNavigation.id,
-                                            Nombre = cs.servicioNavigation.nombre,
-                                            Valor = cs.servicioNavigation.nombre == "Otro"
-                                                ? cp.citaNavigation.valor
-                                                : cs.servicioNavigation.valor
-                                        }).ToList()
-                                }).ToList()
-                        })
-                        .OrderBy(o => o.Padre)
-                        .ToList();
+                            return new
+                            {
+                                c.id,
+                                c.fechaInicio,
+                                c.estado,
+                                c.recurso,
+                                c.NombreRecurso,
+                                c.Cliente,
+                                c.Servicios,
+                                fidelidad = fidelidadMensaje
+                            };
+                        }).ToList()
+                    })
+                    .OrderBy(o => o.Padre)
+                    .ToList();
+                    //lista = ContextBD.Padres
+                    //    .Where(p => p.CitaPadres.Any(cp =>
+                    //        cp.citaNavigation.fechaInicio >= dto.FechaIni &&
+                    //        cp.citaNavigation.fechaFin <= dto.FechaFin &&
+                    //        (cp.citaNavigation.estado == Estados.Activo ||
+                    //         cp.citaNavigation.estado == Estados.Asistio)))
+                    //    .Select(p => new
+                    //    {
+                    //        Padre = p.id,
+
+                    //        Citas = p.CitaPadres
+                    //            .Where(cp =>
+                    //                cp.citaNavigation.fechaInicio >= dto.FechaIni &&
+                    //                cp.citaNavigation.fechaFin <= dto.FechaFin &&
+                    //                (cp.citaNavigation.estado == Estados.Activo ||
+                    //                 cp.citaNavigation.estado == Estados.Asistio))
+                    //            .Select(cp => new
+                    //            {
+                    //                cp.citaNavigation.id,
+                    //                cp.citaNavigation.fechaInicio,
+                    //                cp.citaNavigation.estado,
+                    //                cp.citaNavigation.recurso,
+
+                    //                NombreRecurso = ContextBD.Usuarios
+                    //                        .Where(u => u.id == cp.citaNavigation.recurso)
+                    //                        .Select(u => u.nombre)
+                    //                        .FirstOrDefault(),
+
+                    //                Cliente = ContextBD.Clientes
+                    //                        .Where(cl => cl.id == cp.citaNavigation.cliente)
+                    //                        .Select(cl => new
+                    //                        {
+                    //                            NombreCliente = cl.nombre,
+                    //                            TelefonoCliente = cl.telefono
+                    //                        })
+                    //                        .FirstOrDefault(),
+
+                    //                Servicios = cp.citaNavigation.CitaServicios
+                    //                    .Select(cs => new
+                    //                    {
+                    //                        Id = cs.servicioNavigation.id,
+                    //                        Nombre = cs.servicioNavigation.nombre,
+                    //                        Valor = cs.servicioNavigation.nombre == "Otro" || cp.citaNavigation.bono == true || cp.citaNavigation.fidelidad == true || cs.servicioNavigation.valor == 0
+                    //                                ? (cp.citaNavigation.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                    //                    }).ToList()
+                    //            }).ToList()
+                    //    })
+                    //    .OrderBy(o => o.Padre)
+                    //    .ToList();
                 }
                 else
                 {
@@ -1825,6 +1930,7 @@ namespace Agendamiento.API.Controllers
                             c.id,
                             c.fechaInicio,
                             c.estado,
+                            c.fidelidad,
                             Cliente = ContextBD.Clientes
                                 .Where(cl => cl.id == c.cliente)
                                 .Select(cl => new
@@ -1837,18 +1943,50 @@ namespace Agendamiento.API.Controllers
                             {
                                 Id = cs.servicioNavigation.id,
                                 Nombre = cs.servicioNavigation.nombre,
-                                Valor = cs.servicioNavigation.nombre == "Otro" ? c.valor : cs.servicioNavigation.valor
-                            }).ToList()
+                                Valor = cs.servicioNavigation.nombre == "Otro" || c.bono == true || c.fidelidad == true || cs.servicioNavigation.valor == 0
+                                        ? (c.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                            }).ToList(),
+                            FidelidadCantidad = ContextBD.Fidelidads
+                                                .Where(f => f.cliente == c.cliente)
+                                                .Select(f => (int?)f.cantidad)
+                                                .FirstOrDefault()
                         })
                         .AsEnumerable()
-                        .Select(c => new
+                        .Select(c =>
                         {
-                            c.id,
-                            c.fechaInicio,
-                            c.estado,
-                            nombreCliente = c.Cliente?.NombreCliente,
-                            telefonoCliente = c.Cliente?.TelefonoCliente,
-                            servicios = c.Servicios
+                            string fidelidadMensaje = string.Empty;
+
+                            if (c.FidelidadCantidad.HasValue)
+                            {
+                                var fidelidadParametro = ContextBD.FidelidadParametros
+                                    .FirstOrDefault(p =>
+                                        p.cantidad == c.FidelidadCantidad.Value &&
+                                        p.estado);
+
+                                if (fidelidadParametro != null)
+                                {
+                                    var valorServicios = c.Servicios.Sum(s => s.Valor);
+
+                                    var valorFinal = valorServicios - (valorServicios * fidelidadParametro.porcentaje / 100);
+
+                                    fidelidadMensaje =
+                                        $"Es la {c.FidelidadCantidad.Value} visita de la clienta " +
+                                        $"{c.Cliente.NombreCliente} y tiene un " +
+                                        $"{fidelidadParametro.porcentaje:0}% de descuento para un total de " +
+                                        $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
+                                }
+                            }
+
+                            return new
+                            {
+                                c.id,
+                                c.fechaInicio,
+                                c.estado,
+                                nombreCliente = c.Cliente?.NombreCliente,
+                                telefonoCliente = c.Cliente?.TelefonoCliente,
+                                servicios = c.Servicios,
+                                fidelidad = fidelidadMensaje
+                            };
                         })
                         .OrderBy(o => o.fechaInicio)
                         .ToList();
