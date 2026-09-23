@@ -478,8 +478,7 @@ namespace Agendamiento.API.Controllers
 
                                 if (fidelidadParametro != null)
                                 {
-                                    fidelidadMensaje =
-                                        $"Es tu {siguienteCantidad} visita, tienes un {fidelidadParametro.porcentaje}% de descuento";
+                                    fidelidadMensaje = $"Es tu {siguienteCantidad} visita, tienes un {fidelidadParametro.porcentaje:0}% de descuento";
                                 }
                             }
                         }
