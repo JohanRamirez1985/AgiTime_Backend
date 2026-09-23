@@ -276,6 +276,7 @@ namespace Agendamiento.API.Controllers
             string telefonoCliente = "";
             bool pago = true;
             int rec = 0;
+            string fidelidadMensaje = string.Empty;
 
             try
             {
@@ -321,6 +322,7 @@ namespace Agendamiento.API.Controllers
 
                     var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
                     var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
+                    var fidelidad = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "ManejaFidelidad")?.valor, out bool resulFidelidad) && resulFidelidad;
 
                     if (dto.validaHorario)
                     {
@@ -461,10 +463,32 @@ namespace Agendamiento.API.Controllers
                             );
                         }
 
+                        if (fidelidad)
+                        {
+                            var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
+
+                            if (fidelidadCliente != null && (fidelidadCliente.cantidad == 4 || fidelidadCliente.cantidad == 9))
+                            {
+                                var siguienteCantidad = fidelidadCliente.cantidad + 1;
+
+                                var fidelidadParametro = ContextBD.FidelidadParametros
+                                    .FirstOrDefault(p =>
+                                        p.cantidad == siguienteCantidad &&
+                                        p.estado);
+
+                                if (fidelidadParametro != null)
+                                {
+                                    fidelidadMensaje =
+                                        $"Es tu {siguienteCantidad} visita, tienes un {fidelidadParametro.porcentaje}% de descuento";
+                                }
+                            }
+                        }
+
                         return Ok(new
                         {
                             mensaje = "Cita registrada exitosamente",
                             envioMensaje = validacion.EnvioMensaje,
+                            fidelidadMensaje = fidelidadMensaje,
                             exito = true
                         });
                     }
@@ -2023,7 +2047,7 @@ namespace Agendamiento.API.Controllers
                             where cs.cita == cita.id
                             select new
                             {
-                                ServicioValor = s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
+                                ServicioValor = cita.bono == true || cita.fidelidad == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
                                 Porcentaje = (sp.porcentaje ?? 0),
                                 Sede = se.Nombre
                             }
@@ -2123,7 +2147,7 @@ namespace Agendamiento.API.Controllers
                                                      where cs.cita == citaId.id
                                                      select new
                                                      {
-                                                         ServicioValor = s.valor,
+                                                         ServicioValor = citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
                                                          Porcentaje = (u.porcentaje ?? 0),
                                                          Sede = se.Nombre
                                                      }
@@ -2131,7 +2155,7 @@ namespace Agendamiento.API.Controllers
 
                                     foreach (var servicio in servicios)
                                     {
-                                        decimal valorServicio = servicio.ServicioValor ?? 0m;
+                                        decimal valorServicio = servicio.ServicioValor;
 
                                         decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
 
@@ -2254,7 +2278,7 @@ namespace Agendamiento.API.Controllers
                                 where cs.cita == citaId.id
                                 select new
                                 {
-                                    ServicioValor = citaId.bono == true ? (citaId.valor ?? 0) : (s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0)),
+                                    ServicioValor = citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
                                     Porcentaje = (u.porcentaje ?? 0) != 0 ? (u.porcentaje ?? 0) : (sp != null ? (sp.porcentaje ?? 0) : 0),
                                     Sede = se.Nombre
                                 }

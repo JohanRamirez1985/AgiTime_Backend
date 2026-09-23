@@ -212,6 +212,7 @@ namespace Agendamiento.API.Servicios
                 EnvioMensaje = false
             };
         }
+
         public UsuarioDTO GetInfoRecurso(int recurso, ModeloContext ContextBD)
         {
             var infoRecurso = ContextBD.Usuarios
