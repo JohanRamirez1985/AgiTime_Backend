@@ -1996,6 +1996,10 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
+                bool fidelidad = ContextBD.Parametros.Where(p => p.estado && p.tipo == "ManejaFidelidad")
+                    .Select(p => p.valor)
+                    .FirstOrDefault()?.ToLower() == "true";
+
                 if (empresa.servicio == true)
                 {
                     var citas = (from cp in ContextBD.CitaPadres
@@ -2075,6 +2079,11 @@ namespace Agendamiento.API.Controllers
                         {
                             citaId.estado = Estados.Asistio;
                             citaId.bono = dto.Bono;
+                            citaId.metodoPago = dto.metodoPago;
+                            if (dto.Valor.HasValue && dto.Valor > 0)
+                            {
+                                citaId.valor = dto.Valor;
+                            }
 
                             var sesion = ContextBD.Sesiones.FirstOrDefault(s => s.cita == citaId.id);
 
@@ -2180,6 +2189,58 @@ namespace Agendamiento.API.Controllers
                             citaId.estado = Estados.Asistio;
                             citaId.bono = dto.Bono;
                             citaId.metodoPago = dto.metodoPago;
+                            if (dto.Valor.HasValue && dto.Valor.Value > 0)
+                            {
+                                citaId.valor = dto.Valor;
+                            }
+                            if (fidelidad)
+                            {
+                                var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente);
+
+                                if (fidelidadCliente == null)
+                                {
+                                    fidelidadCliente = new Fidelidad
+                                    {
+                                        cliente = citaId.cliente.Value,
+                                        cantidad = 1
+                                    };
+
+                                    ContextBD.Fidelidads.Add(fidelidadCliente);
+                                }
+                                else
+                                {
+                                    fidelidadCliente.cantidad++;
+                                }
+
+                                var niveles = ContextBD.FidelidadParametros
+                                    .Where(p => p.estado)
+                                    .OrderBy(p => p.cantidad)
+                                    .ToList();
+
+                                var nivel = niveles
+                                    .FirstOrDefault(p => p.cantidad == fidelidadCliente.cantidad);
+
+                                if (nivel != null)
+                                {
+                                    if (citaId.valor.HasValue && citaId.valor > 0)
+                                    {
+                                        citaId.valor = citaId.valor.Value -
+                                                       (citaId.valor.Value * nivel.porcentaje / 100);
+                                    }
+
+                                    var cantidadMaxima = niveles
+                                        .Select(p => p.cantidad)
+                                        .LastOrDefault();
+
+                                    if (fidelidadCliente.cantidad == cantidadMaxima)
+                                    {
+                                        fidelidadCliente.cantidad = 0;
+                                    }
+                                }
+
+                                citaId.fidelidad = true;
+
+                            }
 
                             if (empresa.id != 2)
                             {
@@ -2188,18 +2249,20 @@ namespace Agendamiento.API.Controllers
                                 join s in ContextBD.Servicios on cs.servicio equals s.id
                                 join u in ContextBD.Usuarios on citaId.recurso equals u.id
                                 join se in ContextBD.Sedes on u.sede equals se.id
+                                join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio into spGroup
+                                from sp in spGroup.DefaultIfEmpty()
                                 where cs.cita == citaId.id
                                 select new
                                 {
-                                    ServicioValor = s.valor,
-                                    Porcentaje = (u.porcentaje ?? 0),
+                                    ServicioValor = citaId.bono == true ? (citaId.valor ?? 0) : (s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0)),
+                                    Porcentaje = (u.porcentaje ?? 0) != 0 ? (u.porcentaje ?? 0) : (sp != null ? (sp.porcentaje ?? 0) : 0),
                                     Sede = se.Nombre
                                 }
                                 ).ToList();
 
                                 foreach (var servicio in servicios)
                                 {
-                                    decimal valorServicio = servicio.ServicioValor ?? 0m;
+                                    decimal valorServicio = servicio.ServicioValor;
 
                                     decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
 
