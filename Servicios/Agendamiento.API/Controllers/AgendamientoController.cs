@@ -86,7 +86,7 @@ namespace Agendamiento.API.Controllers
                     var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
                     var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
 
-                    var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni 
+                    var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
                                                            && c.recurso == dto.recurso
                                                            && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
                                                            ).FirstOrDefault();
@@ -437,7 +437,7 @@ namespace Agendamiento.API.Controllers
                             if (empresa.recursoMultiple == true)
                                 rec = 7;
                         }
-                       
+
                         var infoRecurso = agendaService.GetInfoRecurso(rec, ContextBD);
 
                         if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
@@ -690,7 +690,7 @@ namespace Agendamiento.API.Controllers
 
                         ContextBD.Citas.Add(nuevo);
                         ContextBD.SaveChanges();
-                        
+
                         int idCita = nuevo.id;
 
                         foreach (var detalle in dto.servicios)
@@ -932,7 +932,7 @@ namespace Agendamiento.API.Controllers
 
                         transaction.Commit();
 
-                        var infoRecurso = agendaService. GetInfoRecurso(dto.recurso, ContextBD);
+                        var infoRecurso = agendaService.GetInfoRecurso(dto.recurso, ContextBD);
 
                         //if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
                         //{
@@ -2735,7 +2735,7 @@ namespace Agendamiento.API.Controllers
 
                 var usuario = ContextBD.Usuarios.Where(u => u.estado == Estados.Activo && u.recurso == true).ToList();
 
-                foreach (Usuario u in usuario) 
+                foreach (Usuario u in usuario)
                 {
                     var listaOrdenada = new List<string>();
                     var horasOcupadas = new HashSet<string>();
@@ -3341,15 +3341,16 @@ namespace Agendamiento.API.Controllers
                         Observaciones = o.observaciones,
                         UsuarioCreacion = o.usuarioCreacion,
                         FechaCreacion = o.fechaCreacion,
-                        NombreServicio = (from c in ContextBD.Citas 
-                                          join cs in ContextBD.CitaServicios on c.id equals cs.cita 
-                                          join servicio in ContextBD.Servicios on cs.servicio equals servicio.id 
-                                          where c.orden == o.id select servicio.nombre).FirstOrDefault(),
-                        idServicio = (from c in ContextBD.Citas
+                        NombreServicio = (from c in ContextBD.Citas
                                           join cs in ContextBD.CitaServicios on c.id equals cs.cita
                                           join servicio in ContextBD.Servicios on cs.servicio equals servicio.id
                                           where c.orden == o.id
-                                          select servicio.id).FirstOrDefault(),
+                                          select servicio.nombre).FirstOrDefault(),
+                        idServicio = (from c in ContextBD.Citas
+                                      join cs in ContextBD.CitaServicios on c.id equals cs.cita
+                                      join servicio in ContextBD.Servicios on cs.servicio equals servicio.id
+                                      where c.orden == o.id
+                                      select servicio.id).FirstOrDefault(),
                         sesiones = ContextBD.Sesiones
                             .Where(s => s.orden == o.id)
                             .Select(s => new SesionesDTO

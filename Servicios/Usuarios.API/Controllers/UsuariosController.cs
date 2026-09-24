@@ -75,6 +75,15 @@ namespace Usuarios.API.Controllers
                     });
                 }
 
+                if (usuario.estado == Estados.Inactivo)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Usuario Inactivo",
+                        exito = false
+                    });
+                }
+
                 string claveSecreta = configuracion["Jwt:Key"];
                 int expiracion = int.Parse(configuracion["Jwt:ExpiracionMinutos"]);
 
