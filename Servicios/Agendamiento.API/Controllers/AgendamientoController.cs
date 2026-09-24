@@ -1966,11 +1966,6 @@ namespace Agendamiento.API.Controllers
                         })
                         .ToList();
                     
-                    var cliente = citas[0].cliente;
-
-                    var fidelidad = ContextBD.Fidelidads
-                        .FirstOrDefault(f => f.cliente == cliente);
-
                     lista = citas
                         .Select(c =>
                         {
