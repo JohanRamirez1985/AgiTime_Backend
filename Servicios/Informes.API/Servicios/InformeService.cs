@@ -132,7 +132,7 @@ namespace Informes.API.Servicios
 
                 foreach (var s in r.servicios)
                 {
-                    gfx.DrawString($"• {s.servicio}", font, XBrushes.Black,
+                    gfx.DrawString($"• {s.servicio + "    " + s.metodoPago}", font, XBrushes.Black,
                         colDetalle, y);
                     var esBono = s.bono is bool b && b;
                     var valorTexto = Moneda((decimal)s.valor) + (esBono ? " *" : "");
@@ -374,7 +374,7 @@ namespace Informes.API.Servicios
                 bool mostrarTotalBonos = true;
                 bool mostrarComision = true;
 
-                if ( cliente == 8)
+                if ( cliente == 8 || cliente == 11 || cliente == 12)
                 {
                     mostrarObsequio = false;
                     mostrarDescanso = false;

@@ -224,8 +224,10 @@ namespace Informes.API.Controllers
                                     servicio = s.nombre,
                                     pagoCita = c.pago,
                                     pagoServicio = s.esPago,
-                                    valor = s.nombre == "Otro" ? c.valor : s.valor - (c.bono.GetValueOrDefault() ? bono : 0),
-                                    bono = c.bono
+                                    valor = emp == 2 ? s.nombre == "Otro" ? c.valor : s.valor - (c.bono.GetValueOrDefault() ? bono : 0)
+                                            : (c.bono == true || c.fidelidad == true || s.valor == 0 ? (c.valor ?? 0) : (s.valor ?? 0)),
+                                    bono = c.bono,
+                                    metodoPago = c.metodoPago
                                 })
                                .ToList();
 
@@ -261,7 +263,7 @@ namespace Informes.API.Controllers
                     {
                         nombre = u.nombre,
                         totalServicios = pagas.Count,
-                        servicios = pagas.Select(s => new { s.servicio, s.valor,s.bono }).ToList(),
+                        servicios = pagas.Select(s => new { s.servicio, s.valor,s.bono, s.metodoPago }).ToList(),
                         totalPlata = pagas.Sum(s => s.valor),
                         obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
                         totalPlataObsequios = obsequios.Sum(s => s.valor),
