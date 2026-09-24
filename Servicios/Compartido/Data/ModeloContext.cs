@@ -24,6 +24,8 @@ namespace Compartido.Data
         public virtual DbSet<CitaServicio> CitaServicios { get; set; }
         public virtual DbSet<Ciudad> Ciudads { get; set; }
         public virtual DbSet<Cliente> Clientes { get; set; }
+        public virtual DbSet<Fidelidad> Fidelidads { get; set; }
+        public virtual DbSet<FidelidadParametro> FidelidadParametros { get; set; }
         public virtual DbSet<Funcionalidade> Funcionalidades { get; set; }
         public virtual DbSet<FuncionalidadesSet> FuncionalidadesSets { get; set; }
         public virtual DbSet<Genero> Generos { get; set; }
@@ -207,6 +209,18 @@ namespace Compartido.Data
                     .WithMany(p => p.Clientes)
                     .HasForeignKey(d => d.tipoDocumento)
                     .HasConstraintName("FK_Clientes_TipoDocumento");
+            });
+
+            modelBuilder.Entity<Fidelidad>(entity =>
+            {
+                entity.ToTable("Fidelidad");
+            });
+
+            modelBuilder.Entity<FidelidadParametro>(entity =>
+            {
+                entity.ToTable("FidelidadParametro");
+
+                entity.Property(e => e.porcentaje).HasColumnType("decimal(5, 2)");
             });
 
             modelBuilder.Entity<Funcionalidade>(entity =>

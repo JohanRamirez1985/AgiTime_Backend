@@ -29,6 +29,7 @@ namespace Compartido.Data.Modelos
         public string usuarioCancelacion { get; set; }
         public int? orden { get; set; }
         public string metodoPago { get; set; }
+        public bool? fidelidad { get; set; }
 
         public virtual ICollection<CitaPadre> CitaPadres { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }
