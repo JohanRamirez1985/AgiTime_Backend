@@ -132,7 +132,7 @@ namespace Informes.API.Servicios
 
                 foreach (var s in r.servicios)
                 {
-                    gfx.DrawString($"• {s.servicio + "    " + s.metodoPago}", font, XBrushes.Black,
+                    gfx.DrawString($"• {s.servicio}{(!string.IsNullOrWhiteSpace(s.metodoPago) ? "  -   " + s.metodoPago : "")}", font, XBrushes.Black,
                         colDetalle, y);
                     var esBono = s.bono is bool b && b;
                     var valorTexto = Moneda((decimal)s.valor) + (esBono ? " *" : "");
