@@ -654,9 +654,30 @@ namespace Parametros.API.Controllers
                     .OrderBy(o => o.nombre)
                     .Select(e => new
                     {
-                        Empresa = e,
+                        e.id,
+                        e.nombre,
+                        e.nit,
+                        e.logo,
+                        e.conexionBD,
+                        e.subDominio,
+                        e.estado,
+                        e.telefono,
+                        e.servicio,
+                        e.ordenes,
+                        e.recursoMultiple,
                         Apariencia = ContextGene.Apariencia
-                            .FirstOrDefault(a => a.empresa == e.id && a.estado == true)
+                            .Where(a => a.empresa == e.id && a.estado == true)
+                                .Select(a => new
+                                {
+                                    a.id,
+                                    a.tipoLetra,
+                                    a.colorLetra,
+                                    a.colorFondo,
+                                    a.colorPiePagina,
+                                    a.colorCabecera,
+                                    a.estado,
+                                })
+                                .FirstOrDefault()
                     }).ToList();
 
                 if (lista == null || lista.Count == 0)
