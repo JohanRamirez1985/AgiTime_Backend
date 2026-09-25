@@ -23,6 +23,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --use-database-names ^
 --no-onconfiguring ^
 --force ^
+--table Apariencia ^
 --table Empresa ^
 --table ParametrosGenerales 
 
