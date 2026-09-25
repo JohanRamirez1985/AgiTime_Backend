@@ -24,6 +24,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --no-onconfiguring ^
 --force ^
 --table Agenda ^
+--table Apariencia ^
 --table BloqueosHorario ^
 --table CitaPadre ^
 --table Citas ^
