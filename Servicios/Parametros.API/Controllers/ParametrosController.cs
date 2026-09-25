@@ -649,7 +649,15 @@ namespace Parametros.API.Controllers
             string nombreBase = string.Empty;
             try
             {
-                var lista = ContextGene.Empresas.Where(e => e.estado == Estados.Activo).OrderBy(o => o.nombre).ToList();
+                var lista = ContextGene.Empresas
+                    .Where(e => e.estado == Estados.Activo)
+                    .OrderBy(o => o.nombre)
+                    .Select(e => new
+                    {
+                        Empresa = e,
+                        Apariencia = ContextGene.Apariencia
+                            .FirstOrDefault(a => a.empresa == e.id && a.estado == true)
+                    }).ToList();
 
                 if (lista == null || lista.Count == 0)
                 {

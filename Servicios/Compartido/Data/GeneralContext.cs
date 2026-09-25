@@ -44,6 +44,12 @@ namespace Compartido.Data
                 entity.Property(e => e.tipoLetra)
                     .HasMaxLength(50)
                     .IsUnicode(false);
+
+                entity.HasOne(d => d.empresaNavigation)
+                    .WithMany(p => p.Apariencia)
+                    .HasForeignKey(d => d.empresa)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Apariencia_Empresa");
             });
 
             modelBuilder.Entity<Empresa>(entity =>

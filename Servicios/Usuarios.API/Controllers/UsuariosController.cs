@@ -41,7 +41,6 @@ namespace Usuarios.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == request.empresa && e.estado == Estados.Activo);
-                var apariencia = ContextGene.Apariencia.Where(a => a.estado == true && a.empresa == request.empresa).FirstOrDefault();
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -96,7 +95,6 @@ namespace Usuarios.API.Controllers
                 {
                     Token = token,
                     Datos = user,
-                    Apariencia = apariencia,
                     Exito = true
                 });
             }

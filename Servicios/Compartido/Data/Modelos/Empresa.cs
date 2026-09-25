@@ -5,6 +5,11 @@ namespace Compartido.Data.Modelos
 {
     public partial class Empresa
     {
+        public Empresa()
+        {
+            Apariencia = new HashSet<Apariencium>();
+        }
+
         public int id { get; set; }
         public string nombre { get; set; }
         public string nit { get; set; }
@@ -16,5 +21,7 @@ namespace Compartido.Data.Modelos
         public bool? servicio { get; set; }
         public bool? ordenes { get; set; }
         public bool? recursoMultiple { get; set; }
+
+        public virtual ICollection<Apariencium> Apariencia { get; set; }
     }
 }
