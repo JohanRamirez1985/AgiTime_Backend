@@ -41,6 +41,7 @@ namespace Usuarios.API.Controllers
             try
             {
                 var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == request.empresa && e.estado == Estados.Activo);
+                var apariencia = ContextGene.Apariencia.Where(a => a.estado == true && a.empresa == request.empresa).FirstOrDefault();
                 var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
 
                 if (!resultado.Exito)
@@ -83,8 +84,6 @@ namespace Usuarios.API.Controllers
                         exito = false
                     });
                 }
-
-                var apariencia = ContextBD.Apariencia.Where(a => a.estado == true).FirstOrDefault();
 
                 string claveSecreta = configuracion["Jwt:Key"];
                 int expiracion = int.Parse(configuracion["Jwt:ExpiracionMinutos"]);

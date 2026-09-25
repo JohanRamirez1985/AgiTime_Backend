@@ -17,11 +17,35 @@ namespace Compartido.Data
         {
         }
 
+        public virtual DbSet<Apariencium> Apariencia { get; set; }
         public virtual DbSet<Empresa> Empresas { get; set; }
         public virtual DbSet<ParametrosGenerale> ParametrosGenerales { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Apariencium>(entity =>
+            {
+                entity.Property(e => e.colorCabecera)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.colorFondo)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.colorLetra)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.colorPiePagina)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.tipoLetra)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+            });
+
             modelBuilder.Entity<Empresa>(entity =>
             {
                 entity.ToTable("Empresa");
