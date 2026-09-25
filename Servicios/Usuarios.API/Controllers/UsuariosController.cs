@@ -84,6 +84,8 @@ namespace Usuarios.API.Controllers
                     });
                 }
 
+                var apariencia = ContextBD.Apariencia.Where(a => a.estado == true).FirstOrDefault();
+
                 string claveSecreta = configuracion["Jwt:Key"];
                 int expiracion = int.Parse(configuracion["Jwt:ExpiracionMinutos"]);
 
@@ -95,6 +97,7 @@ namespace Usuarios.API.Controllers
                 {
                     Token = token,
                     Datos = user,
+                    Apariencia = apariencia,
                     Exito = true
                 });
             }

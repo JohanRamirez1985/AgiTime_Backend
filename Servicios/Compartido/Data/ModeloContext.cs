@@ -18,6 +18,7 @@ namespace Compartido.Data
         }
 
         public virtual DbSet<Agendum> Agenda { get; set; }
+        public virtual DbSet<Apariencium> Apariencia { get; set; }
         public virtual DbSet<BloqueosHorario> BloqueosHorarios { get; set; }
         public virtual DbSet<Cita> Citas { get; set; }
         public virtual DbSet<CitaPadre> CitaPadres { get; set; }
@@ -57,6 +58,29 @@ namespace Compartido.Data
             modelBuilder.Entity<Agendum>(entity =>
             {
                 entity.Property(e => e.valor).HasColumnType("time(0)");
+            });
+
+            modelBuilder.Entity<Apariencium>(entity =>
+            {
+                entity.Property(e => e.colorCabecera)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.colorFondo)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.colorLetra)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.colorPiePagina)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.tipoLetra)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<BloqueosHorario>(entity =>
