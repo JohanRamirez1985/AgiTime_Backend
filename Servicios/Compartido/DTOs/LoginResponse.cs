@@ -12,6 +12,5 @@ namespace Compartido.DTOs
         public string Mensaje { get; set; }
         public string Token { get; set; }
         public object Datos { get; set; }
-        public object Apariencia { get; set; }
     }
 }
