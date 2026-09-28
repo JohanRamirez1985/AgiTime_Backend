@@ -675,6 +675,8 @@ namespace Parametros.API.Controllers
                                     a.colorFondo,
                                     a.colorPiePagina,
                                     a.colorCabecera,
+                                    a.colorLetraPiePagina,
+                                    a.colorLetraCabecera,
                                     a.estado,
                                 })
                                 .FirstOrDefault()

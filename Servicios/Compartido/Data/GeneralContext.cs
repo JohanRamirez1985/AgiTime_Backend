@@ -37,6 +37,14 @@ namespace Compartido.Data
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
+                entity.Property(e => e.colorLetraCabecera)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.colorLetraPiePagina)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.colorPiePagina)
                     .HasMaxLength(50)
                     .IsUnicode(false);
