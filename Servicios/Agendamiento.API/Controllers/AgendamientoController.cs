@@ -2452,7 +2452,10 @@ namespace Agendamiento.API.Controllers
                     }
                     else
                     {
-                        var citaId = ContextBD.Citas.FirstOrDefault(p => p.id == dto.Id);
+                        var citaId = ContextBD.Citas
+                            .Include(c => c.CitaServicios)
+                            .ThenInclude(cs => cs.servicioNavigation)
+                            .FirstOrDefault(p => p.id == dto.Id);
 
                         if (citaId == null)
                         {
@@ -2475,9 +2478,12 @@ namespace Agendamiento.API.Controllers
                             {
                                 bool validaCliente = true;
 
-                                if(empresa.id == 2 && citaId.usuarioCreacion == "Usuario")
+                                if(empresa.id == 2)
                                 {
-                                    validaCliente = false;
+                                    if (citaId.usuarioCreacion == "Usuario" || !citaId.CitaServicios.Any(cs => cs.servicioNavigation.esPago == true))
+                                    {
+                                        validaCliente = false;
+                                    }
                                 }
                                     
                                 if(validaCliente)

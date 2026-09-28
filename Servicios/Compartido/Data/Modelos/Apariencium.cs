@@ -13,6 +13,8 @@ namespace Compartido.Data.Modelos
         public string colorPiePagina { get; set; }
         public string colorCabecera { get; set; }
         public bool? estado { get; set; }
+        public string colorLetraPiePagina { get; set; }
+        public string colorLetraCabecera { get; set; }
 
         public virtual Empresa empresaNavigation { get; set; }
     }
