@@ -1857,7 +1857,7 @@ namespace Agendamiento.API.Controllers
                                 {
                                     string fidelidadMensaje = string.Empty;
 
-                                    if (c.FidelidadCantidad.HasValue && c.Cliente != null)
+                                    if (c.estado == Estados.Activo && c.FidelidadCantidad.HasValue)
                                     {
                                         // La cita actual todavía no está contabilizada
                                         var visitaActual = c.FidelidadCantidad.Value + 1;
@@ -1998,7 +1998,7 @@ namespace Agendamiento.API.Controllers
 
                             string fidelidadMensaje = string.Empty;
 
-                            if (fidelidadCantidad.HasValue)
+                            if (c.estado == Estados.Activo && fidelidadCantidad.HasValue)
                             {
                                 var visitaActual = fidelidadCantidad.Value + 1;
 
