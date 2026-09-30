@@ -584,7 +584,7 @@ namespace Informes.API.Controllers
                                     servicio = s.nombre,
                                     pagoCita = c.pago ?? false,
                                     pagoServicio = s.esPago ?? false,
-                                    valor = s.nombre == "Otro" ? (c.valor ?? 0) : (s.valor ?? 0) - (c.bono.GetValueOrDefault() ? bono : 0),
+                                    valor = s.nombre == "Otro" || c.fidelidad == true ? (c.valor ?? 0) : (s.valor ?? 0) - (c.bono.GetValueOrDefault() ? bono : 0),
                                     bono = c.bono ?? false
                                 })
                                .ToList();
