@@ -2012,7 +2012,8 @@ namespace Agendamiento.API.Controllers
                                     {
                                         var valorServicios = c.Servicios.Sum(s => s.Valor);
 
-                                        var cantidadCitasPadre = ContextBD.CitaPadres.Count(cp => cp.padre == c.Padre);
+                                        var cantidadCitasPadre = (from cp in ContextBD.CitaPadres join cita in ContextBD.Citas on cp.cita equals cita.id
+                                                                  where cp.padre == c.Padre && cita.estado == Estados.Activo || cita.estado == Estados.Asistio select cita.id).Count();
 
                                         var porcentajeFidelidad = fidelidadParametro.porcentaje / cantidadCitasPadre;
 
@@ -2023,7 +2024,7 @@ namespace Agendamiento.API.Controllers
                                         fidelidadMensaje =
                                             $"Es la {visitaActual} visita del cliente " +
                                             $"{c.Cliente?.NombreCliente} y tiene un " +
-                                            $"descuento del {fidelidadParametro.porcentaje:0}% " +
+                                            $"descuento del {porcentajeFidelidad:0}% " +
                                             $"para un total de " +
                                             $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
                                     }
@@ -2476,91 +2477,146 @@ namespace Agendamiento.API.Controllers
                     }
                     else
                     {
-                        var citaId = ContextBD.Citas
-                            .Include(c => c.CitaServicios)
-                            .ThenInclude(cs => cs.servicioNavigation)
-                            .FirstOrDefault(p => p.id == dto.Id);
-
-                        if (citaId == null)
+                        if (empresa.recursoMultiple == true)
                         {
-                            return Ok(new
-                            {
-                                mensaje = "Cita no encontrada",
-                                exito = false
-                            });
-                        }
-                        if (dto.Asistencia)
-                        {
-                            citaId.estado = Estados.Asistio;
-                            citaId.bono = dto.Bono;
-                            citaId.metodoPago = dto.metodoPago;
-                            if (dto.Valor.HasValue && dto.Valor.Value > 0)
-                            {
-                                citaId.valor = dto.Valor;
-                            }
-                            if (fidelidad)
-                            {
-                                bool validaCliente = true;
+                            var citaId = ContextBD.Citas
+                           .Include(c => c.CitaServicios)
+                           .ThenInclude(cs => cs.servicioNavigation)
+                           .FirstOrDefault(p => p.id == dto.Id);
 
-                                if(empresa.id == 2)
+                            if (citaId == null)
+                            {
+                                return Ok(new
                                 {
-                                    if (citaId.usuarioCreacion == "Usuario" || !citaId.CitaServicios.Any(cs => cs.servicioNavigation.esPago == true))
+                                    mensaje = "Cita no encontrada",
+                                    exito = false
+                                });
+                            }
+                            if (dto.Asistencia)
+                            {
+                                citaId.estado = Estados.Asistio;
+                                citaId.bono = dto.Bono;
+                                citaId.metodoPago = dto.metodoPago;
+                                if (dto.Valor.HasValue && dto.Valor.Value > 0)
+                                {
+                                    citaId.valor = dto.Valor;
+                                }
+                                if (fidelidad)
+                                {
+                                    var padre = ContextBD.CitaPadres.Where(cp => cp.cita == citaId.id).Select(cp => cp.padre).FirstOrDefault();
+
+                                    if (padre != null)
                                     {
-                                        validaCliente = false;
+                                        var citasPadre = (from cp in ContextBD.CitaPadres join c in ContextBD.Citas on cp.cita equals c.id
+                                            where cp.padre == padre select c).ToList();
+
+                                        var citasValidas = citasPadre.Where(c => c.estado == Estados.Activo || c.estado == Estados.Asistio).ToList();
+
+                                        var todasAsistieron = citasValidas.Any() && citasValidas.All(c => c.estado == Estados.Asistio);
+
+                                        if (todasAsistieron)
+                                        {
+                                            var fidelidadYaAplicada = citasValidas.Any(c => c.fidelidad == true);
+
+                                            if (!fidelidadYaAplicada)
+                                            {
+                                                var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente.Value);
+
+                                                if (fidelidadCliente == null)
+                                                {
+                                                    fidelidadCliente = new Fidelidad
+                                                    {
+                                                        cliente = citaId.cliente.Value,
+                                                        cantidad = 1
+                                                    };
+
+                                                    ContextBD.Fidelidads.Add(fidelidadCliente);
+                                                }
+                                                else
+                                                {
+                                                    fidelidadCliente.cantidad++;
+                                                }
+
+                                                var niveles = ContextBD.FidelidadParametros.Where(p => p.estado).OrderBy(p => p.cantidad).ToList();
+
+                                                var nivel = niveles.FirstOrDefault(p => p.cantidad == fidelidadCliente.cantidad);
+
+                                                if (nivel != null)
+                                                {
+                                                    var cantidadCitasPadre = citasValidas.Count;
+
+                                                    var porcentajePorCita = nivel.porcentaje / cantidadCitasPadre;
+
+                                                    foreach (var cita in citasValidas)
+                                                    {
+                                                        if (cita.valor.HasValue && cita.valor > 0)
+                                                        {
+                                                            cita.valor = cita.valor.Value -
+                                                                         (cita.valor.Value * porcentajePorCita / 100);
+                                                        }
+
+                                                        cita.fidelidad = true;
+                                                    }
+
+                                                    var cantidadMaxima = niveles
+                                                        .Select(p => p.cantidad)
+                                                        .LastOrDefault();
+
+                                                    if (fidelidadCliente.cantidad == cantidadMaxima)
+                                                    {
+                                                        fidelidadCliente.cantidad = 0;
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                                    
-                                if(validaCliente)
-                                {
-                                    var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente);
 
-                                    if (fidelidadCliente == null)
-                                    {
-                                        fidelidadCliente = new Fidelidad
-                                        {
-                                            cliente = citaId.cliente.Value,
-                                            cantidad = 1
-                                        };
+                                //var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente);
 
-                                        ContextBD.Fidelidads.Add(fidelidadCliente);
-                                    }
-                                    else
-                                    {
-                                        fidelidadCliente.cantidad++;
-                                    }
+                                //if (fidelidadCliente == null)
+                                //{
+                                //    fidelidadCliente = new Fidelidad
+                                //    {
+                                //        cliente = citaId.cliente.Value,
+                                //        cantidad = 1
+                                //    };
 
-                                    var niveles = ContextBD.FidelidadParametros
-                                        .Where(p => p.estado)
-                                        .OrderBy(p => p.cantidad)
-                                        .ToList();
+                                //    ContextBD.Fidelidads.Add(fidelidadCliente);
+                                //}
+                                //else
+                                //{
+                                //    fidelidadCliente.cantidad++;
+                                //}
 
-                                    var nivel = niveles
-                                        .FirstOrDefault(p => p.cantidad == fidelidadCliente.cantidad);
+                                //var niveles = ContextBD.FidelidadParametros
+                                //    .Where(p => p.estado)
+                                //    .OrderBy(p => p.cantidad)
+                                //    .ToList();
 
-                                    if (nivel != null)
-                                    {
-                                        if (citaId.valor.HasValue && citaId.valor > 0)
-                                        {
-                                            citaId.valor = citaId.valor.Value -
-                                                           (citaId.valor.Value * nivel.porcentaje / 100);
-                                        }
+                                //var nivel = niveles
+                                //    .FirstOrDefault(p => p.cantidad == fidelidadCliente.cantidad);
 
-                                        var cantidadMaxima = niveles
-                                            .Select(p => p.cantidad)
-                                            .LastOrDefault();
+                                //if (nivel != null)
+                                //{
+                                //    if (citaId.valor.HasValue && citaId.valor > 0)
+                                //    {
+                                //        citaId.valor = citaId.valor.Value -
+                                //                       (citaId.valor.Value * nivel.porcentaje / 100);
+                                //    }
 
-                                        if (fidelidadCliente.cantidad == cantidadMaxima)
-                                        {
-                                            fidelidadCliente.cantidad = 0;
-                                        }
-                                    }
+                                //    var cantidadMaxima = niveles
+                                //        .Select(p => p.cantidad)
+                                //        .LastOrDefault();
 
-                                    citaId.fidelidad = true;
-                                }
-                            }
+                                //    if (fidelidadCliente.cantidad == cantidadMaxima)
+                                //    {
+                                //        fidelidadCliente.cantidad = 0;
+                                //    }
+                                //}
 
-                            if (empresa.id != 2)
-                            {
+                                //citaId.fidelidad = true;
+
                                 var servicios = (
                                 from cs in ContextBD.CitaServicios
                                 join s in ContextBD.Servicios on cs.servicio equals s.id
@@ -2603,11 +2659,146 @@ namespace Agendamiento.API.Controllers
                                     ContextBD.LiquidacionCita.Add(liquidacion);
                                 }
                             }
+                            else
+                                citaId.estado = Estados.Inasistencia;
+
+                            ContextBD.SaveChanges();
                         }
                         else
-                            citaId.estado = Estados.Inasistencia;
+                        {
+                            var citaId = ContextBD.Citas
+                            .Include(c => c.CitaServicios)
+                            .ThenInclude(cs => cs.servicioNavigation)
+                            .FirstOrDefault(p => p.id == dto.Id);
 
-                        ContextBD.SaveChanges();
+                            if (citaId == null)
+                            {
+                                return Ok(new
+                                {
+                                    mensaje = "Cita no encontrada",
+                                    exito = false
+                                });
+                            }
+                            if (dto.Asistencia)
+                            {
+                                citaId.estado = Estados.Asistio;
+                                citaId.bono = dto.Bono;
+                                citaId.metodoPago = dto.metodoPago;
+                                if (dto.Valor.HasValue && dto.Valor.Value > 0)
+                                {
+                                    citaId.valor = dto.Valor;
+                                }
+                                if (fidelidad)
+                                {
+                                    bool validaCliente = true;
+
+                                    if (empresa.id == 2)
+                                    {
+                                        if (citaId.usuarioCreacion == "Usuario" || !citaId.CitaServicios.Any(cs => cs.servicioNavigation.esPago == true))
+                                        {
+                                            validaCliente = false;
+                                        }
+                                    }
+
+                                    if (validaCliente)
+                                    {
+                                        var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente);
+
+                                        if (fidelidadCliente == null)
+                                        {
+                                            fidelidadCliente = new Fidelidad
+                                            {
+                                                cliente = citaId.cliente.Value,
+                                                cantidad = 1
+                                            };
+
+                                            ContextBD.Fidelidads.Add(fidelidadCliente);
+                                        }
+                                        else
+                                        {
+                                            fidelidadCliente.cantidad++;
+                                        }
+
+                                        var niveles = ContextBD.FidelidadParametros
+                                            .Where(p => p.estado)
+                                            .OrderBy(p => p.cantidad)
+                                            .ToList();
+
+                                        var nivel = niveles
+                                            .FirstOrDefault(p => p.cantidad == fidelidadCliente.cantidad);
+
+                                        if (nivel != null)
+                                        {
+                                            if (citaId.valor.HasValue && citaId.valor > 0)
+                                            {
+                                                citaId.valor = citaId.valor.Value -
+                                                               (citaId.valor.Value * nivel.porcentaje / 100);
+                                            }
+
+                                            var cantidadMaxima = niveles
+                                                .Select(p => p.cantidad)
+                                                .LastOrDefault();
+
+                                            if (fidelidadCliente.cantidad == cantidadMaxima)
+                                            {
+                                                fidelidadCliente.cantidad = 0;
+                                            }
+                                        }
+
+                                        citaId.fidelidad = true;
+                                    }
+                                }
+
+                                if (empresa.id != 2)
+                                {
+                                    var servicios = (
+                                    from cs in ContextBD.CitaServicios
+                                    join s in ContextBD.Servicios on cs.servicio equals s.id
+                                    join u in ContextBD.Usuarios on citaId.recurso equals u.id
+                                    join se in ContextBD.Sedes on u.sede equals se.id
+                                    join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio into spGroup
+                                    from sp in spGroup.DefaultIfEmpty()
+                                    where cs.cita == citaId.id
+                                    select new
+                                    {
+                                        ServicioValor = citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                        Porcentaje = (u.porcentaje ?? 0) != 0 ? (u.porcentaje ?? 0) : (sp != null ? (sp.porcentaje ?? 0) : 0),
+                                        Sede = se.Nombre
+                                    }
+                                    ).ToList();
+
+                                    foreach (var servicio in servicios)
+                                    {
+                                        decimal valorServicio = servicio.ServicioValor;
+
+                                        decimal valorTrabajador = valorServicio * (servicio.Porcentaje / 100m);
+
+                                        decimal valorEmpresa = valorServicio - valorTrabajador;
+
+                                        var liquidacion = new LiquidacionCitum
+                                        {
+                                            cita = citaId.id,
+                                            valorServicio = servicio.ServicioValor,
+                                            valorBarbero = valorTrabajador,
+                                            valorBarberia = valorEmpresa,
+                                            sede = servicio.Sede,
+                                            fechaCita = citaId.fechaInicio,
+                                            bono = citaId.bono,
+                                            fechaCreacion = dto.FechaCreacion,
+                                            usuarioCreacion = dto.UsuarioCreacion,
+                                            tipo = "Normal",
+                                            numero = 1
+                                        };
+
+                                        ContextBD.LiquidacionCita.Add(liquidacion);
+                                    }
+                                }
+                            }
+                            else
+                                citaId.estado = Estados.Inasistencia;
+
+                            ContextBD.SaveChanges();
+                        }
                     }
                 }
 
