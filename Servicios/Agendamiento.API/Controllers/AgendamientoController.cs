@@ -2013,7 +2013,7 @@ namespace Agendamiento.API.Controllers
                                         var valorServicios = c.Servicios.Sum(s => s.Valor);
 
                                         var cantidadCitasPadre = (from cp in ContextBD.CitaPadres join cita in ContextBD.Citas on cp.cita equals cita.id
-                                                                  where cp.padre == c.Padre && cita.estado == Estados.Activo || cita.estado == Estados.Asistio select cita.id).Count();
+                                                                  where cp.padre == c.Padre && (cita.estado == Estados.Activo || cita.estado == Estados.Asistio) select cita.id).Count();
 
                                         var porcentajeFidelidad = fidelidadParametro.porcentaje / cantidadCitasPadre;
 
