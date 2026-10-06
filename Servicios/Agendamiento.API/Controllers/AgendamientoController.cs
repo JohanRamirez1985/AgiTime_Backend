@@ -2299,9 +2299,7 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                bool fidelidad = ContextBD.Parametros.Where(p => p.estado && p.tipo == "ManejaFidelidad")
-                    .Select(p => p.valor)
-                    .FirstOrDefault()?.ToLower() == "true";
+                bool fidelidad = ContextBD.Parametros.Where(p => p.estado && p.tipo == "ManejaFidelidad").Select(p => p.valor).FirstOrDefault()?.ToLower() == "true";
 
                 if (empresa.servicio == true)
                 {
@@ -2507,66 +2505,61 @@ namespace Agendamiento.API.Controllers
 
                                     if (padre != null)
                                     {
-                                        var citasPadre = (from cp in ContextBD.CitaPadres join c in ContextBD.Citas on cp.cita equals c.id
-                                            where cp.padre == padre select c).ToList();
+                                        var citasPadre = (from cp in ContextBD.CitaPadres join c in ContextBD.Citas on cp.cita equals c.id where cp.padre == padre select c).ToList();
 
                                         var citasValidas = citasPadre.Where(c => c.estado == Estados.Activo || c.estado == Estados.Asistio).ToList();
+
+                                        var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente.Value);
+
+                                        var visitaActual = (fidelidadCliente?.cantidad ?? 0) + 1;
+
+                                        var nivel = ContextBD.FidelidadParametros.FirstOrDefault(p => p.cantidad == visitaActual && p.estado);
+
+                                        if (nivel != null && citaId.fidelidad != true)
+                                        {
+                                            var cantidadCitasPadre = citasValidas.Count;
+
+                                            if (cantidadCitasPadre > 0)
+                                            {
+                                                var porcentajePorCita = nivel.porcentaje / cantidadCitasPadre;
+
+                                                if (citaId.valor.HasValue && citaId.valor > 0)
+                                                {
+                                                    citaId.valor = citaId.valor.Value - (citaId.valor.Value * porcentajePorCita / 100);
+                                                }
+
+                                                citaId.fidelidad = true;
+                                            }
+                                        }
 
                                         var todasAsistieron = citasValidas.Any() && citasValidas.All(c => c.estado == Estados.Asistio);
 
                                         if (todasAsistieron)
                                         {
-                                            var fidelidadYaAplicada = citasValidas.Any(c => c.fidelidad == true);
-
-                                            if (!fidelidadYaAplicada)
+                                            if (fidelidadCliente == null)
                                             {
-                                                var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente.Value);
-
-                                                if (fidelidadCliente == null)
+                                                fidelidadCliente = new Fidelidad
                                                 {
-                                                    fidelidadCliente = new Fidelidad
-                                                    {
-                                                        cliente = citaId.cliente.Value,
-                                                        cantidad = 1
-                                                    };
+                                                    cliente = citaId.cliente.Value,
+                                                    cantidad = 1
+                                                };
 
-                                                    ContextBD.Fidelidads.Add(fidelidadCliente);
-                                                }
-                                                else
-                                                {
-                                                    fidelidadCliente.cantidad++;
-                                                }
+                                                ContextBD.Fidelidads.Add(fidelidadCliente);
+                                            }
+                                            else
+                                            {
+                                                fidelidadCliente.cantidad++;
+                                            }
 
-                                                var niveles = ContextBD.FidelidadParametros.Where(p => p.estado).OrderBy(p => p.cantidad).ToList();
+                                            var cantidadMaxima = ContextBD.FidelidadParametros
+                                                .Where(p => p.estado)
+                                                .Select(p => p.cantidad)
+                                                .OrderByDescending(c => c)
+                                                .FirstOrDefault();
 
-                                                var nivel = niveles.FirstOrDefault(p => p.cantidad == fidelidadCliente.cantidad);
-
-                                                if (nivel != null)
-                                                {
-                                                    var cantidadCitasPadre = citasValidas.Count;
-
-                                                    var porcentajePorCita = nivel.porcentaje / cantidadCitasPadre;
-
-                                                    foreach (var cita in citasValidas)
-                                                    {
-                                                        if (cita.valor.HasValue && cita.valor > 0)
-                                                        {
-                                                            cita.valor = cita.valor.Value -
-                                                                         (cita.valor.Value * porcentajePorCita / 100);
-                                                        }
-
-                                                        cita.fidelidad = true;
-                                                    }
-
-                                                    var cantidadMaxima = niveles
-                                                        .Select(p => p.cantidad)
-                                                        .LastOrDefault();
-
-                                                    if (fidelidadCliente.cantidad == cantidadMaxima)
-                                                    {
-                                                        fidelidadCliente.cantidad = 0;
-                                                    }
-                                                }
+                                            if (fidelidadCliente.cantidad == cantidadMaxima)
+                                            {
+                                                fidelidadCliente.cantidad = 0;
                                             }
                                         }
                                     }
