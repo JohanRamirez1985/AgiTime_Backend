@@ -38,6 +38,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table IngresoMesPrueba ^
 --table LiquidacionCita ^
 --table Logs ^
+--table MensajesWhatsApp ^
 --table MetodosPago ^
 --table Ordenes ^
 --table Padre ^
