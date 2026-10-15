@@ -52,7 +52,8 @@ namespace Clientes.API.Servicios
 
             var sedes = ContextBD.Sedes.OrderBy(s => s.Nombre);
 
-            var emp = new { 
+            var emp = new
+            {
                 Id = empresa.id,
                 Nombre = empresa.nombre,
                 Nit = empresa.nit,
@@ -72,6 +73,17 @@ namespace Clientes.API.Servicios
 
             return datos;
 
+        }
+
+        public int GetInt(Parametro? parametro)
+        {
+            if (parametro == null)
+                return 0;
+
+            if (int.TryParse(parametro.valor, out var resultado))
+                return resultado;
+
+            return 0;
         }
 
         //public object ProcesarFuncionabilidad(Cliente usuario, Empresa empresa, string nombreBase)
