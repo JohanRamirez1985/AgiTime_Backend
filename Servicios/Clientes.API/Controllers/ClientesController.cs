@@ -231,7 +231,7 @@ namespace Clientes.API.Controllers
         }
 
         [HttpGet("clientesRecordatorio")]
-        public IActionResult ObtenerRecordatorio([FromQuery] int emp)
+        public IActionResult ObtenerRecordatorio([FromQuery] int emp, int dias)
         {
             string nombreBase = string.Empty;
             try
@@ -256,8 +256,6 @@ namespace Clientes.API.Controllers
                 using var ContextBD = ContextFact.Create(connectionString);
 
                 var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
-
-                int dias = ClienteService.GetInt(parametros.FirstOrDefault(p => p.tipo == "TiempoReporteClienteRecordatorio"));
 
                 var fechaLimite = DateTime.Now.AddDays(-dias);
 
