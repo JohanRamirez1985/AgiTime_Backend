@@ -42,6 +42,7 @@ namespace Compartido.Data
         public virtual DbSet<Recurso> Recursos { get; set; }
         public virtual DbSet<Reporte> Reportes { get; set; }
         public virtual DbSet<Rol> Rols { get; set; }
+        public virtual DbSet<RotacionRecursoAutomatica> RotacionRecursoAutomaticas { get; set; }
         public virtual DbSet<Sede> Sedes { get; set; }
         public virtual DbSet<Servicio> Servicios { get; set; }
         public virtual DbSet<ServiciosParametro> ServiciosParametros { get; set; }
@@ -501,6 +502,18 @@ namespace Compartido.Data
                     .IsRequired()
                     .HasMaxLength(50)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<RotacionRecursoAutomatica>(entity =>
+            {
+                entity.ToTable("RotacionRecursoAutomatica");
+
+                entity.HasIndex(e => new { e.sede, e.fecha }, "UQ_RotacionRecursoAutomatica_Sede_Fecha")
+                    .IsUnique();
+
+                entity.Property(e => e.fecha).HasColumnType("date");
+
+                entity.Property(e => e.fechaActualizacion).HasDefaultValueSql("(sysdatetime())");
             });
 
             modelBuilder.Entity<Sede>(entity =>

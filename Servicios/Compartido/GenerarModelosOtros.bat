@@ -48,6 +48,7 @@ dotnet ef dbcontext scaffold %CADENA% %PROVIDER% ^
 --table Recursos ^
 --table Reportes ^
 --table Rol ^
+--table RotacionRecursoAutomatica ^
 --table Sede ^
 --table Servicios ^
 --table ServiciosParametros ^

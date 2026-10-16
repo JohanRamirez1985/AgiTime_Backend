@@ -88,24 +88,224 @@ namespace Agendamiento.API.Controllers
                     var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
                     var fidelidad = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "ManejaFidelidad")?.valor, out bool resulFidelidad) && resulFidelidad;
 
-                    var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
-                                                           && c.recurso == dto.recurso
-                                                           && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
-                                                           ).FirstOrDefault();
-
-                    if (validaHora == null)
+                    if (dto.seleccionoCualquiera)
                     {
+                        // =====================================================
+                        // 1. ROTACIÓN AUTOMÁTICA DE RECURSOS
+                        // =====================================================
+
+                        DateTime ahora = DateTime.Now;
+                        DateTime fechaRotacion = DateTime.Today;
+
+
+                        var zonaColombia = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? "SA Pacific Standard Time" : "America/Bogota");
+
+                        ahora = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaColombia);
+
+                        fechaRotacion = ahora.Date;
+
+                        // Siempre comenzar en el siguiente intervalo de 15 minutos.
+                        int minutosActuales = ahora.Hour * 60 + ahora.Minute;
+
+                        int siguienteIntervalo = ((minutosActuales / 15) + 1) * 15;
+
+                        DateTime horaMinima = ahora.Date.AddMinutes(siguienteIntervalo);
+
+                        // -------------------------------------------------
+                        // 1.1. Bloquear la rotación para esta sede y fecha.
+                        // Evita que dos solicitudes automáticas consulten
+                        // simultáneamente el mismo último recurso.
+                        // -------------------------------------------------
+
+                        string recursoBloqueo = $"RotacionAutomatica_Sede_{dto.sede}_{fechaRotacion:yyyyMMdd}";
+
+                        await ContextBD.Database.ExecuteSqlInterpolatedAsync($@"
+                            DECLARE @resultado INT;
+
+                            EXEC @resultado = sp_getapplock
+                                @Resource = {recursoBloqueo},
+                                @LockMode = 'Exclusive',
+                                @LockOwner = 'Transaction',
+                                @LockTimeout = 15000;
+
+                            IF @resultado < 0
+                                THROW 50001,
+                                    'No fue posible obtener el bloqueo de rotación.',
+                                    1;
+                        ");
+
+                        // -------------------------------------------------
+                        // 1.2. Consultar los recursos activos de la sede.
+                        // -------------------------------------------------
+
+                        var recursos = ContextBD.Usuarios
+                            .Where(u =>
+                                u.recurso == true &&
+                                u.id != 3 &&
+                                u.id != 4 &&
+                                u.estado == Estados.Activo &&
+                                u.sede == dto.sede)
+                            .Select(u => u.id)
+                            .OrderBy(id => id)
+                            .ToList();
+
+                        if (!recursos.Any())
+                        {
+                            await transaction.RollbackAsync();
+
+                            return Ok(new
+                            {
+                                mensaje = "No hay recursos disponibles en la sede seleccionada.",
+                                exito = false
+                            });
+                        }
+
+                        // -------------------------------------------------
+                        // 1.3. Consultar el último recurso asignado
+                        // automáticamente para la sede en el día actual.
+                        // -------------------------------------------------
+
+                        var rotacionActual = ContextBD.RotacionRecursoAutomaticas.FirstOrDefault(r => r.sede == dto.sede && r.fecha == fechaRotacion);
+
+                        // Si ya hubo una asignación automática hoy,
+                        // comenzar por el recurso siguiente al último usado.
+                        if (rotacionActual != null)
+                        {
+                            int indiceUltimoRecurso = recursos.IndexOf(rotacionActual.ultimoRecurso);
+
+                            if (indiceUltimoRecurso >= 0)
+                            {
+                                recursos = recursos.Skip(indiceUltimoRecurso + 1).Concat(recursos.Take(indiceUltimoRecurso + 1)).ToList();
+                            }
+                        }
+
+                        // -------------------------------------------------
+                        // 1.4. Consultar los horarios activos de la agenda.
+                        // -------------------------------------------------
+
+                        var horarios = ContextBD.Agenda
+                            .Where(a => a.estado)
+                            .Select(a => a.valor)
+                            .Distinct()
+                            .OrderBy(h => h)
+                            .ToList();
+
+                        if (!horarios.Any())
+                        {
+                            await transaction.RollbackAsync();
+
+                            return Ok(new
+                            {
+                                mensaje = "No hay horarios disponibles en la agenda.",
+                                exito = false
+                            });
+                        }
+
+                        // -------------------------------------------------
+                        // 1.5. Buscar la primera combinación disponible:
+                        // horario más cercano y recurso según la rotación.
+                        // -------------------------------------------------
+
+                        bool encontrado = false;
+
+                        for (int dia = 0; dia < 30 && !encontrado; dia++)
+                        {
+                            DateTime fecha = horaMinima.Date.AddDays(dia);
+
+                            foreach (var horario in horarios)
+                            {
+                                DateTime inicio = fecha.Add(horario);
+
+                                // No asignar una hora anterior o igual
+                                // al siguiente intervalo permitido.
+                                if (inicio < horaMinima)
+                                    continue;
+
+                                DateTime fin = inicio.AddMinutes(dto.Hora);
+
+                                foreach (var recurso in recursos)
+                                {
+                                    bool ocupado = ContextBD.Citas.Any(c =>
+                                        c.recurso == recurso &&
+                                        (
+                                            c.estado == Estados.Activo ||
+                                            c.estado == Estados.Asistio
+                                        ) &&
+                                        c.fechaInicio < fin &&
+                                        c.fechaFin > inicio);
+
+                                    if (ocupado)
+                                        continue;
+
+                                    // Se encontró disponibilidad para
+                                    // toda la duración de la cita.
+                                    dto.FechaIni = inicio;
+                                    dto.recurso = recurso;
+
+                                    encontrado = true;
+                                    break;
+                                }
+
+                                if (encontrado)
+                                    break;
+                            }
+                        }
+
+                        if (!encontrado)
+                        {
+                            await transaction.RollbackAsync();
+
+                            return Ok(new
+                            {
+                                mensaje = "No se encontraron recursos con disponibilidad para toda la duración de la cita durante los próximos 30 días.",
+                                exito = false
+                            });
+                        }
+
+
+                        // =====================================================
+                        // 2. VALIDAR DISPONIBILIDAD PARA LA CITA
+                        // =====================================================
+
+                        DateTime fechaInicio = dto.FechaIni;
+                        DateTime fechaFin = fechaInicio.AddMinutes(dto.Hora);
+
+                        bool citaOcupada = ContextBD.Citas.Any(c =>
+                            c.recurso == dto.recurso &&
+                            (
+                                c.estado == Estados.Activo ||
+                                c.estado == Estados.Asistio
+                            ) &&
+                            c.fechaInicio < fechaFin &&
+                            c.fechaFin > fechaInicio);
+
+                        if (citaOcupada)
+                        {
+                            await transaction.RollbackAsync();
+
+                            return Ok(new
+                            {
+                                mensaje = "Ya hay una cita agendada en ese horario.",
+                                exito = false
+                            });
+                        }
+
+                        // =====================================================
+                        // 3. CONSULTAR O CREAR EL CLIENTE
+                        // =====================================================
+
                         if (dto.clienteInfo != null)
                         {
                             var user = ContextBD.Clientes
-                                .FirstOrDefault(e => e.telefono == dto.clienteInfo.Telefono);
+                                .FirstOrDefault(e =>
+                                    e.telefono == dto.clienteInfo.Telefono);
 
                             if (user == null)
                             {
                                 var nueva = new Cliente
                                 {
                                     nombre = dto.clienteInfo.Nombre,
-                                    correo = dto.clienteInfo.Correo,
+                                    correo = string.IsNullOrWhiteSpace(dto.clienteInfo.Correo) ? "na@na.com" : dto.clienteInfo.Correo.Trim(),
                                     telefono = dto.clienteInfo.Telefono,
                                     fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                     estado = Estados.Activo,
@@ -113,7 +313,8 @@ namespace Agendamiento.API.Controllers
                                 };
 
                                 ContextBD.Clientes.Add(nueva);
-                                ContextBD.SaveChanges();
+
+                                await ContextBD.SaveChangesAsync();
 
                                 idCliente = nueva.id;
                                 nombreCliente = nueva.nombre;
@@ -129,34 +330,38 @@ namespace Agendamiento.API.Controllers
                             }
                         }
 
-                        bool diaCompletoBloqueado = false;
-                        var diaSemana = (int)dto.FechaIni.DayOfWeek;
-                        if (diaSemana == 0) diaSemana = 7;
+                        // =====================================================
+                        // 4. VALIDAR BLOQUEO DE DÍA COMPLETO
+                        // =====================================================
 
-                        var fechaSolo = dto.FechaIni.Date;
+                        bool diaCompletoBloqueado = false;
+
+                        int diaSemana = (int)dto.FechaIni.DayOfWeek;
+
+                        if (diaSemana == 0)
+                            diaSemana = 7;
 
                         var bloqueos = ContextBD.BloqueosHorarios
-                                        .AsEnumerable()
-                                        .Where(b => b.usuario == dto.recurso &&
-                                            b.tipoBloqueo == 3 &&
-                                            b.estado == Estados.Activo &&
-                                            b.diasSemana != null &&
-                                            (
-                                                diaSemana == 7 &&
-                                                b.diasSemana.Split(',')
-                                                            .Select(x => x.Trim())
-                                                            .Contains("7")
-                                            )
-                                        )
-                                        .ToList();
+                            .AsEnumerable()
+                            .Where(b =>
+                                b.usuario == dto.recurso &&
+                                b.tipoBloqueo == 3 &&
+                                b.estado == Estados.Activo &&
+                                b.diasSemana != null &&
+                                diaSemana == 7 &&
+                                b.diasSemana
+                                    .Split(',')
+                                    .Select(x => x.Trim())
+                                    .Contains("7"))
+                            .ToList();
 
                         foreach (var bloqueo in bloqueos)
                         {
-                            var inicio = bloqueo.horaInicio;
-                            var fin = bloqueo.horaFin;
+                            var inicioBloqueo = bloqueo.horaInicio;
+                            var finBloqueo = bloqueo.horaFin;
 
-                            // Día completo bloqueado
-                            if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
+                            if (inicioBloqueo == TimeSpan.Zero &&
+                                finBloqueo >= TimeSpan.FromHours(23.5))
                             {
                                 diaCompletoBloqueado = true;
                                 break;
@@ -168,53 +373,118 @@ namespace Agendamiento.API.Controllers
                             pago = false;
                         }
 
+                        // =====================================================
+                        // 5. CREAR LA CITA
+                        // =====================================================
+
                         var nuevo = new Cita
                         {
                             fechaInicio = dto.FechaIni,
                             hora = dto.Hora,
                             fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
                             recurso = dto.recurso,
-                            cliente = dto.clienteInfo != null ? idCliente : null,
+                            cliente = dto.clienteInfo != null
+                                ? idCliente
+                                : null,
+
                             valor = dto.Valor,
-                            estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+
+                            estado = dto.UsuarioCreacion == "Usuario"
+                                ? Estados.Asistio
+                                : Estados.Activo,
+
                             pago = pago,
-                            bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
+
+                            bono = dto.UsuarioCreacion == "Usuario"
+                                ? dto.Bono
+                                : null,
+
                             liquidado = false,
                             fechaCreacion = dto.FechaCreacion,
                             usuarioCreacion = dto.UsuarioCreacion
                         };
 
                         ContextBD.Citas.Add(nuevo);
-                        ContextBD.SaveChanges();
 
-                        foreach (var detalle in dto.servicios)
+                        await ContextBD.SaveChangesAsync();
+
+                        // =====================================================
+                        // 6. GUARDAR LOS SERVICIOS DE LA CITA
+                        // =====================================================
+
+                        if (dto.servicios != null)
                         {
-                            var nuevoServicio = new CitaServicio
+                            foreach (var detalle in dto.servicios)
                             {
-                                cita = nuevo.id,
-                                servicio = detalle.Servicio
-                            };
+                                var nuevoServicio = new CitaServicio
+                                {
+                                    cita = nuevo.id,
+                                    servicio = detalle.Servicio
+                                };
 
-                            ContextBD.CitaServicios.Add(nuevoServicio);
+                                ContextBD.CitaServicios.Add(nuevoServicio);
+                            }
+
+                            await ContextBD.SaveChangesAsync();
                         }
 
-                        ContextBD.SaveChanges();
+                        // =====================================================
+                        // 7. ACTUALIZAR LA ROTACIÓN
+                        // Solo para citas automáticas.
+                        // Se guarda dentro de la misma transacción de la cita.
+                        // =====================================================
 
-                        transaction.Commit();
+                        if (dto.seleccionoCualquiera)
+                        {
+                            var rotacion = ContextBD.RotacionRecursoAutomaticas
+                                .FirstOrDefault(r =>
+                                    r.sede == dto.sede &&
+                                    r.fecha == fechaRotacion);
+
+                            if (rotacion == null)
+                            {
+                                rotacion = new RotacionRecursoAutomatica
+                                {
+                                    sede = dto.sede,
+                                    fecha = fechaRotacion,
+                                    ultimoRecurso = dto.recurso,
+                                    fechaActualizacion = ahora
+                                };
+
+                                ContextBD.RotacionRecursoAutomaticas.Add(rotacion);
+                            }
+                            else
+                            {
+                                rotacion.ultimoRecurso = dto.recurso;
+                                rotacion.fechaActualizacion = ahora;
+                            }
+
+                            await ContextBD.SaveChangesAsync();
+                        }
+
+                        // Confirmar tanto la cita como la actualización
+                        // de la rotación.
+                        await transaction.CommitAsync();
+
+                        // =====================================================
+                        // 8. ENVIAR CORREOS DE CONFIRMACIÓN
+                        // =====================================================
 
                         var infoRecurso = agendaService.GetInfoRecurso(dto.recurso, ContextBD);
 
-                        if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
+                        if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario && !string.IsNullOrEmpty(infoRecurso.Correo))
                         {
-                            if (!string.IsNullOrEmpty(infoRecurso.Correo))
-                            {
-                                await emailService.SendEmailAsync(
-                                    infoRecurso.Correo,
-                                    "Confirmación de cita",
-                                    agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.Nombre, dto.FechaIni, logo),
-                                    isHtml: true
-                                );
-                            }
+                            await emailService.SendEmailAsync(
+                                infoRecurso.Correo,
+                                "Confirmación de cita",
+                                agendaService.mensajeEmailUsuario(
+                                    nombreCliente,
+                                    telefonoCliente,
+                                    infoRecurso.Nombre,
+                                    dto.FechaIni,
+                                    logo),
+                                isHtml: true
+                            );
                         }
 
                         if (!string.IsNullOrEmpty(emailCliente) && EnvioEmailCitaCliente)
@@ -222,27 +492,45 @@ namespace Agendamiento.API.Controllers
                             await emailService.SendEmailAsync(
                                 emailCliente,
                                 "Confirmación de cita",
-                                agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, infoRecurso.NombreSede, logo),
+                                agendaService.mensajeEmailCliente(
+                                    nombreCliente,
+                                    dto.FechaIni,
+                                    nombreEmpresa,
+                                    infoRecurso.NombreSede,
+                                    logo),
                                 isHtml: true
                             );
                         }
 
-                        if (fidelidad)
+                        // =====================================================
+                        // 9. VALIDAR MENSAJE DE FIDELIDAD
+                        // =====================================================
+
+                        if (fidelidad && idCliente > 0)
                         {
-                            var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
+                            var fidelidadCliente =
+                                ContextBD.Fidelidads.FirstOrDefault(
+                                    p => p.cliente == idCliente);
 
                             if (fidelidadCliente != null)
                             {
-                                var siguienteParametro = ContextBD.FidelidadParametros
-                                                        .Where(p =>
-                                                            p.estado &&
-                                                            p.cantidad > fidelidadCliente.cantidad)
-                                                        .OrderBy(p => p.cantidad)
-                                                        .FirstOrDefault();
+                                var siguienteParametro =
+                                    ContextBD.FidelidadParametros
+                                        .Where(p =>
+                                            p.estado &&
+                                            p.cantidad > fidelidadCliente.cantidad)
+                                        .OrderBy(p => p.cantidad)
+                                        .FirstOrDefault();
 
-                                if (siguienteParametro != null && siguienteParametro.cantidad == fidelidadCliente.cantidad + 1)
+                                if (siguienteParametro != null &&
+                                    siguienteParametro.cantidad ==
+                                    fidelidadCliente.cantidad + 1)
                                 {
-                                    fidelidadMensaje = $"¡Felicitaciones! llegaste a tu {siguienteParametro.cantidad} visita. " + $"Tienes un beneficio especial {siguienteParametro.porcentaje:0}% de descuento.";
+                                    fidelidadMensaje =
+                                        $"¡Felicitaciones! llegaste a tu " +
+                                        $"{siguienteParametro.cantidad} visita. " +
+                                        $"Tienes un beneficio especial " +
+                                        $"{siguienteParametro.porcentaje:0}% de descuento.";
                                 }
                             }
                         }
@@ -255,17 +543,190 @@ namespace Agendamiento.API.Controllers
                     }
                     else
                     {
-                        return Ok(new
+                        var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
+                                                               && c.recurso == dto.recurso
+                                                               && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
+                                                               ).FirstOrDefault();
+
+                        if (validaHora == null)
                         {
-                            mensaje = "Ya hay una cita agendada en ese horario.",
-                            exito = false
-                        });
+                            if (dto.clienteInfo != null)
+                            {
+                                var user = ContextBD.Clientes
+                                    .FirstOrDefault(e => e.telefono == dto.clienteInfo.Telefono);
+
+                                if (user == null)
+                                {
+                                    var nueva = new Cliente
+                                    {
+                                        nombre = dto.clienteInfo.Nombre,
+                                        correo = string.IsNullOrWhiteSpace(dto.clienteInfo.Correo) ? "na@na.com" : dto.clienteInfo.Correo.Trim(),
+                                        telefono = dto.clienteInfo.Telefono,
+                                        fechaNacimiento = dto.clienteInfo.FechaNacimiento,
+                                        estado = Estados.Activo,
+                                        fechaCreacion = dto.FechaCreacion
+                                    };
+
+                                    ContextBD.Clientes.Add(nueva);
+                                    ContextBD.SaveChanges();
+
+                                    idCliente = nueva.id;
+                                    nombreCliente = nueva.nombre;
+                                    emailCliente = nueva.correo;
+                                    telefonoCliente = nueva.telefono;
+                                }
+                                else
+                                {
+                                    idCliente = user.id;
+                                    nombreCliente = user.nombre;
+                                    emailCliente = user.correo;
+                                    telefonoCliente = user.telefono;
+                                }
+                            }
+
+                            bool diaCompletoBloqueado = false;
+                            var diaSemana = (int)dto.FechaIni.DayOfWeek;
+                            if (diaSemana == 0) diaSemana = 7;
+
+                            var fechaSolo = dto.FechaIni.Date;
+
+                            var bloqueos = ContextBD.BloqueosHorarios
+                                            .AsEnumerable()
+                                            .Where(b => b.usuario == dto.recurso &&
+                                                b.tipoBloqueo == 3 &&
+                                                b.estado == Estados.Activo &&
+                                                b.diasSemana != null &&
+                                                (
+                                                    diaSemana == 7 &&
+                                                    b.diasSemana.Split(',')
+                                                                .Select(x => x.Trim())
+                                                                .Contains("7")
+                                                )
+                                            )
+                                            .ToList();
+
+                            foreach (var bloqueo in bloqueos)
+                            {
+                                var inicio = bloqueo.horaInicio;
+                                var fin = bloqueo.horaFin;
+
+                                // Día completo bloqueado
+                                if (inicio == TimeSpan.Zero && fin >= TimeSpan.FromHours(23.5))
+                                {
+                                    diaCompletoBloqueado = true;
+                                    break;
+                                }
+                            }
+
+                            if (diaCompletoBloqueado)
+                            {
+                                pago = false;
+                            }
+
+                            var nuevo = new Cita
+                            {
+                                fechaInicio = dto.FechaIni,
+                                hora = dto.Hora,
+                                fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
+                                recurso = dto.recurso,
+                                cliente = dto.clienteInfo != null ? idCliente : null,
+                                valor = dto.Valor,
+                                estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                                pago = pago,
+                                bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
+                                liquidado = false,
+                                fechaCreacion = dto.FechaCreacion,
+                                usuarioCreacion = dto.UsuarioCreacion
+                            };
+
+                            ContextBD.Citas.Add(nuevo);
+                            ContextBD.SaveChanges();
+
+                            foreach (var detalle in dto.servicios)
+                            {
+                                var nuevoServicio = new CitaServicio
+                                {
+                                    cita = nuevo.id,
+                                    servicio = detalle.Servicio
+                                };
+
+                                ContextBD.CitaServicios.Add(nuevoServicio);
+                            }
+
+                            ContextBD.SaveChanges();
+
+                            transaction.Commit();
+
+                            var infoRecurso = agendaService.GetInfoRecurso(dto.recurso, ContextBD);
+
+                            if (dto.UsuarioCreacion != "Usuario" && EnvioEmailCitaUsuario)
+                            {
+                                if (!string.IsNullOrEmpty(infoRecurso.Correo))
+                                {
+                                    await emailService.SendEmailAsync(
+                                        infoRecurso.Correo,
+                                        "Confirmación de cita",
+                                        agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.Nombre, dto.FechaIni, logo),
+                                        isHtml: true
+                                    );
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(emailCliente) && EnvioEmailCitaCliente)
+                            {
+                                await emailService.SendEmailAsync(
+                                    emailCliente,
+                                    "Confirmación de cita",
+                                    agendaService.mensajeEmailCliente(nombreCliente, dto.FechaIni, nombreEmpresa, infoRecurso.NombreSede, logo),
+                                    isHtml: true
+                                );
+                            }
+
+                            if (fidelidad)
+                            {
+                                var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
+
+                                if (fidelidadCliente != null)
+                                {
+                                    var siguienteParametro = ContextBD.FidelidadParametros
+                                                            .Where(p =>
+                                                                p.estado &&
+                                                                p.cantidad > fidelidadCliente.cantidad)
+                                                            .OrderBy(p => p.cantidad)
+                                                            .FirstOrDefault();
+
+                                    if (siguienteParametro != null && siguienteParametro.cantidad == fidelidadCliente.cantidad + 1)
+                                    {
+                                        fidelidadMensaje = $"¡Felicitaciones! llegaste a tu {siguienteParametro.cantidad} visita. " + $"Tienes un beneficio especial {siguienteParametro.porcentaje:0}% de descuento.";
+                                    }
+                                }
+                            }
+
+                            return Ok(new
+                            {
+                                mensaje = "Cita registrada exitosamente",
+                                exito = true
+                            });
+                        }
+                        else
+                        {
+                            return Ok(new
+                            {
+                                mensaje = "Ya hay una cita agendada en ese horario.",
+                                exito = false
+                            });
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    transaction.Rollback();
-                    LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+                    await transaction.RollbackAsync();
+
+                    LogsCatch.GuardarError(
+                        ex,
+                        configuracion,
+                        ContextFact,
+                        nombreBase);
 
                     return StatusCode(500, new
                     {
@@ -367,7 +828,7 @@ namespace Agendamiento.API.Controllers
                                 var nuevoCliente = new Cliente
                                 {
                                     nombre = dto.clienteInfo.Nombre,
-                                    correo = dto.clienteInfo.Correo,
+                                    correo = string.IsNullOrWhiteSpace(dto.clienteInfo.Correo) ? "na@na.com" : dto.clienteInfo.Correo.Trim(),
                                     telefono = dto.clienteInfo.Telefono,
                                     fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                     estado = Estados.Activo,
@@ -609,7 +1070,7 @@ namespace Agendamiento.API.Controllers
                                 var nueva = new Cliente
                                 {
                                     nombre = dto.clienteInfo.Nombre,
-                                    correo = dto.clienteInfo.Correo,
+                                    correo = string.IsNullOrWhiteSpace(dto.clienteInfo.Correo) ? "na@na.com" : dto.clienteInfo.Correo.Trim(),
                                     telefono = dto.clienteInfo.Telefono,
                                     fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                     estado = Estados.Activo,
