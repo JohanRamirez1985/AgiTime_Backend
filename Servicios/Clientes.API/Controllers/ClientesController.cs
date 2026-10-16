@@ -198,7 +198,7 @@ namespace Clientes.API.Controllers
                 var nuevoCliente = new Cliente
                 {
                     nombre = dto.Nombre,
-                    correo = dto.Correo,
+                    correo = string.IsNullOrWhiteSpace(dto.Correo) ? "na@na.com" : dto.Correo.Trim(),
                     telefono = dto.Telefono,
                     fechaNacimiento = dto.FechaNacimiento,
                     genero = dto.Genero > 0 ? dto.Genero : (int?)null,

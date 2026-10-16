@@ -159,7 +159,7 @@ namespace Usuarios.API.Controllers
                 var nuevoUsuario = new Usuario
                 {
                     nombre = dto.Nombre,
-                    correo = dto.Correo,
+                    correo = string.IsNullOrWhiteSpace(dto.Correo) ? "na@na.com" : dto.Correo.Trim(),
                     login = dto.Documento,
                     password = EncripPassword.EncriptarPassword(dto.Documento),
                     telefono = dto.Telefono,
