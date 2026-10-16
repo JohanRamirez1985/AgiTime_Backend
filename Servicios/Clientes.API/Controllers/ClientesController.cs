@@ -229,5 +229,81 @@ namespace Clientes.API.Controllers
                 });
             }
         }
+
+        [HttpGet("clientesRecordatorio")]
+        public IActionResult ObtenerRecordatorio([FromQuery] int emp, int dias)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
+
+                var fechaHoy = DateTime.Today;
+                var fechaObjetivo = fechaHoy.AddDays(-dias);
+
+                var lista = ContextBD.Clientes
+                    .Select(c => new
+                    {
+                        c.id,
+                        c.nombre,
+                        c.telefono,
+                        c.correo,
+
+                        UltimaFechaAsistio = ContextBD.Citas
+                            .Where(ci => ci.cliente == c.id &&
+                                   ci.estado == Estados.Asistio)
+                            .Max(ci => (DateTime?)ci.fechaInicio)
+                    })
+                    .Where(c => c.UltimaFechaAsistio.HasValue &&
+                                c.UltimaFechaAsistio.Value >= fechaObjetivo &&
+                                c.UltimaFechaAsistio.Value < fechaObjetivo.AddDays(1))
+                    .OrderBy(c => c.nombre)
+                    .ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay clientes registrados",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }

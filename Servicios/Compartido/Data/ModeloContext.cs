@@ -32,6 +32,7 @@ namespace Compartido.Data
         public virtual DbSet<IngresoMesPrueba> IngresoMesPruebas { get; set; }
         public virtual DbSet<LiquidacionCitum> LiquidacionCita { get; set; }
         public virtual DbSet<Log> Logs { get; set; }
+        public virtual DbSet<MensajesWhatsApp> MensajesWhatsApps { get; set; }
         public virtual DbSet<MetodosPago> MetodosPagos { get; set; }
         public virtual DbSet<Ordene> Ordenes { get; set; }
         public virtual DbSet<Padre> Padres { get; set; }
@@ -330,6 +331,23 @@ namespace Compartido.Data
                 entity.Property(e => e.Level).HasMaxLength(50);
 
                 entity.Property(e => e.Timestamp).HasColumnType("datetime");
+            });
+
+            modelBuilder.Entity<MensajesWhatsApp>(entity =>
+            {
+                entity.ToTable("MensajesWhatsApp");
+
+                entity.Property(e => e.mensaje).IsRequired();
+
+                entity.Property(e => e.observacion)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.tipo)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<MetodosPago>(entity =>
