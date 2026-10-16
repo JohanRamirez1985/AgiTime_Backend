@@ -257,7 +257,8 @@ namespace Clientes.API.Controllers
 
                 var parametros = ContextBD.Parametros.Where(p => p.estado).ToList();
 
-                var fechaLimite = DateTime.Now.AddDays(-dias);
+                var fechaHoy = DateTime.Today;
+                var fechaObjetivo = fechaHoy.AddDays(-dias);
 
                 var lista = ContextBD.Clientes
                     .Select(c => new
@@ -272,9 +273,10 @@ namespace Clientes.API.Controllers
                                    ci.estado == Estados.Asistio)
                             .Max(ci => (DateTime?)ci.fechaInicio)
                     })
-                    .Where(c => c.UltimaFechaAsistio == null ||
-                                c.UltimaFechaAsistio <= fechaLimite)
-                    .OrderBy(c => c.UltimaFechaAsistio)
+                    .Where(c => c.UltimaFechaAsistio.HasValue &&
+                                c.UltimaFechaAsistio.Value >= fechaObjetivo &&
+                                c.UltimaFechaAsistio.Value < fechaObjetivo.AddDays(1))
+                    .OrderBy(c => c.nombre)
                     .ToList();
 
                 if (lista == null || lista.Count == 0)
