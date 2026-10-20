@@ -331,7 +331,7 @@ namespace Clientes.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                var fid = ContextBD.Fidelidads.Where(s => s.id == dto.Id).FirstOrDefault();
+                var fid = ContextBD.Fidelidads.Where(s => s.cliente == dto.Id).FirstOrDefault();
 
                 if (fid == null)
                 {
