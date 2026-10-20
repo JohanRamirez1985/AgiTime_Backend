@@ -2936,12 +2936,13 @@ namespace Agendamiento.API.Controllers
                     }
                     else
                     {
+
                         if (empresa.recursoMultiple == true)
                         {
                             var citaId = ContextBD.Citas
-                           .Include(c => c.CitaServicios)
-                           .ThenInclude(cs => cs.servicioNavigation)
-                           .FirstOrDefault(p => p.id == dto.Id);
+                                .Include(c => c.CitaServicios)
+                                .ThenInclude(cs => cs.servicioNavigation)
+                                .FirstOrDefault(p => p.id == dto.Id);
 
                             if (citaId == null)
                             {
@@ -2951,140 +2952,144 @@ namespace Agendamiento.API.Controllers
                                     exito = false
                                 });
                             }
+
                             if (dto.Asistencia)
                             {
+                                // Guardar el estado anterior antes de actualizarlo.
+                                bool yaEstabaAsistida = citaId.estado == Estados.Asistio;
+                                var fechaDia = citaId.fechaInicio.Date;
+                                var fechaDiaSiguiente = fechaDia.AddDays(1);
+
+                                // 1. Actualizar la cita actual.
                                 citaId.estado = Estados.Asistio;
                                 citaId.bono = dto.Bono;
                                 citaId.metodoPago = dto.metodoPago;
+
                                 if (dto.Valor.HasValue && dto.Valor.Value > 0)
                                 {
                                     citaId.valor = dto.Valor;
                                 }
-                                if (fidelidad)
+
+                                // 2. Procesar fidelidad si está habilitada.
+                                if (fidelidad && citaId.cliente.HasValue)
                                 {
-                                    var padre = ContextBD.CitaPadres.Where(cp => cp.cita == citaId.id).Select(cp => cp.padre).FirstOrDefault();
+                                    int idCliente = citaId.cliente.Value;
 
-                                    if (padre != null)
+                                    // Obtener todas las citas del cliente del día.
+                                    // Incluye las citas Activo y Asistio.
+                                    var citasClienteDia = ContextBD.Citas
+                                        .Where(c =>
+                                            c.cliente == idCliente &&
+                                            c.fechaInicio >= fechaDia &&
+                                            c.fechaInicio < fechaDiaSiguiente &&
+                                            (c.estado == Estados.Activo ||
+                                             c.estado == Estados.Asistio))
+                                        .ToList();
+
+                                    // 3. Obtener las citas relacionadas con CitaPadres.
+                                    var idsCitasDia = citasClienteDia
+                                        .Select(c => c.id)
+                                        .Distinct()
+                                        .ToList();
+
+                                    var citasConPadre = (
+                                        from cp in ContextBD.CitaPadres
+                                        join c in ContextBD.Citas
+                                            on cp.cita equals c.id
+                                        where idsCitasDia.Contains(c.id) &&
+                                              (c.estado == Estados.Activo ||
+                                               c.estado == Estados.Asistio)
+                                        select c
+                                    )
+                                    .Distinct()
+                                    .ToList();
+
+                                    int cantidadCitasDescuento = citasConPadre.Count;
+
+                                    // 4. Consultar el contador actual de fidelidad.
+                                    var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
+
+                                    int visitasActuales = fidelidadCliente?.cantidad ?? 0;
+
+                                    // El nivel corresponde a la siguiente visita.
+                                    int visitaActual = visitasActuales + 1;
+
+                                    var nivel = ContextBD.FidelidadParametros.FirstOrDefault(p => p.cantidad == visitaActual && p.estado);
+
+                                    // 5. Aplicar el descuento SOLAMENTE a la cita actual.
+                                    if (nivel != null && cantidadCitasDescuento > 0 && citaId.fidelidad != true)
                                     {
-                                        var citasPadre = (from cp in ContextBD.CitaPadres join c in ContextBD.Citas on cp.cita equals c.id where cp.padre == padre select c).ToList();
+                                        // Dividir el porcentaje entre las citas del día.
+                                        decimal porcentajePorCita = nivel.porcentaje / cantidadCitasDescuento;
 
-                                        var citasValidas = citasPadre.Where(c => c.estado == Estados.Activo || c.estado == Estados.Asistio).ToList();
-
-                                        var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente.Value);
-
-                                        var visitaActual = (fidelidadCliente?.cantidad ?? 0) + 1;
-
-                                        var nivel = ContextBD.FidelidadParametros.FirstOrDefault(p => p.cantidad == visitaActual && p.estado);
-
-                                        if (nivel != null && citaId.fidelidad != true)
+                                        if (citaId.valor.HasValue && citaId.valor.Value > 0)
                                         {
-                                            var cantidadCitasPadre = citasValidas.Count;
+                                            decimal valorOriginal = citaId.valor.Value;
 
-                                            if (cantidadCitasPadre > 0)
-                                            {
-                                                var porcentajePorCita = nivel.porcentaje / cantidadCitasPadre;
+                                            decimal descuento = valorOriginal * porcentajePorCita / 100m;
 
-                                                if (citaId.valor.HasValue && citaId.valor > 0)
-                                                {
-                                                    citaId.valor = citaId.valor.Value - (citaId.valor.Value * porcentajePorCita / 100);
-                                                }
+                                            citaId.valor = valorOriginal - descuento;
 
-                                                citaId.fidelidad = true;
-                                            }
+                                            citaId.fidelidad = true;
                                         }
+                                    }
 
-                                        var todasAsistieron = citasValidas.Any() && citasValidas.All(c => c.estado == Estados.Asistio);
+                                    // 6. Comprobar si todas las citas del cliente
+                                    // de ese día ya están asistidas.
+                                    bool todasAsistieron = citasClienteDia.Any() && citasClienteDia.All(c => c.estado == Estados.Asistio);
 
-                                        if (todasAsistieron)
+                                    // Incrementar únicamente cuando la cita actual
+                                    // acaba de cambiar a Asistio y todas ya asistieron.
+                                    if (todasAsistieron && !yaEstabaAsistida)
+                                    {
+                                        if (fidelidadCliente == null)
                                         {
-                                            if (fidelidadCliente == null)
+                                            fidelidadCliente = new Fidelidad
                                             {
-                                                fidelidadCliente = new Fidelidad
-                                                {
-                                                    cliente = citaId.cliente.Value,
-                                                    cantidad = 1
-                                                };
+                                                cliente = idCliente,
+                                                cantidad = 1
+                                            };
 
-                                                ContextBD.Fidelidads.Add(fidelidadCliente);
-                                            }
-                                            else
-                                            {
-                                                fidelidadCliente.cantidad++;
-                                            }
-
-                                            var cantidadMaxima = ContextBD.FidelidadParametros
-                                                .Where(p => p.estado)
-                                                .Select(p => p.cantidad)
-                                                .OrderByDescending(c => c)
-                                                .FirstOrDefault();
-
-                                            if (fidelidadCliente.cantidad == cantidadMaxima)
-                                            {
-                                                fidelidadCliente.cantidad = 0;
-                                            }
+                                            ContextBD.Fidelidads.Add(fidelidadCliente);
+                                        }
+                                        else
+                                        {
+                                            fidelidadCliente.cantidad++;
                                         }
                                     }
                                 }
 
-                                //var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == citaId.cliente);
-
-                                //if (fidelidadCliente == null)
-                                //{
-                                //    fidelidadCliente = new Fidelidad
-                                //    {
-                                //        cliente = citaId.cliente.Value,
-                                //        cantidad = 1
-                                //    };
-
-                                //    ContextBD.Fidelidads.Add(fidelidadCliente);
-                                //}
-                                //else
-                                //{
-                                //    fidelidadCliente.cantidad++;
-                                //}
-
-                                //var niveles = ContextBD.FidelidadParametros
-                                //    .Where(p => p.estado)
-                                //    .OrderBy(p => p.cantidad)
-                                //    .ToList();
-
-                                //var nivel = niveles
-                                //    .FirstOrDefault(p => p.cantidad == fidelidadCliente.cantidad);
-
-                                //if (nivel != null)
-                                //{
-                                //    if (citaId.valor.HasValue && citaId.valor > 0)
-                                //    {
-                                //        citaId.valor = citaId.valor.Value -
-                                //                       (citaId.valor.Value * nivel.porcentaje / 100);
-                                //    }
-
-                                //    var cantidadMaxima = niveles
-                                //        .Select(p => p.cantidad)
-                                //        .LastOrDefault();
-
-                                //    if (fidelidadCliente.cantidad == cantidadMaxima)
-                                //    {
-                                //        fidelidadCliente.cantidad = 0;
-                                //    }
-                                //}
-
-                                //citaId.fidelidad = true;
-
+                                // 7. Liquidar los servicios de la cita actual.
                                 var servicios = (
-                                from cs in ContextBD.CitaServicios
-                                join s in ContextBD.Servicios on cs.servicio equals s.id
-                                join u in ContextBD.Usuarios on citaId.recurso equals u.id
-                                join se in ContextBD.Sedes on u.sede equals se.id
-                                join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio into spGroup
-                                from sp in spGroup.DefaultIfEmpty()
-                                where cs.cita == citaId.id
-                                select new
-                                {
-                                    ServicioValor = citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
-                                    Porcentaje = (u.porcentaje ?? 0) != 0 ? (u.porcentaje ?? 0) : (sp != null ? (sp.porcentaje ?? 0) : 0),
-                                    Sede = se.Nombre
-                                }
+                                    from cs in ContextBD.CitaServicios
+                                    join s in ContextBD.Servicios
+                                        on cs.servicio equals s.id
+                                    join u in ContextBD.Usuarios
+                                        on citaId.recurso equals u.id
+                                    join se in ContextBD.Sedes
+                                        on u.sede equals se.id
+                                    join sp in ContextBD.ServiciosParametros
+                                        on s.id equals sp.servicio into spGroup
+                                    from sp in spGroup.DefaultIfEmpty()
+                                    where cs.cita == citaId.id
+                                    select new
+                                    {
+                                        ServicioValor =
+                                            citaId.bono == true ||
+                                            citaId.fidelidad == true ||
+                                            s.valor == 0
+                                                ? (citaId.valor ?? 0)
+                                                : (s.valor ?? 0),
+
+                                        Porcentaje =
+                                            (u.porcentaje ?? 0) != 0
+                                                ? (u.porcentaje ?? 0)
+                                                : (sp != null
+                                                    ? (sp.porcentaje ?? 0)
+                                                    : 0),
+
+                                        Sede = se.Nombre
+                                    }
                                 ).ToList();
 
                                 foreach (var servicio in servicios)
@@ -3114,7 +3119,9 @@ namespace Agendamiento.API.Controllers
                                 }
                             }
                             else
+                            {
                                 citaId.estado = Estados.Inasistencia;
+                            }
 
                             ContextBD.SaveChanges();
                         }
