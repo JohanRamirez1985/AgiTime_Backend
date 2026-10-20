@@ -305,5 +305,137 @@ namespace Clientes.API.Controllers
                 });
             }
         }
+
+        [HttpPost("editarFidelidad")]
+        public IActionResult EditarFidelidad([FromBody] ClienteDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var fid = ContextBD.Fidelidads.Where(s => s.cliente == dto.Id).FirstOrDefault();
+
+                if (fid == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "fidelidad no encontrada no encontrado.",
+                        exito = false
+                    });
+                }
+                else
+                {
+                    fid.cantidad = dto.cantidad;
+                    ContextBD.SaveChanges();
+
+                    return Ok(new
+                    {
+                        mensaje = "Fidelidad actualizada exitosamente",
+                        exito = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpGet("clientesFidelidad")]
+        public IActionResult ClientesFidelidad([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var lista = ContextBD.Clientes
+                        .OrderBy(o => o.nombre)
+                        .Select(c => new
+                        {
+                            c.id,
+                            c.nombre,
+                            c.correo,
+                            c.telefono,
+                            c.fechaNacimiento,
+                            c.genero,
+                            c.tipoDocumento,
+                            c.documento,
+                            c.estado,
+                            c.fechaCreacion,
+                            cantidad = ContextBD.Fidelidads
+                                .Where(f => f.cliente == c.id)
+                                .Select(f => (int?)f.cantidad)
+                                .FirstOrDefault() ?? 0
+                        })
+                        .ToList();
+
+                if (lista == null || lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay clientes registradas con fidelidad",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }
