@@ -3708,7 +3708,7 @@ namespace Agendamiento.API.Controllers
 
                             if (citaIndividual != null)
                             {
-                                var citaPadre = ContextBD.CitaPadre.FirstOrDefault(cp => cp.cita == citaIndividual.id);
+                                var citaPadre = ContextBD.CitaPadres.FirstOrDefault(cp => cp.cita == citaIndividual.id);
 
                                 if (citaPadre != null)
                                 {
