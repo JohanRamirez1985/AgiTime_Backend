@@ -335,23 +335,25 @@ namespace Clientes.API.Controllers
 
                 if (fid == null)
                 {
-                    return Ok(new
+                    var nuevo = new Fidelidad
                     {
-                        mensaje = "fidelidad no encontrada no encontrado.",
-                        exito = false
-                    });
+                        cliente = dto.Id,
+                        cantidad = dto.cantidad
+                    };
+                    ContextBD.Fidelidads.Add(nuevo);
                 }
                 else
                 {
                     fid.cantidad = dto.cantidad;
-                    ContextBD.SaveChanges();
-
-                    return Ok(new
-                    {
-                        mensaje = "Fidelidad actualizada exitosamente",
-                        exito = true
-                    });
                 }
+
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Fidelidad actualizada exitosamente",
+                    exito = true
+                });
             }
             catch (Exception ex)
             {
