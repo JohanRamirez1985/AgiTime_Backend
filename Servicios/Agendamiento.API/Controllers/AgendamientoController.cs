@@ -3652,6 +3652,7 @@ namespace Agendamiento.API.Controllers
             string telefonoCliente = "";
             bool pago = true;
             bool cliente = true;
+            int padre = 0;
 
             try
             {
@@ -3695,7 +3696,27 @@ namespace Agendamiento.API.Controllers
                         EnvioMensaje = false
                     };
 
-                    var cita = ContextBD.Padres.Where(p => p.id == dto.Id).FirstOrDefault();
+                    Padre cita = null;
+
+                    if (empresa.servicio == true)
+                        cita = ContextBD.Padres.FirstOrDefault(p => p.id == dto.Id);
+                    else
+                    {
+                        if (empresa.recursoMultiple == true)
+                        {
+                            var citaIndividual = ContextBD.Citas.FirstOrDefault(c => c.id == dto.Id);
+
+                            if (citaIndividual != null)
+                            {
+                                var citaPadre = ContextBD.CitaPadre.FirstOrDefault(cp => cp.cita == citaIndividual.id);
+
+                                if (citaPadre != null)
+                                {
+                                    cita = ContextBD.Padres.FirstOrDefault(p => p.id == citaPadre.padre);
+                                }
+                            }
+                        }
+                    }
 
                     if (cita != null)
                     {
@@ -3719,12 +3740,20 @@ namespace Agendamiento.API.Controllers
 
                         if (cliente)
                         {
-
-                            if (dto.validaHorario)
-                                validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
-
-                            if (validacion.Disponible)
+                            if (empresa.servicio == true)
                             {
+                                if (dto.validaHorario)
+                                    validacion = agendaService.ValidarDisponibilidad(ContextBD, dto.Citas);
+
+                                if (!validacion.Disponible)
+                                {
+                                    return Ok(new
+                                    {
+                                        mensaje = "Los servicios seleccionados superan el tiempo disponible del usuario.",
+                                        exito = false
+                                    });
+                                }
+
                                 cita.fechaCita = dto.FechaIni;
 
                                 var idsCitas = ContextBD.CitaPadres
@@ -3785,49 +3814,108 @@ namespace Agendamiento.API.Controllers
                                         padre = cita.id
                                     });
                                 }
-
-                                ContextBD.SaveChanges();
-                                transaction.Commit();
-
-                                //if (dto.UsuarioCreacion != "Usuario")
-                                //{
-                                //    var infoRecurso = ContextBD.Usuarios
-                                //                        .Include(u => u.sedeNavigation)
-                                //                        .Where(e => e.estado == Estados.Activo
-                                //                            && e.recurso == true
-                                //                            && e.id == 8)
-                                //                        .FirstOrDefault();
-
-                                //    if (infoRecurso != null)
-                                //    {
-                                //        nombreSede = infoRecurso.sedeNavigation?.Nombre;
-
-                                //        if (!string.IsNullOrEmpty(infoRecurso.correo))
-                                //        {
-                                //            await emailService.SendEmailAsync(
-                                //                infoRecurso.correo,
-                                //                "Confirmación de cita",
-                                //                agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
-                                //                isHtml: true
-                                //            );
-                                //        }
-                                //    }
-                                //}
-
-                                return Ok(new
-                                {
-                                    mensaje = "Cita editada exitosamente",
-                                    exito = true
-                                });
                             }
                             else
                             {
-                                return Ok(new
+                                if (empresa.recursoMultiple == true)
                                 {
-                                    mensaje = "Los servicios seleccionados superan el tiempo disponible del usuario.",
-                                    exito = false
-                                });
+                                    cita.fechaCita = dto.FechaIni;
+
+                                    var idsCitas = ContextBD.CitaPadres
+                                        .Where(cp => cp.padre == cita.id)
+                                        .Select(cp => cp.cita)
+                                        .ToList();
+
+                                    var servicios = ContextBD.CitaServicios
+                                        .Where(cs => idsCitas.Contains(cs.cita));
+
+                                    ContextBD.CitaServicios.RemoveRange(servicios);
+
+                                    var relaciones = ContextBD.CitaPadres
+                                        .Where(cp => idsCitas.Contains(cp.cita));
+
+                                    ContextBD.CitaPadres.RemoveRange(relaciones);
+
+                                    var citasEliminar = ContextBD.Citas
+                                        .Where(c => idsCitas.Contains(c.id));
+
+                                    ContextBD.Citas.RemoveRange(citasEliminar);
+
+                                    ContextBD.SaveChanges();
+
+                                    foreach (var detalleCita in dto.Citas)
+                                    {
+                                        var nuevaCita = new Cita
+                                        {
+                                            fechaInicio = detalleCita.FechaIni,
+                                            hora = detalleCita.Hora,
+                                            fechaFin = detalleCita.FechaIni.AddMinutes(detalleCita.Hora),
+                                            recurso = detalleCita.recurso,
+                                            cliente = idCliente,
+                                            valor = detalleCita.Valor,
+                                            estado = empresa.recursoMultiple == true ? Estados.Activo : dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
+                                            pago = pago,
+                                            bono = dto.UsuarioCreacion == "Usuario" ? detalleCita.Bono : null,
+                                            liquidado = false,
+                                            fechaCreacion = dto.FechaCreacion,
+                                            usuarioCreacion = dto.UsuarioCreacion
+                                        };
+
+                                        ContextBD.Citas.Add(nuevaCita);
+                                        ContextBD.SaveChanges();
+
+                                        foreach (var detalleServicio in detalleCita.servicios)
+                                        {
+                                            ContextBD.CitaServicios.Add(new CitaServicio
+                                            {
+                                                cita = nuevaCita.id,
+                                                servicio = detalleServicio.Servicio
+                                            });
+                                        }
+
+                                        ContextBD.CitaPadres.Add(new CitaPadre
+                                        {
+                                            cita = nuevaCita.id,
+                                            padre = cita.id
+                                        });
+                                    }
+                                }
                             }
+
+                            ContextBD.SaveChanges();
+                            transaction.Commit();
+
+                            //if (dto.UsuarioCreacion != "Usuario")
+                            //{
+                            //    var infoRecurso = ContextBD.Usuarios
+                            //                        .Include(u => u.sedeNavigation)
+                            //                        .Where(e => e.estado == Estados.Activo
+                            //                            && e.recurso == true
+                            //                            && e.id == 8)
+                            //                        .FirstOrDefault();
+
+                            //    if (infoRecurso != null)
+                            //    {
+                            //        nombreSede = infoRecurso.sedeNavigation?.Nombre;
+
+                            //        if (!string.IsNullOrEmpty(infoRecurso.correo))
+                            //        {
+                            //            await emailService.SendEmailAsync(
+                            //                infoRecurso.correo,
+                            //                "Confirmación de cita",
+                            //                agendaService.mensajeEmailUsuario(nombreCliente, telefonoCliente, infoRecurso.nombre, dto.FechaIni, logo),
+                            //                isHtml: true
+                            //            );
+                            //        }
+                            //    }
+                            //}
+
+                            return Ok(new
+                            {
+                                mensaje = "Cita editada exitosamente",
+                                exito = true
+                            });
+
                         }
                         else
                         {
