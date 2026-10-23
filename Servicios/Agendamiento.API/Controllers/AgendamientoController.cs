@@ -2289,12 +2289,13 @@ namespace Agendamiento.API.Controllers
                                         {
                                             Id = cs.servicioNavigation.id,
                                             Nombre = cs.servicioNavigation.nombre,
-                                            Valor = cs.servicioNavigation.nombre == "Otro"
-                                                    || cp.citaNavigation.bono == true
-                                                    || cp.citaNavigation.fidelidad == true
-                                                    || cs.servicioNavigation.valor == 0
-                                                ? (cp.citaNavigation.valor ?? 0)
-                                                : (cs.servicioNavigation.valor ?? 0)
+                                            Valor = (cp.citaNavigation.valor ?? 0) > 0 ? (cp.citaNavigation.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                                            //    cs.servicioNavigation.nombre == "Otro"
+                                            //    || cp.citaNavigation.bono == true
+                                            //    || cp.citaNavigation.fidelidad == true
+                                            //    || cs.servicioNavigation.valor == 0
+                                            //? (cp.citaNavigation.valor ?? 0)
+                                            //: (cs.servicioNavigation.valor ?? 0)
                                         })
                                         .ToList()
                                 })
@@ -2440,12 +2441,13 @@ namespace Agendamiento.API.Controllers
                                 {
                                     Id = cs.servicioNavigation.id,
                                     Nombre = cs.servicioNavigation.nombre,
-                                    Valor = cs.servicioNavigation.nombre == "Otro"
-                                            || c.bono == true
-                                            || c.fidelidad == true
-                                            || cs.servicioNavigation.valor == 0
-                                            ? (c.valor ?? 0)
-                                            : (cs.servicioNavigation.valor ?? 0)
+                                    Valor = (c.valor ?? 0) > 0 ? (c.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                                            //cs.servicioNavigation.nombre == "Otro"
+                                            //|| c.bono == true
+                                            //|| c.fidelidad == true
+                                            //|| cs.servicioNavigation.valor == 0
+                                            //? (c.valor ?? 0)
+                                            //: (cs.servicioNavigation.valor ?? 0)
                                 }).ToList()
                             })
                             .ToList();
@@ -2533,12 +2535,13 @@ namespace Agendamiento.API.Controllers
                                 {
                                     Id = cs.servicioNavigation.id,
                                     Nombre = cs.servicioNavigation.nombre,
-                                    Valor = cs.servicioNavigation.nombre == "Otro"
-                                            || c.bono == true
-                                            || c.fidelidad == true
-                                            || cs.servicioNavigation.valor == 0
-                                            ? (c.valor ?? 0)
-                                            : (cs.servicioNavigation.valor ?? 0)
+                                    Valor = (c.valor ?? 0) > 0 ? (c.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                                    //cs.servicioNavigation.nombre == "Otro"
+                                    //|| c.bono == true
+                                    //|| c.fidelidad == true
+                                    //|| cs.servicioNavigation.valor == 0
+                                    //? (c.valor ?? 0)
+                                    //: (cs.servicioNavigation.valor ?? 0)
                                 }).ToList()
                             })
                             .ToList();
@@ -2785,7 +2788,7 @@ namespace Agendamiento.API.Controllers
                             where cs.cita == cita.id
                             select new
                             {
-                                ServicioValor = cita.bono == true || cita.fidelidad == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
+                                ServicioValor = (cita.valor ?? 0) > 0 ? (cita.valor ?? 0) : (s.valor ?? 0), //cita.bono == true || cita.fidelidad == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
                                 Porcentaje = (sp.porcentaje ?? 0),
                                 Sede = se.Nombre
                             }
@@ -2885,7 +2888,7 @@ namespace Agendamiento.API.Controllers
                                                      where cs.cita == citaId.id
                                                      select new
                                                      {
-                                                         ServicioValor = citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                                         ServicioValor = (citaId.valor ?? 0) > 0 ? (citaId.valor ?? 0) : (s.valor ?? 0), //citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
                                                          Porcentaje = (u.porcentaje ?? 0),
                                                          Sede = se.Nombre
                                                      }
@@ -3074,12 +3077,12 @@ namespace Agendamiento.API.Controllers
                                     where cs.cita == citaId.id
                                     select new
                                     {
-                                        ServicioValor =
-                                            citaId.bono == true ||
-                                            citaId.fidelidad == true ||
-                                            s.valor == 0
-                                                ? (citaId.valor ?? 0)
-                                                : (s.valor ?? 0),
+                                        ServicioValor = (citaId.valor ?? 0) > 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                        //citaId.bono == true ||
+                                        //citaId.fidelidad == true ||
+                                        //s.valor == 0
+                                        //    ? (citaId.valor ?? 0)
+                                        //    : (s.valor ?? 0),
 
                                         Porcentaje =
                                             (u.porcentaje ?? 0) != 0
@@ -3192,8 +3195,7 @@ namespace Agendamiento.API.Controllers
                                         {
                                             if (citaId.valor.HasValue && citaId.valor > 0)
                                             {
-                                                citaId.valor = citaId.valor.Value -
-                                                               (citaId.valor.Value * nivel.porcentaje / 100);
+                                                citaId.valor = citaId.valor.Value - (citaId.valor.Value * nivel.porcentaje / 100);
                                             }
 
                                             var cantidadMaxima = niveles
@@ -3222,7 +3224,7 @@ namespace Agendamiento.API.Controllers
                                     where cs.cita == citaId.id
                                     select new
                                     {
-                                        ServicioValor = citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                        ServicioValor = (citaId.valor ?? 0) > 0 ? (citaId.valor ?? 0) : (s.valor ?? 0), //citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
                                         Porcentaje = (u.porcentaje ?? 0) != 0 ? (u.porcentaje ?? 0) : (sp != null ? (sp.porcentaje ?? 0) : 0),
                                         Sede = se.Nombre
                                     }
@@ -3708,7 +3710,7 @@ namespace Agendamiento.API.Controllers
 
                             if (citaIndividual != null)
                             {
-                                var citaPadre = ContextBD.CitaPadre.FirstOrDefault(cp => cp.cita == citaIndividual.id);
+                                var citaPadre = ContextBD.CitaPadres.FirstOrDefault(cp => cp.cita == citaIndividual.id);
 
                                 if (citaPadre != null)
                                 {
@@ -4029,9 +4031,7 @@ namespace Agendamiento.API.Controllers
                         .Select(cs => new
                         {
                             Nombre = cs.servicioNavigation.nombre,
-                            Valor = cs.servicioNavigation.nombre == "Otro"
-                                ? c.valor
-                                : cs.servicioNavigation.valor
+                            Valor =  cs.servicioNavigation.nombre == "Otro" ? c.valor : cs.servicioNavigation.valor
                         })
                         .ToList()
                 })
