@@ -2942,6 +2942,8 @@ namespace Agendamiento.API.Controllers
 
                         if (empresa.recursoMultiple == true)
                         {
+                            decimal porcFidelidad = 0m;
+
                             var citaId = ContextBD.Citas
                                 .Include(c => c.CitaServicios)
                                 .ThenInclude(cs => cs.servicioNavigation)
@@ -3024,6 +3026,7 @@ namespace Agendamiento.API.Controllers
                                     {
                                         // Dividir el porcentaje entre las citas del día.
                                         decimal porcentajePorCita = nivel.porcentaje / cantidadCitasDescuento;
+                                        porcFidelidad = porcentajePorCita;
 
                                         if (citaId.valor.HasValue && citaId.valor.Value > 0)
                                         {
@@ -3057,43 +3060,119 @@ namespace Agendamiento.API.Controllers
                                         }
                                         else
                                         {
-                                            fidelidadCliente.cantidad++;
+                                            // Obtener la cantidad máxima configurada en fidelidad.
+                                            int cantidadMaxima = ContextBD.FidelidadParametros
+                                                .Where(p => p.estado)
+                                                .Select(p => (int?)p.cantidad)
+                                                .Max() ?? 0;
+
+                                            if (cantidadMaxima > 0 &&
+                                                fidelidadCliente.cantidad >= cantidadMaxima - 1)
+                                            {
+                                                // Al completar la última visita, reiniciar a cero.
+                                                fidelidadCliente.cantidad = 0;
+                                            }
+                                            else
+                                            {
+                                                fidelidadCliente.cantidad++;
+                                            }
                                         }
                                     }
                                 }
 
                                 // 7. Liquidar los servicios de la cita actual.
-                                var servicios = (
-                                    from cs in ContextBD.CitaServicios
-                                    join s in ContextBD.Servicios
-                                        on cs.servicio equals s.id
-                                    join u in ContextBD.Usuarios
-                                        on citaId.recurso equals u.id
-                                    join se in ContextBD.Sedes
-                                        on u.sede equals se.id
-                                    join sp in ContextBD.ServiciosParametros
-                                        on s.id equals sp.servicio into spGroup
-                                    from sp in spGroup.DefaultIfEmpty()
-                                    where cs.cita == citaId.id
-                                    select new
+                                //var servicios = (
+                                //    from cs in ContextBD.CitaServicios
+                                //    join s in ContextBD.Servicios
+                                //        on cs.servicio equals s.id
+                                //    join u in ContextBD.Usuarios
+                                //        on citaId.recurso equals u.id
+                                //    join se in ContextBD.Sedes
+                                //        on u.sede equals se.id
+                                //    join sp in ContextBD.ServiciosParametros
+                                //        on s.id equals sp.servicio into spGroup
+                                //    from sp in spGroup.DefaultIfEmpty()
+                                //    where cs.cita == citaId.id
+                                //    select new
+                                //    {
+                                //        ServicioValor = (citaId.valor ?? 0) > 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                //        //citaId.bono == true ||
+                                //        //citaId.fidelidad == true ||
+                                //        //s.valor == 0
+                                //        //    ? (citaId.valor ?? 0)
+                                //        //    : (s.valor ?? 0),
+
+                                //        Porcentaje =
+                                //            (u.porcentaje ?? 0) != 0
+                                //                ? (u.porcentaje ?? 0)
+                                //                : (sp != null
+                                //                    ? (sp.porcentaje ?? 0)
+                                //                    : 0),
+
+                                //        Sede = se.Nombre
+                                //    }
+                                //).ToList();
+                                var usuario = ContextBD.Usuarios
+                                    .Where(u => u.id == citaId.recurso)
+                                    .Select(u => new
                                     {
-                                        ServicioValor = (citaId.valor ?? 0) > 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
-                                        //citaId.bono == true ||
-                                        //citaId.fidelidad == true ||
-                                        //s.valor == 0
-                                        //    ? (citaId.valor ?? 0)
-                                        //    : (s.valor ?? 0),
+                                        Porcentaje = u.porcentaje ?? 0,
+                                        Sede = ContextBD.Sedes
+                                            .Where(se => se.id == u.sede)
+                                            .Select(se => se.Nombre)
+                                            .FirstOrDefault()
+                                    })
+                                    .FirstOrDefault();
 
-                                        Porcentaje =
-                                            (u.porcentaje ?? 0) != 0
-                                                ? (u.porcentaje ?? 0)
-                                                : (sp != null
+                                var servicios = new List<ServicioLiquidacionDTO>();
+
+                                if (usuario != null && usuario.Porcentaje != 0)
+                                {
+                                    // CASO 1: El usuario tiene un porcentaje propio.
+                                    // Solo se devuelve un registro, aunque tenga varios servicios.
+
+                                    servicios.Add(new ServicioLiquidacionDTO
+                                    {
+                                        ServicioValor = citaId.valor ?? 0,
+                                        Porcentaje = usuario.Porcentaje,
+                                        Sede = usuario.Sede
+                                    });
+                                }
+                                else
+                                {
+                                    // CASO 2: El porcentaje depende de ServiciosParametros.
+                                    // Se conserva un registro por cada servicio y su porcentaje.
+
+                                    servicios = (
+                                            from cs in ContextBD.CitaServicios
+                                            join s in ContextBD.Servicios
+                                                on cs.servicio equals s.id
+                                            join u in ContextBD.Usuarios
+                                                on citaId.recurso equals u.id
+                                            join se in ContextBD.Sedes
+                                                on u.sede equals se.id
+                                            join sp in ContextBD.ServiciosParametros
+                                                on s.id equals sp.servicio into spGroup
+                                            from sp in spGroup.DefaultIfEmpty()
+                                            where cs.cita == citaId.id
+                                            orderby s.valor descending, s.id
+                                            select new ServicioLiquidacionDTO
+                                            {
+                                                ServicioValor = s.valor ?? 0,
+                                                Porcentaje = sp != null
                                                     ? (sp.porcentaje ?? 0)
-                                                    : 0),
+                                                    : 0,
+                                                Sede = se.Nombre
+                                            }
+                                        )
+                                        .ToList();
 
-                                        Sede = se.Nombre
-                                    }
-                                ).ToList();
+                                        if (citaId.fidelidad == true && servicios.Any())
+                                        {
+                                            servicios[0].ServicioValor -=
+                                                servicios[0].ServicioValor * porcFidelidad / 100m;
+                                        }
+                                }
 
                                 foreach (var servicio in servicios)
                                 {
@@ -3214,21 +3293,77 @@ namespace Agendamiento.API.Controllers
 
                                 if (empresa.id != 2)
                                 {
-                                    var servicios = (
-                                    from cs in ContextBD.CitaServicios
-                                    join s in ContextBD.Servicios on cs.servicio equals s.id
-                                    join u in ContextBD.Usuarios on citaId.recurso equals u.id
-                                    join se in ContextBD.Sedes on u.sede equals se.id
-                                    join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio into spGroup
-                                    from sp in spGroup.DefaultIfEmpty()
-                                    where cs.cita == citaId.id
-                                    select new
+                                    //var servicios = (
+                                    //from cs in ContextBD.CitaServicios
+                                    //join s in ContextBD.Servicios on cs.servicio equals s.id
+                                    //join u in ContextBD.Usuarios on citaId.recurso equals u.id
+                                    //join se in ContextBD.Sedes on u.sede equals se.id
+                                    //join sp in ContextBD.ServiciosParametros on s.id equals sp.servicio into spGroup
+                                    //from sp in spGroup.DefaultIfEmpty()
+                                    //where cs.cita == citaId.id
+                                    //select new
+                                    //{
+                                    //    ServicioValor = (citaId.valor ?? 0) > 0 ? (citaId.valor ?? 0) : (s.valor ?? 0), //citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                    //    Porcentaje = (u.porcentaje ?? 0) != 0 ? (u.porcentaje ?? 0) : (sp != null ? (sp.porcentaje ?? 0) : 0),
+                                    //    Sede = se.Nombre
+                                    //}
+                                    //).ToList();
+                                    var usuario = ContextBD.Usuarios
+                                    .Where(u => u.id == citaId.recurso)
+                                    .Select(u => new
                                     {
-                                        ServicioValor = (citaId.valor ?? 0) > 0 ? (citaId.valor ?? 0) : (s.valor ?? 0), //citaId.bono == true || citaId.fidelidad == true || s.valor == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
-                                        Porcentaje = (u.porcentaje ?? 0) != 0 ? (u.porcentaje ?? 0) : (sp != null ? (sp.porcentaje ?? 0) : 0),
-                                        Sede = se.Nombre
+                                        Porcentaje = u.porcentaje ?? 0,
+                                        Sede = ContextBD.Sedes
+                                            .Where(se => se.id == u.sede)
+                                            .Select(se => se.Nombre)
+                                            .FirstOrDefault()
+                                    })
+                                    .FirstOrDefault();
+
+                                    var servicios = new List<dynamic>();
+
+                                    if (usuario != null && usuario.Porcentaje != 0)
+                                    {
+                                        // CASO 1: El usuario tiene un porcentaje propio.
+                                        // Solo se devuelve un registro, aunque tenga varios servicios.
+
+                                        servicios.Add(new
+                                        {
+                                            ServicioValor = citaId.valor ?? 0,
+                                            Porcentaje = usuario.Porcentaje,
+                                            Sede = usuario.Sede
+                                        });
                                     }
-                                    ).ToList();
+                                    else
+                                    {
+                                        // CASO 2: El porcentaje depende de ServiciosParametros.
+                                        // Se conserva un registro por cada servicio y su porcentaje.
+
+                                        servicios = (
+                                            from cs in ContextBD.CitaServicios
+                                            join s in ContextBD.Servicios
+                                                on cs.servicio equals s.id
+                                            join u in ContextBD.Usuarios
+                                                on citaId.recurso equals u.id
+                                            join se in ContextBD.Sedes
+                                                on u.sede equals se.id
+                                            join sp in ContextBD.ServiciosParametros
+                                                on s.id equals sp.servicio into spGroup
+                                            from sp in spGroup.DefaultIfEmpty()
+                                            where cs.cita == citaId.id
+                                            select new
+                                            {
+                                                ServicioValor = (s.valor ?? 0),
+
+                                                Porcentaje = sp != null
+                                                    ? (sp.porcentaje ?? 0)
+                                                    : 0,
+
+                                                Sede = se.Nombre
+                                            }
+                                        )
+                                        .ToList<dynamic>();
+                                    }
 
                                     foreach (var servicio in servicios)
                                     {
