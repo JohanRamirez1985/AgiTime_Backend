@@ -2289,7 +2289,7 @@ namespace Agendamiento.API.Controllers
                                         {
                                             Id = cs.servicioNavigation.id,
                                             Nombre = cs.servicioNavigation.nombre,
-                                            Valor = (cs.servicioNavigation.valor ?? 0) > 0 ? (cp.citaNavigation.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                                            Valor = (cs.servicioNavigation.valor ?? 0) == 0 ? (cp.citaNavigation.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
                                             //    cs.servicioNavigation.nombre == "Otro"
                                             //    || cp.citaNavigation.bono == true
                                             //    || cp.citaNavigation.fidelidad == true
@@ -2441,7 +2441,7 @@ namespace Agendamiento.API.Controllers
                                 {
                                     Id = cs.servicioNavigation.id,
                                     Nombre = cs.servicioNavigation.nombre,
-                                    Valor = (cs.servicioNavigation.valor ?? 0) > 0 ? (c.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                                    Valor = (cs.servicioNavigation.valor ?? 0) == 0 ? (c.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
                                             //cs.servicioNavigation.nombre == "Otro"
                                             //|| c.bono == true
                                             //|| c.fidelidad == true
@@ -2535,7 +2535,7 @@ namespace Agendamiento.API.Controllers
                                 {
                                     Id = cs.servicioNavigation.id,
                                     Nombre = cs.servicioNavigation.nombre,
-                                    Valor = (cs.servicioNavigation.valor ?? 0) > 0 ? (c.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
+                                    Valor = (cs.servicioNavigation.valor ?? 0) == 0 ? (c.valor ?? 0) : (cs.servicioNavigation.valor ?? 0)
                                     //cs.servicioNavigation.nombre == "Otro"
                                     //|| c.bono == true
                                     //|| c.fidelidad == true
