@@ -1,10 +1,13 @@
-﻿using Compartido.Data.Modelos;
+﻿using Compartido.Constantes;
+using Compartido.Data;
+using Compartido.Data.Modelos;
 using Compartido.DTOs;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace Informes.API.Servicios
 {
@@ -374,7 +377,7 @@ namespace Informes.API.Servicios
                 bool mostrarTotalBonos = true;
                 bool mostrarComision = true;
 
-                if ( cliente == 8 || cliente == 11 || cliente == 12)
+                if ( cliente == 8 || cliente == 11 || cliente == 12 || cliente == 14)
                 {
                     mostrarObsequio = false;
                     mostrarDescanso = false;
@@ -838,6 +841,13 @@ namespace Informes.API.Servicios
             bool mostrarDescanso = true;
             bool mostrarTotalBonos = true;
             bool mostrarComision = true;
+
+            if (cliente == 8 || cliente == 11 || cliente == 12 || cliente == 14)
+            {
+                mostrarObsequio = false;
+                mostrarDescanso = false;
+                mostrarTotalBonos = false;
+            }
 
             // =========================
             // COLUMNAS DINÁMICAS
@@ -1729,6 +1739,268 @@ namespace Informes.API.Servicios
             {
                 return null;
             }
+        }
+
+        public decimal GetDecimal(Parametro? parametro)
+        {
+            if (parametro == null)
+                return 0m;
+
+            if (decimal.TryParse(parametro.valor, out var resultado))
+                return resultado;
+
+            return 0m;
+        }
+
+        public int GetInt(Parametro? parametro)
+        {
+            if (parametro == null)
+                return 0;
+
+            if (int.TryParse(parametro.valor, out var resultado))
+                return resultado;
+
+            return 0;
+        }
+
+        public decimal GetValorDescuento(List<InfoCitaDTO> info, List<Parametro> parametros, List<int> listaBarberos, Usuario u)
+        {
+            int total = 0;
+            decimal valorDescuentoPorCorte = 0;
+
+            var pagas = info.Where(i => i.pagoCita == true && i.pagoServicio == true).ToList();
+
+            total = pagas.Count;
+
+            foreach (var item in pagas)
+            {
+                if (item.servicio.Equals("Corte VIP"))
+                {
+                    total++;
+                }
+            }
+
+            bool validaBarberos = listaBarberos.Any() && listaBarberos.Contains(u.id);
+
+            if (validaBarberos)
+                valorDescuentoPorCorte = u.incumplimiento ?? 0m;
+            else
+                valorDescuentoPorCorte = u.porcentaje ?? 0m;
+
+            return valorDescuentoPorCorte;
+        }
+
+        public decimal ObtenerPorcentajeOcupacion(DateTime fechaInicial, DateTime fechaFinal, ModeloContext ContextBD)
+        {
+            /*var horariosAgenda = ContextBD.Agenda
+                .Where(a => a.estado)
+                .OrderBy(a => a.valor)
+                .Select(a => a.valor)
+                .ToList();
+
+            int totalDias = (fechaFinal.Date - fechaInicial.Date).Days + 1;
+
+            int totalDisponibles = horariosAgenda.Count * totalDias;
+
+            var citas = ContextBD.Citas
+                .Where(c =>
+                    c.fechaInicio >= fechaInicial &&
+                    c.fechaFin <= fechaFinal &&
+                    c.estado != Estados.Cancelada)
+                .ToList();
+
+            List<string> espaciosOcupados = new List<string>();
+
+            foreach (var cita in citas)
+            {
+                DateTime inicio = cita.fechaInicio;
+                DateTime fin = cita.fechaFin.Value;
+
+                while (inicio < fin)
+                {
+                    espaciosOcupados.Add(
+                        inicio.ToString("yyyy-MM-dd HH:mm")
+                    );
+
+                    inicio = inicio.AddMinutes(30);
+                }
+            }
+
+            int totalOcupados = espaciosOcupados
+                .Distinct()
+                .Count();
+
+            decimal porcentaje = totalDisponibles == 0
+                ? 0
+                : ((decimal)totalOcupados / totalDisponibles) * 100;
+
+            return Math.Round(porcentaje, 2);*/
+
+            int rango = Convert.ToInt32(ContextBD.Parametros.Where(p => p.tipo == "Tiempo_Agenda").Select(p => p.valor).FirstOrDefault());
+
+            var horariosAgenda = ContextBD.Agenda
+        .Where(a => a.estado)
+        .OrderBy(a => a.valor)
+        .Select(a => a.valor)
+        .ToList();
+
+            List<DateTime> espaciosDisponibles = new List<DateTime>();
+
+            DateTime fecha = fechaInicial.Date;
+
+            while (fecha <= fechaFinal.Date)
+            {
+                foreach (var hora in horariosAgenda)
+                {
+                    DateTime fechaHora = DateTime.Parse(
+                        $"{fecha:yyyy-MM-dd} {hora}"
+                    );
+
+                    espaciosDisponibles.Add(fechaHora);
+                }
+
+                fecha = fecha.AddDays(1);
+            }
+
+            var bloqueos = ContextBD.BloqueosHorarios
+                .Where(b => b.estado == "Activo")
+                .ToList();
+
+            List<DateTime> espaciosBloqueados = new List<DateTime>();
+
+            fecha = fechaInicial.Date;
+
+            while (fecha <= fechaFinal.Date)
+            {
+                int diaSemana = (int)fecha.DayOfWeek;
+
+                diaSemana = diaSemana == 0 ? 7 : diaSemana;
+
+                foreach (var bloqueo in bloqueos)
+                {
+                    if (string.IsNullOrWhiteSpace(bloqueo.diasSemana))
+                        continue;
+
+                    List<int> dias = bloqueo.diasSemana
+                        .Split(',')
+                        .Select(x => int.Parse(x.Trim()))
+                        .ToList();
+
+                    if (!dias.Contains(diaSemana))
+                        continue;
+
+                    DateTime horaInicio = fecha.Date + bloqueo.horaInicio;
+                    DateTime horaFin = fecha.Date + bloqueo.horaFin;
+
+                    while (horaInicio < horaFin)
+                    {
+                        espaciosBloqueados.Add(horaInicio);
+
+                        horaInicio = horaInicio.AddMinutes(rango);
+                    }
+                }
+
+                fecha = fecha.AddDays(1);
+            }
+
+            int totalDisponibles = espaciosDisponibles
+                .Except(espaciosBloqueados)
+                .Distinct()
+                .Count();
+
+            var citas = ContextBD.Citas
+                .Where(c =>
+                    c.fechaInicio >= fechaInicial &&
+                    c.fechaFin <= fechaFinal &&
+                    c.estado != Estados.Cancelada)
+                .ToList();
+
+            List<DateTime> espaciosOcupados = new List<DateTime>();
+
+            foreach (var cita in citas)
+            {
+                DateTime inicio = cita.fechaInicio;
+                DateTime fin = cita.fechaFin.Value;
+
+                while (inicio < fin)
+                {
+                    espaciosOcupados.Add(inicio);
+
+                    inicio = inicio.AddMinutes(rango);
+                }
+            }
+
+            int totalOcupados = espaciosOcupados
+                .Distinct()
+                .Count();
+
+            decimal porcentaje = totalDisponibles == 0
+                ? 0
+                : ((decimal)totalOcupados / totalDisponibles) * 100;
+
+            return Math.Round(porcentaje, 2);
+        }
+
+        public async Task<object> ObtenerValorDiario(ModeloContext ContextBD)
+        {
+            var zonaColombia = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
+
+            var ahoraColombia = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaColombia);
+
+            var hoy = ahoraColombia.Date;
+
+            int diasDesdeLunes = ((int)hoy.DayOfWeek == 0 ? 6 : (int)hoy.DayOfWeek - 1);
+
+            var lunesActual = hoy.AddDays(-diasDesdeLunes);
+
+            var domingoActual = lunesActual.AddDays(7);
+
+            var lunesPasado = lunesActual.AddDays(-7);
+
+            var ingresos = await ContextBD.Citas
+                .Where(c =>
+                    c.fechaInicio >= lunesPasado &&
+                    c.fechaInicio < domingoActual &&
+                    c.estado == Estados.Asistio)
+                .GroupBy(c => c.fechaInicio.Date)
+                .Select(g => new
+                {
+                    fecha = g.Key,
+                    total = g.Sum(x => x.valor)
+                })
+                .ToListAsync();
+
+            var semanaActual = Enumerable.Range(0, 7)
+                .Select(i =>
+                {
+                    var fecha = lunesActual.AddDays(i);
+
+                    return new CitaDTO
+                    {
+                        dia = fecha.ToString("dddd", new CultureInfo("es-CO")),
+                        totalDia = ingresos
+                            .FirstOrDefault(x => x.fecha == fecha)?.total ?? 0
+                    };
+                }).ToList();
+
+            var semanaPasada = Enumerable.Range(0, 7)
+                .Select(i =>
+                {
+                    var fecha = lunesPasado.AddDays(i);
+
+                    return new CitaDTO
+                    {
+                        dia = fecha.ToString("dddd", new CultureInfo("es-CO")),
+                        totalDia = ingresos
+                            .FirstOrDefault(x => x.fecha == fecha)?.total ?? 0
+                    };
+                }).ToList();
+
+            return new
+            {
+                semanaActual,
+                semanaPasada
+            };
         }
     }
 }
