@@ -651,7 +651,17 @@ namespace Agendamiento.API.Controllers
                                     if (esDiaDescuento && porcentajeDiaSemana > porcentajeDescuentoAplicar)
                                     {
                                         porcentajeDescuentoAplicar = porcentajeDiaSemana;
-                                        tipoDescuento = "DiaSemana";
+                                        tipoDescuento = promoDia switch
+                                        {
+                                            0 => "Domingo dia de promoción",
+                                            1 => "Lunes dia de promoción",
+                                            2 => "Martes dia de promoción",
+                                            3 => "Miércoles dia de promoción",
+                                            4 => "Jueves dia de promoción",
+                                            5 => "Viernes dia de promoción",
+                                            6 => "Sábado dia de promoción",
+                                            _ => "Día no válido"
+                                        }; ;
                                         cualDescuento = true;
                                         mensajeDescuento = $"¡Tienes un descuento especial del {porcentajeDiaSemana:0.##}% por la promoción del día!";
                                         //valorFinal = Math.Round(valorFinal * (1 - porcentajeDiaSemana / 100m), 2);
@@ -2630,15 +2640,17 @@ namespace Agendamiento.API.Controllers
 
                                 string fidelidadMensaje = string.Empty;
 
-                                if (c.estado == Estados.Activo && fidelidadCantidad.HasValue)
+                                if (c.descuento == true)
                                 {
-                                    if (c.descuento == true)
+                                    fidelidadMensaje =
+                                            $"{c.Cliente?.NombreCliente} se le aplico un descuento por motivo de {c.tipoDescuento} ";
+                                }
+                                else
+                                {
+                                    if (c.estado == Estados.Activo && fidelidadCantidad.HasValue)
                                     {
-                                        fidelidadMensaje =
-                                                $"{c.Cliente?.NombreCliente} se le aplico un descuento por motivo de {c.tipoDescuento} ";
-                                    }
-                                    else
-                                    {
+
+
                                         var visitaActual = fidelidadCantidad.Value + 1;
 
                                         var fidelidadParametro = ContextBD.FidelidadParametros
@@ -2661,6 +2673,7 @@ namespace Agendamiento.API.Controllers
                                                 $"para un total de " +
                                                 $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
                                         }
+
                                     }
                                 }
 
