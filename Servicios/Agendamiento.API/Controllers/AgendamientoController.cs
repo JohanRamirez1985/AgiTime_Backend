@@ -100,7 +100,7 @@ namespace Agendamiento.API.Controllers
                     var promoDiaSemana = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "PromocionDiaSemana")?.valor, out bool resulPromoSemana) && resulPromoSemana;
                     int promoDia = agendaService.GetInt(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "DiaSemanaPromocion"));
                     decimal porcentajeCumple = agendaService.GetDecimal(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "PorcentajeDescuentoCumpleanos"));
-                    decimal porcentajeDiaSemana = agendaService.GetDecimal(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "PromocionDiaSemana"));
+                    decimal porcentajeDiaSemana = agendaService.GetDecimal(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "PorcentajeDiaSemana"));
 
                     if (dto.seleccionoCualquiera)
                     {
