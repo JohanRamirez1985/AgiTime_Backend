@@ -100,6 +100,10 @@ namespace Compartido.Data
 
             modelBuilder.Entity<Cita>(entity =>
             {
+                entity.Property(e => e.alias)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.estado)
                     .IsRequired()
                     .HasMaxLength(20)
@@ -118,6 +122,10 @@ namespace Compartido.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.pago).HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.tipoDescuento)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.usuarioCancelacion)
                     .HasMaxLength(50)
@@ -174,6 +182,10 @@ namespace Compartido.Data
 
             modelBuilder.Entity<Cliente>(entity =>
             {
+                entity.Property(e => e.alias)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.correo)
                     .IsRequired()
                     .HasMaxLength(50)

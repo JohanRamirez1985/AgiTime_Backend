@@ -248,5 +248,27 @@ namespace Agendamiento.API.Servicios
 
             return null;
         }
+
+        public int GetInt(Parametro? parametro)
+        {
+            if (parametro == null)
+                return 0;
+
+            if (int.TryParse(parametro.valor, out var resultado))
+                return resultado;
+
+            return 0;
+        }
+
+        public decimal GetDecimal(Parametro? parametro)
+        {
+            if (parametro == null)
+                return 0m;
+
+            if (decimal.TryParse(parametro.valor, out var resultado))
+                return resultado;
+
+            return 0m;
+        }
     }
 }
