@@ -224,8 +224,8 @@ namespace Informes.API.Controllers
                                     servicio = s.nombre,
                                     pagoCita = c.pago,
                                     pagoServicio = s.esPago,
-                                    valor = emp == 2 ? s.nombre == "Otro" || c.bono == true || c.fidelidad == true || s.valor == 0 ? c.valor : s.valor - (c.bono.GetValueOrDefault() ? bono : 0)
-                                            : (c.bono == true || c.fidelidad == true || s.valor == 0 ? (c.valor ?? 0) : (s.valor ?? 0)),
+                                    valor = emp == 2 ? s.nombre == "Otro" || c.bono == true || c.fidelidad == true || c.descuento == true || s.valor == 0 ? c.valor : s.valor - (c.bono.GetValueOrDefault() ? bono : 0)
+                                            : (c.bono == true || c.fidelidad == true || c.descuento == true || s.valor == 0 ? (c.valor ?? 0) : (s.valor ?? 0)),
                                     bono = c.bono,
                                     metodoPago = c.metodoPago
                                 })
@@ -584,7 +584,7 @@ namespace Informes.API.Controllers
                                     servicio = s.nombre,
                                     pagoCita = c.pago ?? false,
                                     pagoServicio = s.esPago ?? false,
-                                    valor = s.nombre == "Otro" || c.fidelidad == true ? (c.valor ?? 0) : (s.valor ?? 0) - (c.bono.GetValueOrDefault() ? bono : 0),
+                                    valor = s.nombre == "Otro" || c.bono == true || c.fidelidad == true || c.descuento == true ? (c.valor ?? 0) : (s.valor ?? 0) - (c.bono.GetValueOrDefault() ? bono : 0),
                                     bono = c.bono ?? false
                                 })
                                .ToList();

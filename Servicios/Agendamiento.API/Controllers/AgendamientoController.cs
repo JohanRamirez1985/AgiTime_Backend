@@ -2517,11 +2517,6 @@ namespace Agendamiento.API.Controllers
                                     })
                                     .FirstOrDefault(),
 
-                                Padre = ContextBD.CitaPadres
-                                    .Where(cp => cp.cita == c.id)
-                                    .Select(cp => cp.padre)
-                                    .FirstOrDefault(),
-
                                 Servicios = c.CitaServicios.Select(cs => new
                                 {
                                     Id = cs.servicioNavigation.id,
@@ -2559,10 +2554,26 @@ namespace Agendamiento.API.Controllers
                                     {
                                         var valorServicios = c.Servicios.Sum(s => s.Valor);
 
-                                        var cantidadCitasPadre = (from cp in ContextBD.CitaPadres join cita in ContextBD.Citas on cp.cita equals cita.id
-                                                                  where cp.padre == c.Padre && (cita.estado == Estados.Activo || cita.estado == Estados.Asistio) select cita.id).Count();
+                                        // Fecha de la cita
+                                        var fechaCita = c.fechaInicio.Date;
 
-                                        var porcentajeFidelidad = fidelidadParametro.porcentaje / cantidadCitasPadre;
+                                        // Consultar recursos diferentes del mismo cliente y día
+                                        var cantidadRecursos = ContextBD.Citas
+                                            .Where(cita =>
+                                                cita.cliente == c.cliente &&
+                                                cita.fechaInicio.Date == fechaCita &&
+                                                (cita.estado == Estados.Activo ||
+                                                 cita.estado == Estados.Asistio))
+                                            .Select(cita => cita.recurso)
+                                            .Distinct()
+                                            .Count();
+
+                                        // Evitar división por cero
+                                        cantidadRecursos = Math.Max(cantidadRecursos, 1);
+
+                                        // Dividir el porcentaje entre los recursos diferentes
+                                        var porcentajeFidelidad =
+                                            fidelidadParametro.porcentaje / cantidadRecursos;
 
                                         var valorFinal = valorServicios -
                                                          (valorServicios *
@@ -2571,7 +2582,7 @@ namespace Agendamiento.API.Controllers
                                         fidelidadMensaje =
                                             $"Es la {visitaActual} visita del cliente " +
                                             $"{c.Cliente?.NombreCliente} y tiene un " +
-                                            $"descuento del {porcentajeFidelidad:0}% " +
+                                            $"descuento del {porcentajeFidelidad:0.##}% " +
                                             $"para un total de " +
                                             $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
                                     }
