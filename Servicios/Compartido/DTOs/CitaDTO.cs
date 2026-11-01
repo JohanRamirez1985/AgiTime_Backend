@@ -37,5 +37,6 @@ namespace Compartido.DTOs
         public string metodoPago { get; set; }
         public bool seleccionoCualquiera { get; set; } = false;
         public int sede { get; set; }
+        public string alias { get; set; }
     }
 }

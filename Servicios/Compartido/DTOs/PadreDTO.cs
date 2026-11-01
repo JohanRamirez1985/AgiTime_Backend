@@ -18,5 +18,6 @@ namespace Compartido.DTOs
         public bool validaHorario { get; set; }
         public List<CitaDTO> Citas { get; set; } = new();
         public ClienteDTO clienteInfo { get; set; }
+        public string alias { get; set; }
     }
 }

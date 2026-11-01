@@ -7,6 +7,7 @@ using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using Serilog;
 using System.Globalization;
 using System.Linq;
@@ -44,9 +45,17 @@ namespace Agendamiento.API.Controllers
             string emailCliente = "";
             string nombreCliente = "";
             string telefonoCliente = "";
-            //int newHora = 0;
             bool pago = true;
             string fidelidadMensaje = string.Empty;
+            DateTime fechaNacimientoCliente = new DateTime();
+            bool esCumpleanos = false;
+            bool esDiaDescuento = false;
+            decimal valorFinal = dto.Valor ?? 0m;
+            bool descuento = false;
+            decimal porcentajeDescuentoAplicar = 0m;
+            string mensajeDescuento = string.Empty;
+            string tipoDescuento = string.Empty;
+            bool cualDescuento = false;
 
             try
             {
@@ -87,6 +96,11 @@ namespace Agendamiento.API.Controllers
                     var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
                     var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
                     var fidelidad = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "ManejaFidelidad")?.valor, out bool resulFidelidad) && resulFidelidad;
+                    var promoCumple = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "DescuentoCumpleanos")?.valor, out bool resulPromoCumple) && resulPromoCumple;
+                    var promoDiaSemana = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "PromocionDiaSemana")?.valor, out bool resulPromoSemana) && resulPromoSemana;
+                    int promoDia = agendaService.GetInt(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "DiaSemanaPromocion"));
+                    decimal porcentajeCumple = agendaService.GetDecimal(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "PorcentajeDescuentoCumpleanos"));
+                    decimal porcentajeDiaSemana = agendaService.GetDecimal(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "PorcentajeDiaSemana"));
 
                     if (dto.seleccionoCualquiera)
                     {
@@ -309,7 +323,8 @@ namespace Agendamiento.API.Controllers
                                     telefono = dto.clienteInfo.Telefono,
                                     fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                     estado = Estados.Activo,
-                                    fechaCreacion = dto.FechaCreacion
+                                    fechaCreacion = dto.FechaCreacion,
+                                    alias = dto.alias,
                                 };
 
                                 ContextBD.Clientes.Add(nueva);
@@ -401,7 +416,8 @@ namespace Agendamiento.API.Controllers
 
                             liquidado = false,
                             fechaCreacion = dto.FechaCreacion,
-                            usuarioCreacion = dto.UsuarioCreacion
+                            usuarioCreacion = dto.UsuarioCreacion,
+                            alias = dto.alias
                         };
 
                         ContextBD.Citas.Add(nuevo);
@@ -545,7 +561,7 @@ namespace Agendamiento.API.Controllers
                     {
                         var validaHora = ContextBD.Citas.Where(c => c.fechaInicio == dto.FechaIni
                                                                && c.recurso == dto.recurso
-                                                               && (c.estado == Estados.Activo || c.estado == Estados.Asistio || c.estado == Estados.Inasistencia)
+                                                               && (c.estado == Estados.Activo || c.estado == Estados.Asistio)
                                                                ).FirstOrDefault();
 
                         if (validaHora == null)
@@ -564,7 +580,8 @@ namespace Agendamiento.API.Controllers
                                         telefono = dto.clienteInfo.Telefono,
                                         fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                         estado = Estados.Activo,
-                                        fechaCreacion = dto.FechaCreacion
+                                        fechaCreacion = dto.FechaCreacion,
+                                        alias = dto.alias
                                     };
 
                                     ContextBD.Clientes.Add(nueva);
@@ -574,6 +591,7 @@ namespace Agendamiento.API.Controllers
                                     nombreCliente = nueva.nombre;
                                     emailCliente = nueva.correo;
                                     telefonoCliente = nueva.telefono;
+                                    fechaNacimientoCliente = (DateTime)nueva.fechaNacimiento;
                                 }
                                 else
                                 {
@@ -581,6 +599,7 @@ namespace Agendamiento.API.Controllers
                                     nombreCliente = user.nombre;
                                     emailCliente = user.correo;
                                     telefonoCliente = user.telefono;
+                                    fechaNacimientoCliente = (DateTime)user.fechaNacimiento;
                                 }
                             }
 
@@ -623,6 +642,83 @@ namespace Agendamiento.API.Controllers
                                 pago = false;
                             }
 
+                            if (dto.UsuarioCreacion == "Cliente")
+                            {
+                                if (promoDiaSemana)
+                                {
+                                    esDiaDescuento = (int)dto.FechaIni.DayOfWeek == promoDia;
+
+                                    if (esDiaDescuento && porcentajeDiaSemana > porcentajeDescuentoAplicar)
+                                    {
+                                        porcentajeDescuentoAplicar = porcentajeDiaSemana;
+                                        tipoDescuento = promoDia switch
+                                        {
+                                            0 => "Domingo dia de promoción",
+                                            1 => "Lunes dia de promoción",
+                                            2 => "Martes dia de promoción",
+                                            3 => "Miércoles dia de promoción",
+                                            4 => "Jueves dia de promoción",
+                                            5 => "Viernes dia de promoción",
+                                            6 => "Sábado dia de promoción",
+                                            _ => "Día no válido"
+                                        }; ;
+                                        cualDescuento = true;
+                                        mensajeDescuento = $"¡Tienes un descuento especial del {porcentajeDiaSemana:0.##}% por la promoción del día!";
+                                        //valorFinal = Math.Round(valorFinal * (1 - porcentajeDiaSemana / 100m), 2);
+                                        //descuento = true;
+                                    }
+                                }
+
+                                if (promoCumple && fechaNacimientoCliente != DateTime.MinValue)
+                                {
+                                    var nacimiento = fechaNacimientoCliente;
+                                    var fechaCita = dto.FechaIni.Date;
+
+                                    // Validar cumpleaños y día anterior.
+                                    var cumpleanos = new DateTime(fechaCita.Year, nacimiento.Month, Math.Min(nacimiento.Day, DateTime.DaysInMonth(fechaCita.Year, nacimiento.Month)));
+
+                                    esCumpleanos = fechaCita == cumpleanos || fechaCita == cumpleanos.AddDays(-1);
+
+                                    if (esCumpleanos && porcentajeCumple > porcentajeDescuentoAplicar)
+                                    {
+                                        porcentajeDescuentoAplicar = porcentajeCumple;
+                                        tipoDescuento = "Cumpleanos";
+                                        cualDescuento = true;
+                                        mensajeDescuento = $"¡Feliz cumpleaños! Tienes un descuento especial del {porcentajeCumple:0.##}%.";
+                                        //valorFinal = Math.Round(valorFinal * (1 - porcentajeCumple / 100m),2);
+                                        //descuento = true;
+                                    }
+                                }
+                            }
+
+                            if (fidelidad)
+                            {
+                                var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
+
+                                if (fidelidadCliente != null)
+                                {
+                                    var siguienteParametro = ContextBD.FidelidadParametros
+                                                            .Where(p =>
+                                                                p.estado &&
+                                                                p.cantidad > fidelidadCliente.cantidad)
+                                                            .OrderBy(p => p.cantidad)
+                                                            .FirstOrDefault();
+
+                                    if (siguienteParametro != null && siguienteParametro.cantidad == fidelidadCliente.cantidad + 1 && siguienteParametro.porcentaje > porcentajeDescuentoAplicar)
+                                    {
+                                        cualDescuento = false;
+                                        tipoDescuento = string.Empty;
+                                        mensajeDescuento = $"¡Felicitaciones! llegaste a tu {siguienteParametro.cantidad} visita. " + $"Tienes un beneficio especial {siguienteParametro.porcentaje:0}% de descuento.";
+                                    }
+                                }
+                            }
+
+                            if (porcentajeDescuentoAplicar > 0 && cualDescuento)
+                            {
+                                valorFinal = Math.Round(valorFinal * (1 - porcentajeDescuentoAplicar / 100m),2);
+                                descuento = true;
+                            }
+
                             var nuevo = new Cita
                             {
                                 fechaInicio = dto.FechaIni,
@@ -630,13 +726,16 @@ namespace Agendamiento.API.Controllers
                                 fechaFin = dto.FechaIni.AddMinutes(dto.Hora),
                                 recurso = dto.recurso,
                                 cliente = dto.clienteInfo != null ? idCliente : null,
-                                valor = dto.Valor,
+                                valor = valorFinal,
                                 estado = dto.UsuarioCreacion == "Usuario" ? Estados.Asistio : Estados.Activo,
                                 pago = pago,
                                 bono = dto.UsuarioCreacion == "Usuario" ? dto.Bono : null,
                                 liquidado = false,
                                 fechaCreacion = dto.FechaCreacion,
-                                usuarioCreacion = dto.UsuarioCreacion
+                                usuarioCreacion = dto.UsuarioCreacion,
+                                alias = dto.alias,
+                                descuento = descuento,
+                                tipoDescuento = tipoDescuento
                             };
 
                             ContextBD.Citas.Add(nuevo);
@@ -682,30 +781,11 @@ namespace Agendamiento.API.Controllers
                                 );
                             }
 
-                            if (fidelidad)
-                            {
-                                var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
-
-                                if (fidelidadCliente != null)
-                                {
-                                    var siguienteParametro = ContextBD.FidelidadParametros
-                                                            .Where(p =>
-                                                                p.estado &&
-                                                                p.cantidad > fidelidadCliente.cantidad)
-                                                            .OrderBy(p => p.cantidad)
-                                                            .FirstOrDefault();
-
-                                    if (siguienteParametro != null && siguienteParametro.cantidad == fidelidadCliente.cantidad + 1)
-                                    {
-                                        fidelidadMensaje = $"¡Felicitaciones! llegaste a tu {siguienteParametro.cantidad} visita. " + $"Tienes un beneficio especial {siguienteParametro.porcentaje:0}% de descuento.";
-                                    }
-                                }
-                            }
-
                             return Ok(new
                             {
                                 mensaje = "Cita registrada exitosamente",
-                                exito = true
+                                exito = true,
+                                fidelidadMensaje = fidelidadMensaje,
                             });
                         }
                         else
@@ -832,7 +912,8 @@ namespace Agendamiento.API.Controllers
                                     telefono = dto.clienteInfo.Telefono,
                                     fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                     estado = Estados.Activo,
-                                    fechaCreacion = dto.FechaCreacion
+                                    fechaCreacion = dto.FechaCreacion,
+                                    alias = dto.alias
                                 };
 
                                 ContextBD.Clientes.Add(nuevoCliente);
@@ -879,7 +960,8 @@ namespace Agendamiento.API.Controllers
                                 bono = dto.UsuarioCreacion == "Usuario" ? detalleCita.Bono : null,
                                 liquidado = false,
                                 fechaCreacion = dto.FechaCreacion,
-                                usuarioCreacion = dto.UsuarioCreacion
+                                usuarioCreacion = dto.UsuarioCreacion,
+                                alias = dto.alias
                             };
 
                             ContextBD.Citas.Add(nuevaCita);
@@ -1074,7 +1156,8 @@ namespace Agendamiento.API.Controllers
                                     telefono = dto.clienteInfo.Telefono,
                                     fechaNacimiento = dto.clienteInfo.FechaNacimiento,
                                     estado = Estados.Activo,
-                                    fechaCreacion = dto.FechaCreacion
+                                    fechaCreacion = dto.FechaCreacion,
+                                    alias = dto.alias
                                 };
 
                                 ContextBD.Clientes.Add(nueva);
@@ -1162,7 +1245,8 @@ namespace Agendamiento.API.Controllers
                             liquidado = false,
                             fechaCreacion = dto.FechaCreacion,
                             usuarioCreacion = dto.UsuarioCreacion,
-                            orden = idOrden
+                            orden = idOrden,
+                            alias = dto.alias
                         };
 
                         ContextBD.Citas.Add(nuevo);
@@ -1388,7 +1472,8 @@ namespace Agendamiento.API.Controllers
                             liquidado = false,
                             fechaCreacion = dto.FechaCreacion,
                             usuarioCreacion = dto.UsuarioCreacion,
-                            orden = dto.orden.Id
+                            orden = dto.orden.Id,
+                            alias = dto.alias
                         };
 
                         ContextBD.Citas.Add(nuevo);
@@ -2292,6 +2377,7 @@ namespace Agendamiento.API.Controllers
                                             Valor =
                                                 cp.citaNavigation.bono == true
                                                 || cp.citaNavigation.fidelidad == true
+                                                || cp.citaNavigation.descuento == true
                                                 || cs.servicioNavigation.valor == 0
                                             ? (cp.citaNavigation.valor ?? 0)
                                             : (cs.servicioNavigation.valor ?? 0)
@@ -2431,17 +2517,13 @@ namespace Agendamiento.API.Controllers
                                     })
                                     .FirstOrDefault(),
 
-                                Padre = ContextBD.CitaPadres
-                                    .Where(cp => cp.cita == c.id)
-                                    .Select(cp => cp.padre)
-                                    .FirstOrDefault(),
-
                                 Servicios = c.CitaServicios.Select(cs => new
                                 {
                                     Id = cs.servicioNavigation.id,
                                     Nombre = cs.servicioNavigation.nombre,
                                     Valor = c.bono == true
                                             || c.fidelidad == true
+                                            || c.descuento == true
                                             || cs.servicioNavigation.valor == 0
                                             ? (c.valor ?? 0)
                                             : (cs.servicioNavigation.valor ?? 0)
@@ -2472,10 +2554,26 @@ namespace Agendamiento.API.Controllers
                                     {
                                         var valorServicios = c.Servicios.Sum(s => s.Valor);
 
-                                        var cantidadCitasPadre = (from cp in ContextBD.CitaPadres join cita in ContextBD.Citas on cp.cita equals cita.id
-                                                                  where cp.padre == c.Padre && (cita.estado == Estados.Activo || cita.estado == Estados.Asistio) select cita.id).Count();
+                                        // Fecha de la cita
+                                        var fechaCita = c.fechaInicio.Date;
 
-                                        var porcentajeFidelidad = fidelidadParametro.porcentaje / cantidadCitasPadre;
+                                        // Consultar recursos diferentes del mismo cliente y día
+                                        var cantidadRecursos = ContextBD.Citas
+                                            .Where(cita =>
+                                                cita.cliente == c.cliente &&
+                                                cita.fechaInicio.Date == fechaCita &&
+                                                (cita.estado == Estados.Activo ||
+                                                 cita.estado == Estados.Asistio))
+                                            .Select(cita => cita.recurso)
+                                            .Distinct()
+                                            .Count();
+
+                                        // Evitar división por cero
+                                        cantidadRecursos = Math.Max(cantidadRecursos, 1);
+
+                                        // Dividir el porcentaje entre los recursos diferentes
+                                        var porcentajeFidelidad =
+                                            fidelidadParametro.porcentaje / cantidadRecursos;
 
                                         var valorFinal = valorServicios -
                                                          (valorServicios *
@@ -2484,7 +2582,7 @@ namespace Agendamiento.API.Controllers
                                         fidelidadMensaje =
                                             $"Es la {visitaActual} visita del cliente " +
                                             $"{c.Cliente?.NombreCliente} y tiene un " +
-                                            $"descuento del {porcentajeFidelidad:0}% " +
+                                            $"descuento del {porcentajeFidelidad:0.##}% " +
                                             $"para un total de " +
                                             $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
                                     }
@@ -2518,7 +2616,8 @@ namespace Agendamiento.API.Controllers
                                 c.estado,
                                 c.fidelidad,
                                 c.cliente,
-
+                                c.descuento,
+                                c.tipoDescuento,
                                 Cliente = ContextBD.Clientes
                                     .Where(cl => cl.id == c.cliente)
                                     .Select(cl => new
@@ -2534,6 +2633,7 @@ namespace Agendamiento.API.Controllers
                                     Nombre = cs.servicioNavigation.nombre,
                                     Valor = c.bono == true
                                             || c.fidelidad == true
+                                            || c.descuento == true
                                             || cs.servicioNavigation.valor == 0
                                             ? (c.valor ?? 0)
                                             : (cs.servicioNavigation.valor ?? 0)
@@ -2551,29 +2651,40 @@ namespace Agendamiento.API.Controllers
 
                                 string fidelidadMensaje = string.Empty;
 
-                                if (c.estado == Estados.Activo && fidelidadCantidad.HasValue)
+                                if (c.descuento == true)
                                 {
-                                    var visitaActual = fidelidadCantidad.Value + 1;
-
-                                    var fidelidadParametro = ContextBD.FidelidadParametros
-                                        .FirstOrDefault(p =>
-                                            p.cantidad == visitaActual &&
-                                            p.estado);
-
-                                    if (fidelidadParametro != null)
+                                    fidelidadMensaje =
+                                            $"{c.Cliente?.NombreCliente} se le aplico un descuento por motivo de {c.tipoDescuento} ";
+                                }
+                                else
+                                {
+                                    if (c.estado == Estados.Activo && fidelidadCantidad.HasValue)
                                     {
-                                        var valorServicios = c.Servicios.Sum(s => s.Valor);
 
-                                        var valorFinal = valorServicios -
-                                                         (valorServicios *
-                                                          fidelidadParametro.porcentaje / 100);
 
-                                        fidelidadMensaje =
-                                            $"Es la {visitaActual} visita del cliente " +
-                                            $"{c.Cliente?.NombreCliente} y tiene un " +
-                                            $"descuento del {fidelidadParametro.porcentaje:0}% " +
-                                            $"para un total de " +
-                                            $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
+                                        var visitaActual = fidelidadCantidad.Value + 1;
+
+                                        var fidelidadParametro = ContextBD.FidelidadParametros
+                                            .FirstOrDefault(p =>
+                                                p.cantidad == visitaActual &&
+                                                p.estado);
+
+                                        if (fidelidadParametro != null)
+                                        {
+                                            var valorServicios = c.Servicios.Sum(s => s.Valor);
+
+                                            var valorFinal = valorServicios -
+                                                             (valorServicios *
+                                                              fidelidadParametro.porcentaje / 100);
+
+                                            fidelidadMensaje =
+                                                $"Es la {visitaActual} visita del cliente " +
+                                                $"{c.Cliente?.NombreCliente} y tiene un " +
+                                                $"descuento del {fidelidadParametro.porcentaje:0}% " +
+                                                $"para un total de " +
+                                                $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
+                                        }
+
                                     }
                                 }
 
@@ -2783,7 +2894,7 @@ namespace Agendamiento.API.Controllers
                             where cs.cita == cita.id
                             select new
                             {
-                                ServicioValor = cita.bono == true || cita.fidelidad == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
+                                ServicioValor = cita.bono == true || cita.fidelidad == true || cita.descuento == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
                                 Porcentaje = (sp.porcentaje ?? 0),
                                 Sede = se.Nombre
                             }
@@ -2883,7 +2994,7 @@ namespace Agendamiento.API.Controllers
                                                      where cs.cita == citaId.id
                                                      select new
                                                      {
-                                                         ServicioValor = citaId.bono == true || citaId.fidelidad == true || (s.valor ?? 0) == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                                         ServicioValor = citaId.bono == true || citaId.fidelidad == true || citaId.descuento == true || (s.valor ?? 0) == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
                                                          Porcentaje = (u.porcentaje ?? 0),
                                                          Sede = se.Nombre
                                                      }
@@ -3269,7 +3380,11 @@ namespace Agendamiento.API.Controllers
                                         {
                                             if (citaId.valor.HasValue && citaId.valor > 0)
                                             {
-                                                citaId.valor = citaId.valor.Value - (citaId.valor.Value * nivel.porcentaje / 100);
+                                                if (citaId.descuento != true)
+                                                {
+                                                    citaId.valor = citaId.valor.Value - (citaId.valor.Value * nivel.porcentaje / 100);
+                                                    citaId.fidelidad = true;
+                                                }
                                             }
 
                                             var cantidadMaxima = niveles
@@ -3281,8 +3396,6 @@ namespace Agendamiento.API.Controllers
                                                 fidelidadCliente.cantidad = 0;
                                             }
                                         }
-
-                                        citaId.fidelidad = true;
                                     }
                                 }
 
