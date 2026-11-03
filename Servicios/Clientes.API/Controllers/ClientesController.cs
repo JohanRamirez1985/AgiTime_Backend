@@ -267,7 +267,7 @@ namespace Clientes.API.Controllers
                         c.nombre,
                         c.telefono,
                         c.correo,
-                        c.fechaCreacion,
+                        FechaCreacion = c.fechaCreacion,
                         UltimaFechaAsistio = ContextBD.Citas
                             .Where(ci => ci.cliente == c.id &&
                                    ci.estado == Estados.Asistio)
@@ -289,8 +289,8 @@ namespace Clientes.API.Controllers
                     // Clientes registrados que nunca han separado una cita.
                     lista = lista.Where(c =>
                         !c.TieneCitas &&
-                        c.fechaCreacion >= fechaObjetivo &&
-                        c.fechaCreacion < fechaObjetivo.AddDays(1));
+                        c.FechaCreacion >= fechaObjetivo &&
+                        c.FechaCreacion < fechaObjetivo.AddDays(1));
                 }
                 else
                 {
