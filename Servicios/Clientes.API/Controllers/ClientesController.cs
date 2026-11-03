@@ -231,7 +231,7 @@ namespace Clientes.API.Controllers
         }
 
         [HttpGet("clientesRecordatorio")]
-        public IActionResult ObtenerRecordatorio([FromQuery] int emp, int dias)
+        public IActionResult ObtenerRecordatorio([FromQuery] int emp, int dias, int tipo)
         {
             string nombreBase = string.Empty;
             try
@@ -267,19 +267,45 @@ namespace Clientes.API.Controllers
                         c.nombre,
                         c.telefono,
                         c.correo,
-
+                        FechaCreacion = c.fechaCreacion,
                         UltimaFechaAsistio = ContextBD.Citas
                             .Where(ci => ci.cliente == c.id &&
                                    ci.estado == Estados.Asistio)
-                            .Max(ci => (DateTime?)ci.fechaInicio)
-                    })
-                    .Where(c => c.UltimaFechaAsistio.HasValue &&
-                                c.UltimaFechaAsistio.Value >= fechaObjetivo &&
-                                c.UltimaFechaAsistio.Value < fechaObjetivo.AddDays(1))
+                            .Max(ci => (DateTime?)ci.fechaInicio),
+                        TieneCitas = ContextBD.Citas
+                        .Any(ci => ci.cliente == c.id)
+                    });
+
+                if (tipo == 1)
+                {
+                    // Clientes cuya última asistencia fue hace exactamente X días.
+                    lista = lista.Where(c =>
+                        c.UltimaFechaAsistio.HasValue &&
+                        c.UltimaFechaAsistio.Value >= fechaObjetivo &&
+                        c.UltimaFechaAsistio.Value < fechaObjetivo.AddDays(1));
+                }
+                else if (tipo == 2)
+                {
+                    // Clientes registrados que nunca han separado una cita.
+                    lista = lista.Where(c =>
+                        !c.TieneCitas &&
+                        c.FechaCreacion >= fechaObjetivo &&
+                        c.FechaCreacion < fechaObjetivo.AddDays(1));
+                }
+                else
+                {
+                    return BadRequest(new
+                    {
+                        mensaje = "Tipo de recordatorio no válido",
+                        exito = false
+                    });
+                }
+
+                var datos = lista
                     .OrderBy(c => c.nombre)
                     .ToList();
 
-                if (lista == null || lista.Count == 0)
+                if (datos.Count == 0)
                 {
                     return Ok(new
                     {
@@ -291,7 +317,7 @@ namespace Clientes.API.Controllers
                 return Ok(new
                 {
                     exito = true,
-                    datos = lista
+                    datos
                 });
             }
             catch (Exception ex)
