@@ -47,7 +47,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = CustomFontResolver.Instance;
+PdfSharp.Fonts.GlobalFontSettings.FontResolver = CustomFontResolver.Instance;
 
 var app = builder.Build();
 
