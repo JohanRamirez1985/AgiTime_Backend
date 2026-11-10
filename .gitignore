@@ -24,3 +24,6 @@ FrontEnd/portal-angular/.angular/cache/
 Thumbs.db
 .DS_Store
 *.tmp
+
+# Logs de Serilog generados al levantar las APIs
+**/logs/
