@@ -24,3 +24,6 @@ docker-compose.override.yml
 Thumbs.db
 .DS_Store
 *.tmp
+
+# Logs de Serilog generados al levantar las APIs
+**/logs/
