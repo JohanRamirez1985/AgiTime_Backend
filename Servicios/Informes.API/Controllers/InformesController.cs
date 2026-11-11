@@ -209,9 +209,10 @@ namespace Informes.API.Controllers
 
                 bono = informeService.GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Bono"));
 
-                // En la empresa 2 usuarios.porcentaje es un monto fijo por corte, no un porcentaje,
-                // por eso no se calcula ni se imprime la comisión.
-                bool mostrarComision = emp != 2;
+                // La comisión y el nombre del cliente solo se calculan e imprimen para la empresa 12.
+                const int EmpresaConComision = 12;
+                bool mostrarComision = emp == EmpresaConComision;
+                bool mostrarCliente = emp == EmpresaConComision;
 
                 // Porcentaje de comisión por servicio (se usa cuando el usuario tiene porcentaje 0).
                 // Si un servicio tiene varios registros, se prefiere el no alterno.
@@ -230,6 +231,8 @@ namespace Informes.API.Controllers
                     var info = (from c in ContextBD.Citas
                                 join sc in ContextBD.CitaServicios on c.id equals sc.cita
                                 join s in ContextBD.Servicios on sc.servicio equals s.id
+                                join cl in ContextBD.Clientes on c.cliente equals cl.id into clientes
+                                from cl in clientes.DefaultIfEmpty()
                                 where c.fechaInicio >= fecha && c.fechaInicio < fecha.AddDays(1)
                                 && c.recurso == u.id
                                 && c.estado == Estados.Asistio
@@ -238,6 +241,7 @@ namespace Informes.API.Controllers
                                     idCita = c.id,
                                     fechaIni = c.fechaInicio,
                                     idServicio = s.id,
+                                    cliente = cl != null ? cl.nombre : null,
                                     servicio = s.nombre,
                                     pagoCita = c.pago,
                                     pagoServicio = s.esPago,
@@ -290,6 +294,7 @@ namespace Informes.API.Controllers
                             s.valor,
                             s.bono,
                             s.metodoPago,
+                            cliente = mostrarCliente ? s.cliente : null,
                             porcentaje,
                             comision = (s.valor ?? 0m) * porcentaje / 100m
                         };
@@ -317,7 +322,7 @@ namespace Informes.API.Controllers
 
                 if (resumenUsuarios.Count > 0)
                 {
-                    var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, fecha.ToString("dd/MM/yyyy"), nombreEmpresa, logo, mostrarComision);
+                    var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, fecha.ToString("dd/MM/yyyy"), nombreEmpresa, logo, mostrarComision, mostrarCliente);
 
                     return File(pdfBytes, "application/pdf", $"Resumen_Diario_{DateTime.Now:yyyyMMdd}.pdf");
                 }
