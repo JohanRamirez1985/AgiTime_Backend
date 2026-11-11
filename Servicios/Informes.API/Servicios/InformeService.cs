@@ -132,9 +132,6 @@ namespace Informes.API.Servicios
 
                 gfx.DrawString("Servicios", fontBold, XBrushes.Black,
                     colNombre, y);
-                if (mostrarComision)
-                    gfx.DrawString("Comisión", fontBold, XBrushes.Black,
-                        colComision, y);
                 y += filaAlto;
 
                 foreach (var s in r.servicios)
