@@ -13,7 +13,7 @@ namespace Informes.API.Servicios
 {
     public class InformeService
     {
-        public async Task<byte[]> GenerarInformeDiario(List<dynamic> resumenUsuarios, string fecha, string nombreEmpresa, string? rutaLogo = null)
+        public async Task<byte[]> GenerarInformeDiario(List<dynamic> resumenUsuarios, string fecha, string nombreEmpresa, string? rutaLogo = null, bool mostrarComision = true)
         {
             using var stream = new MemoryStream();
             var doc = new PdfDocument();
@@ -37,6 +37,7 @@ namespace Informes.API.Servicios
             double colNombre = 45;
             double colDetalle = 200;
             double colValor = 430;
+            double colComision = 495;
             double filaAlto = 18;
 
             // =========================
@@ -131,16 +132,25 @@ namespace Informes.API.Servicios
 
                 gfx.DrawString("Servicios", fontBold, XBrushes.Black,
                     colNombre, y);
+                if (mostrarComision)
+                    gfx.DrawString("Comisión", fontBold, XBrushes.Black,
+                        colComision, y);
                 y += filaAlto;
 
                 foreach (var s in r.servicios)
                 {
-                    gfx.DrawString($"• {s.servicio}{(!string.IsNullOrWhiteSpace(s.metodoPago) ? "  -   " + s.metodoPago : "")}", font, XBrushes.Black,
+                    var porcentajeTexto = mostrarComision
+                        ? $" ({((decimal)s.porcentaje).ToString("0.##")}%)"
+                        : "";
+                    gfx.DrawString($"• {s.servicio}{porcentajeTexto}{(!string.IsNullOrWhiteSpace(s.metodoPago) ? "  -   " + s.metodoPago : "")}", font, XBrushes.Black,
                         colDetalle, y);
                     var esBono = s.bono is bool b && b;
                     var valorTexto = Moneda((decimal)s.valor) + (esBono ? " *" : "");
                     gfx.DrawString(valorTexto, font,
                         XBrushes.Black, colValor, y);
+                    if (mostrarComision)
+                        gfx.DrawString(Moneda((decimal)s.comision), font,
+                            XBrushes.Black, colComision, y);
                     y += filaAlto;
                 }
 
@@ -208,6 +218,9 @@ namespace Informes.API.Servicios
                     colDetalle, y);
                 gfx.DrawString(Moneda(totalBarbero), fontBold, XBrushes.Black,
                     colValor, y);
+                if (mostrarComision)
+                    gfx.DrawString(Moneda((decimal)(r.totalComision ?? 0m)), fontBold, XBrushes.Black,
+                        colComision, y);
 
                 y += filaAlto + 10;
             }
