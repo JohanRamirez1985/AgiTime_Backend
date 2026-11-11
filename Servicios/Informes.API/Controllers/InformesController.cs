@@ -209,8 +209,24 @@ namespace Informes.API.Controllers
 
                 bono = informeService.GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Bono"));
 
+                // En la empresa 2 usuarios.porcentaje es un monto fijo por corte, no un porcentaje,
+                // por eso no se calcula ni se imprime la comisión.
+                bool mostrarComision = emp != 2;
+
+                // Porcentaje de comisión por servicio (se usa cuando el usuario tiene porcentaje 0).
+                // Si un servicio tiene varios registros, se prefiere el no alterno.
+                var porcentajePorServicio = ContextBD.ServiciosParametros
+                    .Where(sp => sp.servicio != null)
+                    .ToList()
+                    .GroupBy(sp => sp.servicio!.Value)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.OrderBy(sp => sp.alterno == true).First().porcentaje ?? 0m);
+
                 foreach (Usuario u in usuarios)
                 {
+                    var porcentajeUsuario = u.porcentaje ?? 0m;
+
                     var info = (from c in ContextBD.Citas
                                 join sc in ContextBD.CitaServicios on c.id equals sc.cita
                                 join s in ContextBD.Servicios on sc.servicio equals s.id
@@ -221,6 +237,7 @@ namespace Informes.API.Controllers
                                 {
                                     idCita = c.id,
                                     fechaIni = c.fechaInicio,
+                                    idServicio = s.id,
                                     servicio = s.nombre,
                                     pagoCita = c.pago,
                                     pagoServicio = s.esPago,
@@ -259,11 +276,31 @@ namespace Informes.API.Controllers
                                     }
                                  ).ToList();
 
+                    // Comisión: porcentaje del usuario; si es 0, el del servicio (ServiciosParametros).
+                    var serviciosConComision = pagas.Select(s =>
+                    {
+                        var porcentaje = !mostrarComision ? 0m
+                            : porcentajeUsuario != 0
+                                ? porcentajeUsuario
+                                : porcentajePorServicio.GetValueOrDefault(s.idServicio, 0m);
+
+                        return new
+                        {
+                            s.servicio,
+                            s.valor,
+                            s.bono,
+                            s.metodoPago,
+                            porcentaje,
+                            comision = (s.valor ?? 0m) * porcentaje / 100m
+                        };
+                    }).ToList();
+
                     var resultado = new
                     {
                         nombre = u.nombre,
                         totalServicios = pagas.Count,
-                        servicios = pagas.Select(s => new { s.servicio, s.valor,s.bono, s.metodoPago }).ToList(),
+                        servicios = serviciosConComision,
+                        totalComision = serviciosConComision.Sum(s => s.comision),
                         totalPlata = pagas.Sum(s => s.valor),
                         obsequios = obsequios.Select(s => new { s.servicio, s.valor }).ToList(),
                         totalPlataObsequios = obsequios.Sum(s => s.valor),
@@ -280,7 +317,7 @@ namespace Informes.API.Controllers
 
                 if (resumenUsuarios.Count > 0)
                 {
-                    var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, fecha.ToString("dd/MM/yyyy"), nombreEmpresa, logo);
+                    var pdfBytes = await informeService.GenerarInformeDiario(resumenUsuarios, fecha.ToString("dd/MM/yyyy"), nombreEmpresa, logo, mostrarComision);
 
                     return File(pdfBytes, "application/pdf", $"Resumen_Diario_{DateTime.Now:yyyyMMdd}.pdf");
                 }
