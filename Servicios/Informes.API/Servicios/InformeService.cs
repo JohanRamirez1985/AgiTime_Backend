@@ -13,7 +13,7 @@ namespace Informes.API.Servicios
 {
     public class InformeService
     {
-        public async Task<byte[]> GenerarInformeDiario(List<dynamic> resumenUsuarios, string fecha, string nombreEmpresa, string? rutaLogo = null, bool mostrarComision = true)
+        public async Task<byte[]> GenerarInformeDiario(List<dynamic> resumenUsuarios, string fecha, string nombreEmpresa, string? rutaLogo = null, bool mostrarComision = false, bool mostrarCliente = false)
         {
             using var stream = new MemoryStream();
             var doc = new PdfDocument();
@@ -139,6 +139,14 @@ namespace Informes.API.Servicios
 
                 foreach (var s in r.servicios)
                 {
+                    if (mostrarCliente && !string.IsNullOrWhiteSpace((string?)s.cliente))
+                    {
+                        // Columna izquierda (libre en las filas de servicio); se recorta para no invadir el detalle.
+                        string cliente = ((string)s.cliente).Trim();
+                        if (cliente.Length > 28) cliente = cliente.Substring(0, 27) + "…";
+                        gfx.DrawString(cliente, font, XBrushes.Black, colNombre + 10, y);
+                    }
+
                     var porcentajeTexto = mostrarComision
                         ? $" ({((decimal)s.porcentaje).ToString("0.##")}%)"
                         : "";
