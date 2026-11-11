@@ -2,8 +2,8 @@
 using Compartido.Data;
 using Compartido.Data.Modelos;
 using Compartido.DTOs;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Pdf;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
@@ -21,10 +21,10 @@ namespace Informes.API.Servicios
             PdfPage pagina = doc.AddPage();
             XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
-            var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
-            var font = new XFont("OpenSans", 9, XFontStyle.Regular);
-            var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
-            var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+            var fontSmall = new XFont("OpenSans", 6, XFontStyleEx.Regular);
+            var font = new XFont("OpenSans", 9, XFontStyleEx.Regular);
+            var fontBold = new XFont("OpenSans", 9, XFontStyleEx.Bold);
+            var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
 
             double y = 0;
 
@@ -77,7 +77,7 @@ namespace Informes.API.Servicios
                         using var http = new HttpClient();
                         var imgBytes = http.GetByteArrayAsync(rutaLogo).Result;
                         using var msImg = new MemoryStream(imgBytes);
-                        var img = XImage.FromStream(() => msImg);
+                        var img = XImage.FromStream(msImg);
 
                         gfx.DrawImage(img, tableLeft, 20, 60, 60);
                     }
@@ -239,9 +239,9 @@ namespace Informes.API.Servicios
             //var doc = new PdfDocument();
             //var pagina = doc.AddPage();
             //var gfx = XGraphics.FromPdfPage(pagina);
-            //var font = new XFont("OpenSans", 10, XFontStyle.Regular);
-            //var fontBold = new XFont("OpenSans", 10, XFontStyle.Bold);
-            //var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+            //var font = new XFont("OpenSans", 10, XFontStyleEx.Regular);
+            //var fontBold = new XFont("OpenSans", 10, XFontStyleEx.Bold);
+            //var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
             //double y = 40;
 
             //void NuevaPagina()
@@ -259,7 +259,7 @@ namespace Informes.API.Servicios
             //        var imgBytes = await http.GetByteArrayAsync(rutaLogo);
 
             //        using var msImg = new MemoryStream(imgBytes);
-            //        var img = XImage.FromStream(() => msImg);
+            //        var img = XImage.FromStream(msImg);
 
             //        double logoWidth = 120;
             //        double logoHeight = 180;
@@ -351,10 +351,10 @@ namespace Informes.API.Servicios
                 PdfPage pagina = doc.AddPage();
                 XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
-                var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
-                var font = new XFont("OpenSans", 9, XFontStyle.Regular);
-                var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
-                var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+                var fontSmall = new XFont("OpenSans", 6, XFontStyleEx.Regular);
+                var font = new XFont("OpenSans", 9, XFontStyleEx.Regular);
+                var fontBold = new XFont("OpenSans", 9, XFontStyleEx.Bold);
+                var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
 
                 double y = 0;
 
@@ -466,7 +466,7 @@ namespace Informes.API.Servicios
                             using var http = new HttpClient();
                             var imgBytes = http.GetByteArrayAsync(rutaLogo).Result;
                             using var msImg = new MemoryStream(imgBytes);
-                            var img = XImage.FromStream(() => msImg);
+                            var img = XImage.FromStream(msImg);
 
                             gfx.DrawImage(img, tableLeft, 20, 60, 60);
                         }
@@ -703,9 +703,9 @@ namespace Informes.API.Servicios
             //var doc = new PdfDocument();
             //var pagina = doc.AddPage();
             //var gfx = XGraphics.FromPdfPage(pagina);
-            //var font = new XFont("OpenSans", 10, XFontStyle.Regular);
-            //var fontBold = new XFont("OpenSans", 10, XFontStyle.Bold);
-            //var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+            //var font = new XFont("OpenSans", 10, XFontStyleEx.Regular);
+            //var fontBold = new XFont("OpenSans", 10, XFontStyleEx.Bold);
+            //var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
             //double y = 40;
 
             //void NuevaPagina()
@@ -723,7 +723,7 @@ namespace Informes.API.Servicios
             //        var imgBytes = await http.GetByteArrayAsync(rutaLogo);
 
             //        using var msImg = new MemoryStream(imgBytes);
-            //        var img = XImage.FromStream(() => msImg);
+            //        var img = XImage.FromStream(msImg);
 
             //        double logoWidth = 120;
             //        double logoHeight = 180;
@@ -819,10 +819,10 @@ namespace Informes.API.Servicios
             PdfPage pagina = doc.AddPage();
             XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
-            var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
-            var font = new XFont("OpenSans", 9, XFontStyle.Regular);
-            var fontBold = new XFont("OpenSans", 9, XFontStyle.Bold);
-            var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+            var fontSmall = new XFont("OpenSans", 6, XFontStyleEx.Regular);
+            var font = new XFont("OpenSans", 9, XFontStyleEx.Regular);
+            var fontBold = new XFont("OpenSans", 9, XFontStyleEx.Bold);
+            var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
 
             double y = 0;
 
@@ -924,7 +924,7 @@ namespace Informes.API.Servicios
                         using var http = new HttpClient();
                         var imgBytes = http.GetByteArrayAsync(rutaLogo).Result;
                         using var msImg = new MemoryStream(imgBytes);
-                        var img = XImage.FromStream(() => msImg);
+                        var img = XImage.FromStream(msImg);
 
                         gfx.DrawImage(img, tableLeft, 20, 60, 60);
                     }
@@ -1041,9 +1041,9 @@ namespace Informes.API.Servicios
             //var doc = new PdfDocument();
             //var pagina = doc.AddPage();
             //var gfx = XGraphics.FromPdfPage(pagina);
-            //var font = new XFont("OpenSans", 10, XFontStyle.Regular);
-            //var fontBold = new XFont("OpenSans", 10, XFontStyle.Bold);
-            //var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+            //var font = new XFont("OpenSans", 10, XFontStyleEx.Regular);
+            //var fontBold = new XFont("OpenSans", 10, XFontStyleEx.Bold);
+            //var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
             //double y = 40;
 
             //void NuevaPagina()
@@ -1061,7 +1061,7 @@ namespace Informes.API.Servicios
             //        var imgBytes = await http.GetByteArrayAsync(rutaLogo);
 
             //        using var msImg = new MemoryStream(imgBytes);
-            //        var img = XImage.FromStream(() => msImg);
+            //        var img = XImage.FromStream(msImg);
 
             //        double logoWidth = 120;
             //        double logoHeight = 180;
@@ -1150,10 +1150,10 @@ namespace Informes.API.Servicios
                 PdfPage pagina = doc.AddPage();
                 XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
-                var fontSmall = new XFont("OpenSans", 6, XFontStyle.Regular);
-                var font = new XFont("OpenSans", 8, XFontStyle.Regular);
-                var fontBold = new XFont("OpenSans", 8, XFontStyle.Bold);
-                var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+                var fontSmall = new XFont("OpenSans", 6, XFontStyleEx.Regular);
+                var font = new XFont("OpenSans", 8, XFontStyleEx.Regular);
+                var fontBold = new XFont("OpenSans", 8, XFontStyleEx.Bold);
+                var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
 
                 double y = 0;
 
@@ -1201,7 +1201,7 @@ namespace Informes.API.Servicios
                             var imgBytes = http.GetByteArrayAsync(rutaLogo).Result;
 
                             using var msImg = new MemoryStream(imgBytes);
-                            var img = XImage.FromStream(() => msImg);
+                            var img = XImage.FromStream(msImg);
 
                             gfx.DrawImage(img, tableLeft, 20, 60, 60);
                         }
@@ -1432,9 +1432,9 @@ namespace Informes.API.Servicios
                 PdfPage pagina = doc.AddPage();
                 XGraphics gfx = XGraphics.FromPdfPage(pagina);
 
-                var font = new XFont("OpenSans", 8, XFontStyle.Regular);
-                var fontBold = new XFont("OpenSans", 8, XFontStyle.Bold);
-                var fontTitle = new XFont("OpenSans", 14, XFontStyle.Bold);
+                var font = new XFont("OpenSans", 8, XFontStyleEx.Regular);
+                var fontBold = new XFont("OpenSans", 8, XFontStyleEx.Bold);
+                var fontTitle = new XFont("OpenSans", 14, XFontStyleEx.Bold);
 
                 double y = 0;
 
@@ -1483,7 +1483,7 @@ namespace Informes.API.Servicios
                             var bytes = http.GetByteArrayAsync(rutaLogo).Result;
 
                             using var ms = new MemoryStream(bytes);
-                            var img = XImage.FromStream(() => ms);
+                            var img = XImage.FromStream(ms);
 
                             gfx.DrawImage(img, tableLeft, 20, 60, 60);
                         }

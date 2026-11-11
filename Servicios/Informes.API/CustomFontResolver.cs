@@ -1,4 +1,4 @@
-﻿using PdfSharpCore.Fonts;
+﻿using PdfSharp.Fonts;
 using System;
 using System.IO;
 
