@@ -1,26 +1,79 @@
-version: "3.8"
-
 services:
   gateway:
-    build: ./gateway
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: agitime-gateway
     ports:
       - "80:80"
     depends_on:
-      - frontend
-      - usuarios
-      - paramatros
+      - usuariosapi
+      - clientesapi
+      - parametrosapi
+      - agendamientosapi
+      - productosapi
+      - informesapi
+    networks:
+      - agitime-net
+    restart: always
 
-  frontend:
-    build: ./frontend
-    expose:
-      - "3000"
+  usuariosapi:
+    build:
+      context: ./Servicios
+      dockerfile: Usuarios.API/Dockerfile
+    container_name: usuarios-api
+    networks:
+      - agitime-net
+    restart: always
 
-  usuarios:
-    build: ./servicios/Usuarios.API
-    expose:
-      - "5000"
+  clientesapi:
+    build:
+      context: ./Servicios
+      dockerfile: Clientes.API/Dockerfile
+    container_name: clientes-api
+    networks:
+      - agitime-net
+    restart: always
 
-  parametros:
-    build: ./servicios/Parametros.API
-    expose:
-      - "5001"
+  parametrosapi:
+    build:
+      context: ./Servicios
+      dockerfile: Parametros.API/Dockerfile
+    container_name: parametros-api
+    networks:
+      - agitime-net
+    restart: always
+
+  agendamientosapi:
+    build:
+      context: ./Servicios
+      dockerfile: Agendamiento.API/Dockerfile
+    container_name: agendamientos-api
+    networks:
+      - agitime-net
+    restart: always
+
+  productosapi:
+    build:
+      context: ./Servicios
+      dockerfile: Productos.API/Dockerfile
+    container_name: productos-api
+    networks:
+      - agitime-net
+    restart: always
+
+  informesapi:
+    build:
+      context: ./Servicios
+      dockerfile: Informes.API/Dockerfile
+    container_name: informes-api
+    networks:
+      - agitime-net
+    restart: always
+
+# Red compartida con el repo AgiTime_Frontend (contenedor agitime-frontend).
+# El back la crea con nombre fijo; el front la usa como red externa.
+networks:
+  agitime-net:
+    name: agitime-net
+    driver: bridge
