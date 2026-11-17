@@ -4,6 +4,7 @@ services:
       context: ./gateway
       dockerfile: Dockerfile
     container_name: agitime-gateway
+    image: agitime/agitime-gateway:latest
     ports:
       - "80:80"
     depends_on:
@@ -22,6 +23,7 @@ services:
       context: ./Servicios
       dockerfile: Usuarios.API/Dockerfile
     container_name: usuarios-api
+    image: agitime/agitime-usuariosapi:latest
     networks:
       - agitime-net
     restart: always
@@ -31,6 +33,7 @@ services:
       context: ./Servicios
       dockerfile: Clientes.API/Dockerfile
     container_name: clientes-api
+    image: agitime/agitime-clientesapi:latest
     networks:
       - agitime-net
     restart: always
@@ -40,6 +43,7 @@ services:
       context: ./Servicios
       dockerfile: Parametros.API/Dockerfile
     container_name: parametros-api
+    image: agitime/agitime-parametrosapi:latest
     networks:
       - agitime-net
     restart: always
@@ -49,6 +53,7 @@ services:
       context: ./Servicios
       dockerfile: Agendamiento.API/Dockerfile
     container_name: agendamientos-api
+    image: agitime/agitime-agendamientosapi:latest
     networks:
       - agitime-net
     restart: always
@@ -58,6 +63,7 @@ services:
       context: ./Servicios
       dockerfile: Productos.API/Dockerfile
     container_name: productos-api
+    image: agitime/agitime-productosapi:latest
     networks:
       - agitime-net
     restart: always
@@ -67,6 +73,7 @@ services:
       context: ./Servicios
       dockerfile: Informes.API/Dockerfile
     container_name: informes-api
+    image: agitime/agitime-informesapi:latest
     networks:
       - agitime-net
     restart: always
