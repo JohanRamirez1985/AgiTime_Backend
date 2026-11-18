@@ -2066,6 +2066,8 @@ namespace Agendamiento.API.Controllers
                                 ? dto.profesional.Split(',')
                                             .Select(x => int.Parse(x.Trim()))
                                             .ToList()
+                                : empresa.recursoMultiple == true 
+                                ? new List<int> { int.Parse(dto.profesional.Trim()) }
                                 : new List<int> { dto.recurso };
 
                 var listaCitas = ContextBD.Citas
