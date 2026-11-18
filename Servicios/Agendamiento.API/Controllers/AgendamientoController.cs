@@ -2287,8 +2287,17 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpGet("consultarCitasRecurso")]
-        public IActionResult ObtenerCitasRecurso([FromQuery] CitaDTO dto)
+        public IActionResult ObtenerCitasRecurso(
+            [FromQuery(Name = "empresa")] int empresaId,
+            [FromQuery] DateTime FechaIni,
+            [FromQuery] DateTime FechaFin,
+            [FromQuery] string? recurso)
         {
+            // recurso es opcional: si no llega, llega vacío o "null" se consultan las citas de todos los recursos.
+            // Se recibe como texto porque como int un "recurso=null" haría que [ApiController] responda 400.
+            int? recursoId = int.TryParse(recurso, out var recursoNum) && recursoNum > 0 ? recursoNum : null;
+            var dto = new CitaDTO { empresa = empresaId, FechaIni = FechaIni, FechaFin = FechaFin };
+
             string nombreBase = string.Empty;
             IEnumerable<object> lista;
             try
@@ -2498,7 +2507,7 @@ namespace Agendamiento.API.Controllers
                         var citas = ContextBD.Citas
                             .Where(e => e.fechaInicio >= dto.FechaIni
                                         && e.fechaFin <= dto.FechaFin
-                                        && e.recurso == dto.recurso
+                                        && (recursoId == null || e.recurso == recursoId)
                                         && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                             .Select(c => new
                             {
@@ -2507,6 +2516,7 @@ namespace Agendamiento.API.Controllers
                                 c.estado,
                                 c.fidelidad,
                                 c.cliente,
+                                c.recurso,
 
                                 Cliente = ContextBD.Clientes
                                     .Where(cl => cl.id == c.cliente)
@@ -2530,6 +2540,8 @@ namespace Agendamiento.API.Controllers
                                 }).ToList()
                             })
                             .ToList();
+
+                        var nombresRecursos = agendaService.ObtenerNombresRecursos(citas.Select(c => c.recurso), ContextBD);
 
                         lista = citas
                             .Select(c =>
@@ -2593,6 +2605,8 @@ namespace Agendamiento.API.Controllers
                                     c.id,
                                     c.fechaInicio,
                                     c.estado,
+                                    c.recurso,
+                                    nombreRecurso = nombresRecursos.GetValueOrDefault(c.recurso),
                                     nombreCliente = c.Cliente?.NombreCliente,
                                     telefonoCliente = c.Cliente?.TelefonoCliente,
                                     servicios = c.Servicios,
@@ -2607,7 +2621,7 @@ namespace Agendamiento.API.Controllers
                         var citas = ContextBD.Citas
                             .Where(e => e.fechaInicio >= dto.FechaIni
                                         && e.fechaFin <= dto.FechaFin
-                                        && e.recurso == dto.recurso
+                                        && (recursoId == null || e.recurso == recursoId)
                                         && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                             .Select(c => new
                             {
@@ -2616,6 +2630,7 @@ namespace Agendamiento.API.Controllers
                                 c.estado,
                                 c.fidelidad,
                                 c.cliente,
+                                c.recurso,
                                 c.descuento,
                                 c.tipoDescuento,
                                 Cliente = ContextBD.Clientes
@@ -2640,6 +2655,8 @@ namespace Agendamiento.API.Controllers
                                 }).ToList()
                             })
                             .ToList();
+
+                        var nombresRecursos = agendaService.ObtenerNombresRecursos(citas.Select(c => c.recurso), ContextBD);
 
                         lista = citas
                             .Select(c =>
@@ -2693,6 +2710,8 @@ namespace Agendamiento.API.Controllers
                                     c.id,
                                     c.fechaInicio,
                                     c.estado,
+                                    c.recurso,
+                                    nombreRecurso = nombresRecursos.GetValueOrDefault(c.recurso),
                                     nombreCliente = c.Cliente?.NombreCliente,
                                     telefonoCliente = c.Cliente?.TelefonoCliente,
                                     servicios = c.Servicios,

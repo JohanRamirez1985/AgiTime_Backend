@@ -213,6 +213,34 @@ namespace Agendamiento.API.Servicios
             };
         }
 
+        /// <summary>
+        /// Nombre de cada recurso de las citas: primero en Usuarios (marcados como recurso)
+        /// y, si no está ahí, en la tabla Recursos (empresas con recurso múltiple).
+        /// </summary>
+        public Dictionary<int, string> ObtenerNombresRecursos(IEnumerable<int> recursoIds, ModeloContext ContextBD)
+        {
+            var ids = recursoIds.Distinct().ToList();
+
+            var nombres = ContextBD.Usuarios
+                .Where(u => ids.Contains(u.id) && u.recurso)
+                .Select(u => new { u.id, u.nombre })
+                .ToDictionary(u => u.id, u => u.nombre);
+
+            var faltantes = ids.Where(id => !nombres.ContainsKey(id)).ToList();
+
+            if (faltantes.Any())
+            {
+                foreach (var r in ContextBD.Recursos
+                             .Where(r => faltantes.Contains(r.id))
+                             .Select(r => new { r.id, r.nombre }))
+                {
+                    nombres[r.id] = r.nombre;
+                }
+            }
+
+            return nombres;
+        }
+
         public UsuarioDTO GetInfoRecurso(int recurso, ModeloContext ContextBD)
         {
             var infoRecurso = ContextBD.Usuarios
