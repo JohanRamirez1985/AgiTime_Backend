@@ -1,9 +1,4 @@
 services:
-  frontend:
-    # Evitamos que en local levante el contenedor de frontend
-    deploy:
-      replicas: 0
-
   usuariosapi:
     ports:
       - "5002:80"
