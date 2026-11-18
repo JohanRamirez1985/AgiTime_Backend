@@ -4,6 +4,7 @@ using Compartido.Data.Modelos;
 using Compartido.DTOs;
 using Compartido.Metodos;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace Agendamiento.API.Servicios
 {
@@ -239,6 +240,127 @@ namespace Agendamiento.API.Servicios
             }
 
             return nombres;
+        }
+
+        /// <summary>
+        /// Mensaje de fidelidad de las citas recién creadas, con las mismas reglas y formato de
+        /// Agendamiento/consultarCitasRecurso. Devuelve cadena vacía si no aplica.
+        /// </summary>
+        public string ObtenerMensajeFidelidad(int idCliente, IEnumerable<int> citasIds, Empresa empresa, ModeloContext ContextBD)
+        {
+            if (idCliente <= 0)
+                return string.Empty;
+
+            var manejaFidelidad = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "ManejaFidelidad")?.valor, out bool resulFidelidad) && resulFidelidad;
+
+            if (!manejaFidelidad)
+                return string.Empty;
+
+            var ids = citasIds.ToList();
+
+            // Igual que consultarCitasRecurso: solo citas activas, con la misma regla de valores
+            var citas = ContextBD.Citas
+                .Where(c => ids.Contains(c.id) && c.estado == Estados.Activo)
+                .Select(c => new
+                {
+                    c.fechaInicio,
+                    c.usuarioCreacion,
+                    TieneServicioPago = c.CitaServicios.Any(cs => cs.servicioNavigation.esPago == true),
+                    Valores = c.CitaServicios
+                        .Select(cs =>
+                            c.bono == true
+                            || c.fidelidad == true
+                            || c.descuento == true
+                            || cs.servicioNavigation.valor == 0
+                            ? (c.valor ?? 0)
+                            : (cs.servicioNavigation.valor ?? 0))
+                        .ToList()
+                })
+                .ToList();
+
+            // Empresa 2: igual que al sumar la visita de fidelidad, no cuentan las citas creadas
+            // por el usuario ni las que no tienen ningún servicio de pago
+            if (empresa.id == 2)
+            {
+                citas = citas
+                    .Where(c => c.usuarioCreacion != "Usuario" && c.TieneServicioPago)
+                    .ToList();
+            }
+
+            if (!citas.Any())
+                return string.Empty;
+
+            var fidelidadCantidad = ContextBD.Fidelidads
+                .Where(f => f.cliente == idCliente)
+                .Select(f => (int?)f.cantidad)
+                .FirstOrDefault();
+
+            if (!fidelidadCantidad.HasValue)
+                return string.Empty;
+
+            // La cita actual todavía no está contabilizada
+            var visitaActual = fidelidadCantidad.Value + 1;
+
+            var fidelidadParametro = ContextBD.FidelidadParametros
+                .FirstOrDefault(p => p.cantidad == visitaActual && p.estado);
+
+            if (fidelidadParametro == null)
+                return string.Empty;
+
+            var nombreCliente = ContextBD.Clientes
+                .Where(cl => cl.id == idCliente)
+                .Select(cl => cl.nombre)
+                .FirstOrDefault();
+
+            var valorServicios = citas.Sum(c => c.Valores.Sum());
+            var cultura = new CultureInfo("es-CO");
+
+            if (empresa.servicio == true)
+            {
+                var valorFinalServicio = valorServicios - (valorServicios * fidelidadParametro.porcentaje / 100);
+
+                return $"Es la {visitaActual} visita del cliente " +
+                       $"{nombreCliente} y tiene un " +
+                       $"{fidelidadParametro.porcentaje:0}% de descuento " +
+                       $"para un total de " +
+                       $"{valorFinalServicio.ToString("C0", cultura)}";
+            }
+
+            if (empresa.recursoMultiple == true)
+            {
+                var fechaCita = citas.First().fechaInicio.Date;
+
+                // Recursos diferentes del mismo cliente y día
+                var cantidadRecursos = ContextBD.Citas
+                    .Where(cita =>
+                        cita.cliente == idCliente &&
+                        cita.fechaInicio.Date == fechaCita &&
+                        (cita.estado == Estados.Activo || cita.estado == Estados.Asistio))
+                    .Select(cita => cita.recurso)
+                    .Distinct()
+                    .Count();
+
+                cantidadRecursos = Math.Max(cantidadRecursos, 1);
+
+                // El porcentaje se divide entre los recursos diferentes
+                var porcentajeFidelidad = fidelidadParametro.porcentaje / cantidadRecursos;
+
+                var valorFinalMultiple = valorServicios - (valorServicios * porcentajeFidelidad / 100);
+
+                return $"Es la {visitaActual} visita del cliente " +
+                       $"{nombreCliente} y tiene un " +
+                       $"descuento del {porcentajeFidelidad:0.##}% " +
+                       $"para un total de " +
+                       $"{valorFinalMultiple.ToString("C0", cultura)}";
+            }
+
+            var valorFinal = valorServicios - (valorServicios * fidelidadParametro.porcentaje / 100);
+
+            return $"Es la {visitaActual} visita del cliente " +
+                   $"{nombreCliente} y tiene un " +
+                   $"descuento del {fidelidadParametro.porcentaje:0}% " +
+                   $"para un total de " +
+                   $"{valorFinal.ToString("C0", cultura)}";
         }
 
         public UsuarioDTO GetInfoRecurso(int recurso, ModeloContext ContextBD)
