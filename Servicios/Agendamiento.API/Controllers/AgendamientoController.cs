@@ -2066,6 +2066,8 @@ namespace Agendamiento.API.Controllers
                                 ? dto.profesional.Split(',')
                                             .Select(x => int.Parse(x.Trim()))
                                             .ToList()
+                                : empresa.recursoMultiple == true 
+                                ? new List<int> { int.Parse(dto.profesional.Trim()) }
                                 : new List<int> { dto.recurso };
 
                 var listaCitas = ContextBD.Citas
@@ -2287,8 +2289,17 @@ namespace Agendamiento.API.Controllers
         }
 
         [HttpGet("consultarCitasRecurso")]
-        public IActionResult ObtenerCitasRecurso([FromQuery] CitaDTO dto)
+        public IActionResult ObtenerCitasRecurso(
+            [FromQuery(Name = "empresa")] int empresaId,
+            [FromQuery] DateTime FechaIni,
+            [FromQuery] DateTime FechaFin,
+            [FromQuery] string? recurso)
         {
+            // recurso es opcional: si no llega, llega vacío o "null" se consultan las citas de todos los recursos.
+            // Se recibe como texto porque como int un "recurso=null" haría que [ApiController] responda 400.
+            int? recursoId = int.TryParse(recurso, out var recursoNum) && recursoNum > 0 ? recursoNum : null;
+            var dto = new CitaDTO { empresa = empresaId, FechaIni = FechaIni, FechaFin = FechaFin };
+
             string nombreBase = string.Empty;
             IEnumerable<object> lista;
             try
@@ -2498,7 +2509,7 @@ namespace Agendamiento.API.Controllers
                         var citas = ContextBD.Citas
                             .Where(e => e.fechaInicio >= dto.FechaIni
                                         && e.fechaFin <= dto.FechaFin
-                                        && e.recurso == dto.recurso
+                                        && (recursoId == null || e.recurso == recursoId)
                                         && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                             .Select(c => new
                             {
@@ -2507,6 +2518,7 @@ namespace Agendamiento.API.Controllers
                                 c.estado,
                                 c.fidelidad,
                                 c.cliente,
+                                c.recurso,
 
                                 Cliente = ContextBD.Clientes
                                     .Where(cl => cl.id == c.cliente)
@@ -2530,6 +2542,8 @@ namespace Agendamiento.API.Controllers
                                 }).ToList()
                             })
                             .ToList();
+
+                        var nombresRecursos = agendaService.ObtenerNombresRecursos(citas.Select(c => c.recurso), ContextBD);
 
                         lista = citas
                             .Select(c =>
@@ -2593,6 +2607,8 @@ namespace Agendamiento.API.Controllers
                                     c.id,
                                     c.fechaInicio,
                                     c.estado,
+                                    c.recurso,
+                                    nombreRecurso = nombresRecursos.GetValueOrDefault(c.recurso),
                                     nombreCliente = c.Cliente?.NombreCliente,
                                     telefonoCliente = c.Cliente?.TelefonoCliente,
                                     servicios = c.Servicios,
@@ -2607,7 +2623,7 @@ namespace Agendamiento.API.Controllers
                         var citas = ContextBD.Citas
                             .Where(e => e.fechaInicio >= dto.FechaIni
                                         && e.fechaFin <= dto.FechaFin
-                                        && e.recurso == dto.recurso
+                                        && (recursoId == null || e.recurso == recursoId)
                                         && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
                             .Select(c => new
                             {
@@ -2616,6 +2632,7 @@ namespace Agendamiento.API.Controllers
                                 c.estado,
                                 c.fidelidad,
                                 c.cliente,
+                                c.recurso,
                                 c.descuento,
                                 c.tipoDescuento,
                                 Cliente = ContextBD.Clientes
@@ -2640,6 +2657,8 @@ namespace Agendamiento.API.Controllers
                                 }).ToList()
                             })
                             .ToList();
+
+                        var nombresRecursos = agendaService.ObtenerNombresRecursos(citas.Select(c => c.recurso), ContextBD);
 
                         lista = citas
                             .Select(c =>
@@ -2693,6 +2712,8 @@ namespace Agendamiento.API.Controllers
                                     c.id,
                                     c.fechaInicio,
                                     c.estado,
+                                    c.recurso,
+                                    nombreRecurso = nombresRecursos.GetValueOrDefault(c.recurso),
                                     nombreCliente = c.Cliente?.NombreCliente,
                                     telefonoCliente = c.Cliente?.TelefonoCliente,
                                     servicios = c.Servicios,
@@ -4240,7 +4261,7 @@ namespace Agendamiento.API.Controllers
 
                 using var ContextBD = ContextFact.Create(connectionString);
 
-                lista = ContextBD.Citas
+                var citas = ContextBD.Citas
                 .Where(e => e.fechaInicio >= dto.FechaIni
                             && e.fechaFin <= dto.FechaFin
                             && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
@@ -4249,6 +4270,20 @@ namespace Agendamiento.API.Controllers
                     c.id,
                     c.fechaInicio,
                     c.estado,
+                    c.cliente,
+                    c.descuento,
+                    c.tipoDescuento,
+
+                    // Valores con la misma regla de consultarCitasRecurso, usados para el mensaje de fidelidad
+                    ValoresFidelidad = c.CitaServicios
+                        .Select(cs =>
+                            c.bono == true
+                            || c.fidelidad == true
+                            || c.descuento == true
+                            || cs.servicioNavigation.valor == 0
+                            ? (c.valor ?? 0)
+                            : (cs.servicioNavigation.valor ?? 0))
+                        .ToList(),
 
                     Recurso = ContextBD.Usuarios
                         .Where(u => u.id == c.recurso)
@@ -4278,7 +4313,101 @@ namespace Agendamiento.API.Controllers
                         })
                         .ToList()
                 })
-                .AsEnumerable()
+                .ToList();
+
+                // Fidelidad: se precarga en una sola consulta en vez de una por cita
+                var clientesIds = citas
+                    .Where(c => c.cliente.HasValue)
+                    .Select(c => c.cliente.Value)
+                    .Distinct()
+                    .ToList();
+
+                var fidelidadPorCliente = ContextBD.Fidelidads
+                    .Where(f => clientesIds.Contains(f.cliente))
+                    .AsEnumerable()
+                    .GroupBy(f => f.cliente)
+                    .ToDictionary(g => g.Key, g => g.First().cantidad);
+
+                var parametrosFidelidad = ContextBD.FidelidadParametros
+                    .Where(p => p.estado)
+                    .AsEnumerable()
+                    .GroupBy(p => p.cantidad)
+                    .ToDictionary(g => g.Key, g => g.First());
+
+                string ObtenerMensajeFidelidad(int citaCliente, string citaEstado, bool? citaDescuento,
+                                               string citaTipoDescuento, DateTime citaFecha,
+                                               string nombreCliente, decimal valorServicios)
+                {
+                    // Igual que consultarCitasRecurso: el descuento manual solo aplica a empresas sin servicio ni recurso múltiple
+                    if (empresa.servicio != true && empresa.recursoMultiple != true && citaDescuento == true)
+                    {
+                        return $"{nombreCliente} se le aplico un descuento por motivo de {citaTipoDescuento} ";
+                    }
+
+                    if (citaEstado != Estados.Activo || !fidelidadPorCliente.TryGetValue(citaCliente, out var cantidad))
+                    {
+                        return string.Empty;
+                    }
+
+                    // La cita actual todavía no está contabilizada
+                    var visitaActual = cantidad + 1;
+
+                    if (!parametrosFidelidad.TryGetValue(visitaActual, out var fidelidadParametro))
+                    {
+                        return string.Empty;
+                    }
+
+                    if (empresa.servicio == true)
+                    {
+                        var valorFinalServicio = valorServicios - (valorServicios * fidelidadParametro.porcentaje / 100);
+
+                        return $"Es la {visitaActual} visita del cliente " +
+                               $"{nombreCliente} y tiene un " +
+                               $"{fidelidadParametro.porcentaje:0}% de descuento " +
+                               $"para un total de " +
+                               $"{valorFinalServicio.ToString("C0", new CultureInfo("es-CO"))}";
+                    }
+
+                    if (empresa.recursoMultiple == true)
+                    {
+                        var fechaCita = citaFecha.Date;
+
+                        // Consultar recursos diferentes del mismo cliente y día
+                        var cantidadRecursos = ContextBD.Citas
+                            .Where(cita =>
+                                cita.cliente == citaCliente &&
+                                cita.fechaInicio.Date == fechaCita &&
+                                (cita.estado == Estados.Activo ||
+                                 cita.estado == Estados.Asistio))
+                            .Select(cita => cita.recurso)
+                            .Distinct()
+                            .Count();
+
+                        // Evitar división por cero
+                        cantidadRecursos = Math.Max(cantidadRecursos, 1);
+
+                        // Dividir el porcentaje entre los recursos diferentes
+                        var porcentajeFidelidad = fidelidadParametro.porcentaje / cantidadRecursos;
+
+                        var valorFinalMultiple = valorServicios - (valorServicios * porcentajeFidelidad / 100);
+
+                        return $"Es la {visitaActual} visita del cliente " +
+                               $"{nombreCliente} y tiene un " +
+                               $"descuento del {porcentajeFidelidad:0.##}% " +
+                               $"para un total de " +
+                               $"{valorFinalMultiple.ToString("C0", new CultureInfo("es-CO"))}";
+                    }
+
+                    var valorFinal = valorServicios - (valorServicios * fidelidadParametro.porcentaje / 100);
+
+                    return $"Es la {visitaActual} visita del cliente " +
+                           $"{nombreCliente} y tiene un " +
+                           $"descuento del {fidelidadParametro.porcentaje:0}% " +
+                           $"para un total de " +
+                           $"{valorFinal.ToString("C0", new CultureInfo("es-CO"))}";
+                }
+
+                lista = citas
                 .Where(x => x.Recurso != null)
                 .GroupBy(x => new
                 {
@@ -4316,7 +4445,13 @@ namespace Agendamiento.API.Controllers
                                             .Select(s => s.Nombre)
                                             .Distinct()),
 
-                                    estado = c.estado.ToString()
+                                    estado = c.estado.ToString(),
+
+                                    fidelidad = c.cliente.HasValue
+                                        ? ObtenerMensajeFidelidad(c.cliente.Value, c.estado, c.descuento,
+                                                                  c.tipoDescuento, c.fechaInicio,
+                                                                  c.Cliente?.Nombre, c.ValoresFidelidad.Sum())
+                                        : string.Empty
                                 })
                                 .ToList()
                         })
