@@ -205,7 +205,8 @@ namespace Clientes.API.Controllers
                     tipoDocumento = dto.TipoDocumento > 0 ? dto.TipoDocumento : (int?)null,
                     documento = string.IsNullOrWhiteSpace(dto.Documento) ? null : dto.Documento,
                     estado = Estados.Activo,
-                    fechaCreacion = dto.FechaCreacion
+                    fechaCreacion = dto.FechaCreacion,
+                    usuarioCreacion = dto.UsuarioCreacion > 0 ? dto.UsuarioCreacion : null
                 };
 
                 ContextBD.Clientes.Add(nuevoCliente);

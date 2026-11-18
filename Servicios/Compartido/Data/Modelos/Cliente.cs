@@ -16,6 +16,7 @@ namespace Compartido.Data.Modelos
         public string estado { get; set; }
         public DateTime fechaCreacion { get; set; }
         public string alias { get; set; }
+        public int? usuarioCreacion { get; set; }
 
         public virtual Genero generoNavigation { get; set; }
         public virtual TipoDocumento tipoDocumentoNavigation { get; set; }

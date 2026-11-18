@@ -23,6 +23,7 @@ namespace Compartido.DTOs
         public int empresa { get; set; }
         public int servicio { get; set; }
         public int cantidad { get; set; }
+        public int? UsuarioCreacion { get; set; }
         public string? NombreGenero { get; set; }
         public string? NombreTipoDocumento { get; set; }
         public string? NombreRol { get; set; }
