@@ -1,0 +1,99 @@
+version: "3.8"
+
+services:
+  # ==============================
+  # NGINX como reverse proxy
+  # ==============================
+  nginx:
+    image: nginx:alpine
+    container_name: agitime-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /home/web/centurion:/var/www/centurion:ro
+    depends_on:
+      - frontend
+      - usuariosapi
+      - clientesapi
+      - parametrosapi
+      - agendamientosapi
+      - productosapi
+      - informesapi
+    networks:
+      - agitime-net
+    restart: always
+
+  # ==============================
+  # AGITIME Frontend y APIs
+  # ==============================
+  frontend:
+    image: agitime/agitime-frontend:latest
+    container_name: agitime-frontend
+    expose:
+      - "80"
+    volumes:
+      - /Data/agitime/frontend/assets/img:/usr/share/nginx/html/assets/img
+    networks:
+      - agitime-net
+    restart: always
+
+  usuariosapi:
+    image: agitime/agitime-usuariosapi:latest
+    container_name: usuarios-api
+    expose:
+      - "80"
+    networks:
+      - agitime-net
+    restart: always
+
+  clientesapi:
+    image: agitime/agitime-clientesapi:latest
+    container_name: clientes-api
+    expose:
+      - "80"
+    networks:
+      - agitime-net
+    restart: always
+
+  parametrosapi:
+    image: agitime/agitime-parametrosapi:latest
+    container_name: parametros-api
+    expose:
+      - "80"
+    networks:
+      - agitime-net
+    restart: always
+
+  agendamientosapi:
+    image: agitime/agitime-agendamientosapi:latest
+    container_name: agendamientos-api
+    expose:
+      - "80"
+    networks:
+      - agitime-net
+    restart: always
+
+  productosapi:
+    image: agitime/agitime-productosapi:latest
+    container_name: productos-api
+    expose:
+      - "80"
+    networks:
+      - agitime-net
+    restart: always
+
+  informesapi:
+    image: agitime/agitime-informesapi:latest
+    container_name: informes-api
+    expose:
+      - "80"
+    networks:
+      - agitime-net
+    restart: always
+
+networks:
+  agitime-net:
+    external: true

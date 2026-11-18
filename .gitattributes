@@ -1,0 +1,2 @@
+# Archivos que se copian al servidor Linux: siempre con fin de línea LF
+deploy/** text eol=lf

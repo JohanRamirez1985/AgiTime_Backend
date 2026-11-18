@@ -6,6 +6,7 @@ services:
       context: ./gateway
       dockerfile: Dockerfile
     container_name: agitime-gateway
+    image: agitime/agitime-gateway:latest
     ports:
       - "8080:80"  # puerto local de prueba
     depends_on:
@@ -15,86 +16,73 @@ services:
       - agendamientosapi
       - productosapi
       - informesapi
-      - frontend
     networks:
       - agitime-net
     restart: always
-    image: agitime/agitime-gateway:latest
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: agitime-frontend
-    expose:
-      - "80"
-    volumes:
-      - ./frontend/assets/img:/usr/share/nginx/html/assets/img
-    networks:
-      - agitime-net
-    restart: always
-    image: agitime/agitime-frontend:latest
 
   usuariosapi:
     build:
-      context: ./servicios
+      context: ./Servicios
       dockerfile: Usuarios.API/Dockerfile
     container_name: usuarios-api
+    image: agitime/agitime-usuariosapi:latest
     networks:
       - agitime-net
     restart: always
-    image: agitime/agitime-usuariosapi:latest
 
   clientesapi:
     build:
-      context: ./servicios
+      context: ./Servicios
       dockerfile: Clientes.API/Dockerfile
     container_name: clientes-api
+    image: agitime/agitime-clientesapi:latest
     networks:
       - agitime-net
     restart: always
-    image: agitime/agitime-clientesapi:latest
 
   parametrosapi:
     build:
-      context: ./servicios
+      context: ./Servicios
       dockerfile: Parametros.API/Dockerfile
     container_name: parametros-api
+    image: agitime/agitime-parametrosapi:latest
     networks:
       - agitime-net
     restart: always
-    image: agitime/agitime-parametrosapi:latest
 
   agendamientosapi:
     build:
-      context: ./servicios
+      context: ./Servicios
       dockerfile: Agendamiento.API/Dockerfile
     container_name: agendamientos-api
+    image: agitime/agitime-agendamientosapi:latest
     networks:
       - agitime-net
     restart: always
-    image: agitime/agitime-agendamientosapi:latest
 
   productosapi:
     build:
-      context: ./servicios
+      context: ./Servicios
       dockerfile: Productos.API/Dockerfile
     container_name: productos-api
+    image: agitime/agitime-productosapi:latest
     networks:
       - agitime-net
     restart: always
-    image: agitime/agitime-productosapi:latest
 
   informesapi:
     build:
-      context: ./servicios
+      context: ./Servicios
       dockerfile: Informes.API/Dockerfile
     container_name: informes-api
+    image: agitime/agitime-informesapi:latest
     networks:
       - agitime-net
     restart: always
-    image: agitime/agitime-informesapi:latest
 
+# Red compartida con el repo AgiTime_Frontend (contenedor agitime-frontend).
+# El back la crea con nombre fijo; el front la usa como red externa.
 networks:
   agitime-net:
+    name: agitime-net
     driver: bridge
