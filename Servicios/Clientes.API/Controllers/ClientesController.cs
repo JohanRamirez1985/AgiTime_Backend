@@ -209,8 +209,20 @@ namespace Clientes.API.Controllers
                     usuarioCreacion = dto.UsuarioCreacion > 0 ? dto.UsuarioCreacion : null
                 };
 
+                using var transaction = ContextBD.Database.BeginTransaction();
+
                 ContextBD.Clientes.Add(nuevoCliente);
                 ContextBD.SaveChanges();
+
+                // Todo cliente nuevo arranca en fidelidad con 1 visita
+                ContextBD.Fidelidads.Add(new Fidelidad
+                {
+                    cliente = nuevoCliente.id,
+                    cantidad = 1
+                });
+                ContextBD.SaveChanges();
+
+                transaction.Commit();
 
                 return Ok(new
                 {

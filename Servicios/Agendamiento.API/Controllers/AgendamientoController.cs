@@ -522,39 +522,13 @@ namespace Agendamiento.API.Controllers
                         // 9. VALIDAR MENSAJE DE FIDELIDAD
                         // =====================================================
 
-                        if (fidelidad && idCliente > 0)
-                        {
-                            var fidelidadCliente =
-                                ContextBD.Fidelidads.FirstOrDefault(
-                                    p => p.cliente == idCliente);
-
-                            if (fidelidadCliente != null)
-                            {
-                                var siguienteParametro =
-                                    ContextBD.FidelidadParametros
-                                        .Where(p =>
-                                            p.estado &&
-                                            p.cantidad > fidelidadCliente.cantidad)
-                                        .OrderBy(p => p.cantidad)
-                                        .FirstOrDefault();
-
-                                if (siguienteParametro != null &&
-                                    siguienteParametro.cantidad ==
-                                    fidelidadCliente.cantidad + 1)
-                                {
-                                    fidelidadMensaje =
-                                        $"¡Felicitaciones! llegaste a tu " +
-                                        $"{siguienteParametro.cantidad} visita. " +
-                                        $"Tienes un beneficio especial " +
-                                        $"{siguienteParametro.porcentaje:0}% de descuento.";
-                                }
-                            }
-                        }
+                        fidelidadMensaje = agendaService.ObtenerMensajeFidelidad(idCliente, new[] { nuevo.id }, empresa, ContextBD);
 
                         return Ok(new
                         {
                             mensaje = "Cita registrada exitosamente",
-                            exito = true
+                            exito = true,
+                            fidelidadMensaje = fidelidadMensaje
                         });
                     }
                     else
@@ -691,6 +665,9 @@ namespace Agendamiento.API.Controllers
                                 }
                             }
 
+                            // Parámetro de fidelidad que aplica cuando la fidelidad es el mayor descuento
+                            FidelidadParametro? fidelidadGanadora = null;
+
                             if (fidelidad)
                             {
                                 var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
@@ -709,6 +686,7 @@ namespace Agendamiento.API.Controllers
                                         cualDescuento = false;
                                         tipoDescuento = string.Empty;
                                         mensajeDescuento = $"¡Felicitaciones! llegaste a tu {siguienteParametro.cantidad} visita. " + $"Tienes un beneficio especial {siguienteParametro.porcentaje:0}% de descuento.";
+                                        fidelidadGanadora = siguienteParametro;
                                     }
                                 }
                             }
@@ -755,6 +733,18 @@ namespace Agendamiento.API.Controllers
                             ContextBD.SaveChanges();
 
                             transaction.Commit();
+
+                            // Mensaje del mayor descuento, con el mismo formato de consultarCitasRecurso
+                            if (descuento)
+                            {
+                                // Ganó cumpleaños o día de promoción
+                                fidelidadMensaje = $"{nombreCliente} se le aplico un descuento por motivo de {tipoDescuento} ";
+                            }
+                            else if (fidelidadGanadora != null)
+                            {
+                                // Ganó la fidelidad (solo sale si la cita quedó activa)
+                                fidelidadMensaje = agendaService.ObtenerMensajeFidelidad(idCliente, new[] { nuevo.id }, empresa, ContextBD);
+                            }
 
                             var infoRecurso = agendaService.GetInfoRecurso(dto.recurso, ContextBD);
 
@@ -885,7 +875,6 @@ namespace Agendamiento.API.Controllers
 
                     var EnvioEmailCitaUsuario = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaUsuario")?.valor, out bool resulUsuario) && resulUsuario;
                     var EnvioEmailCitaCliente = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "EnvioEmailCitaCliente")?.valor, out bool resulCliente) && resulCliente;
-                    var fidelidad = bool.TryParse(ContextBD.Parametros.FirstOrDefault(p => p.tipo == "ManejaFidelidad")?.valor, out bool resulFidelidad) && resulFidelidad;
 
                     if (dto.validaHorario)
                     {
@@ -945,6 +934,8 @@ namespace Agendamiento.API.Controllers
 
                         padreNuevo = nuevoPadre.id;
 
+                        var citasCreadas = new List<int>();
+
                         foreach (var detalleCita in dto.Citas)
                         {
                             var nuevaCita = new Cita
@@ -966,6 +957,8 @@ namespace Agendamiento.API.Controllers
 
                             ContextBD.Citas.Add(nuevaCita);
                             ContextBD.SaveChanges();
+
+                            citasCreadas.Add(nuevaCita.id);
 
                             foreach (var detalleServicio in detalleCita.servicios)
                             {
@@ -1022,25 +1015,7 @@ namespace Agendamiento.API.Controllers
                             );
                         }
 
-                        if (fidelidad)
-                        {
-                            var fidelidadCliente = ContextBD.Fidelidads.FirstOrDefault(p => p.cliente == idCliente);
-
-                            if (fidelidadCliente != null)
-                            {
-                                var siguienteParametro = ContextBD.FidelidadParametros
-                                                        .Where(p =>
-                                                            p.estado &&
-                                                            p.cantidad > fidelidadCliente.cantidad)
-                                                        .OrderBy(p => p.cantidad)
-                                                        .FirstOrDefault();
-
-                                if (siguienteParametro != null && siguienteParametro.cantidad == fidelidadCliente.cantidad + 1)
-                                {
-                                    fidelidadMensaje = $"¡Felicitaciones! llegaste a tu {siguienteParametro.cantidad} visita. " + $"Tienes un beneficio especial {siguienteParametro.porcentaje:0}% de descuento.";
-                                }
-                            }
-                        }
+                        fidelidadMensaje = agendaService.ObtenerMensajeFidelidad(idCliente, citasCreadas, empresa, ContextBD);
 
                         return Ok(new
                         {
@@ -1307,10 +1282,13 @@ namespace Agendamiento.API.Controllers
                             );
                         }
 
+                        var fidelidadMensaje = agendaService.ObtenerMensajeFidelidad(idCliente, new[] { idCita }, empresa, ContextBD);
+
                         return Ok(new
                         {
                             mensaje = "Cita registrada exitosamente",
-                            exito = true
+                            exito = true,
+                            fidelidadMensaje = fidelidadMensaje
                         });
                     }
                     else
