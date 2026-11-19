@@ -2040,13 +2040,34 @@ namespace Agendamiento.API.Controllers
                 //    }
                 //}
 
-                var recursos = empresa.servicio == true
+                if (tiempo == null || !int.TryParse(tiempo.valor, out int minutosAgenda) || minutosAgenda <= 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No está configurado el parámetro Tiempo_Agenda",
+                        exito = false
+                    });
+                }
+
+                // Empresas de servicio / recurso múltiple envían el recurso en "profesional" (uno o varios separados por coma).
+                // Si no llega, se usa "recurso" para no fallar con un 500.
+                var recursos = (empresa.servicio == true || empresa.recursoMultiple == true) && !string.IsNullOrWhiteSpace(dto.profesional)
                                 ? dto.profesional.Split(',')
-                                            .Select(x => int.Parse(x.Trim()))
+                                            .Select(x => int.TryParse(x.Trim(), out var id) ? id : 0)
+                                            .Where(id => id > 0)
                                             .ToList()
-                                : empresa.recursoMultiple == true 
-                                ? new List<int> { int.Parse(dto.profesional.Trim()) }
-                                : new List<int> { dto.recurso };
+                                : new List<int>();
+
+                // Recurso múltiple usa un solo profesional, como antes; servicio admite varios
+                if (empresa.servicio != true && empresa.recursoMultiple == true)
+                {
+                    recursos = recursos.Take(1).ToList();
+                }
+
+                if (!recursos.Any() && dto.recurso > 0)
+                {
+                    recursos.Add(dto.recurso);
+                }
 
                 var listaCitas = ContextBD.Citas
                     .Where(e => e.fechaInicio >= dto.FechaIni
@@ -2057,11 +2078,11 @@ namespace Agendamiento.API.Controllers
 
                 foreach (var item in listaCitas)
                 {
-                    int cantidad = item.hora / int.Parse(tiempo.valor);
+                    int cantidad = item.hora / minutosAgenda;
 
                     for (int i = 0; i < cantidad; i++)
                     {
-                        DateTime horaActual = item.fechaInicio.AddMinutes(i * int.Parse(tiempo.valor));
+                        DateTime horaActual = item.fechaInicio.AddMinutes(i * minutosAgenda);
                         horasOcupadas.Add(horaActual.ToString("HH:mm"));
                     }
                 }
