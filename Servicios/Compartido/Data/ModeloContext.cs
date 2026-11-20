@@ -39,6 +39,8 @@ namespace Compartido.Data
         public virtual DbSet<Parametro> Parametros { get; set; }
         public virtual DbSet<Producto> Productos { get; set; }
         public virtual DbSet<ProductoLote> ProductoLotes { get; set; }
+        public virtual DbSet<PromoCombo> PromoCombos { get; set; }
+        public virtual DbSet<PromoComboServicio> PromoCombosServicios { get; set; }
         public virtual DbSet<Recurso> Recursos { get; set; }
         public virtual DbSet<Reporte> Reportes { get; set; }
         public virtual DbSet<Rol> Rols { get; set; }
@@ -228,6 +230,32 @@ namespace Compartido.Data
             modelBuilder.Entity<Fidelidad>(entity =>
             {
                 entity.ToTable("Fidelidad");
+            });
+
+            modelBuilder.Entity<PromoCombo>(entity =>
+            {
+                entity.ToTable("PromoCombos");
+
+                entity.Property(e => e.valor).HasColumnType("decimal(18, 0)");
+
+                entity.Property(e => e.fechaIni).HasColumnType("datetime");
+
+                entity.Property(e => e.fechaFin).HasColumnType("datetime");
+            });
+
+            modelBuilder.Entity<PromoComboServicio>(entity =>
+            {
+                entity.ToTable("PromoCombosServicios");
+
+                entity.HasOne(d => d.promoComboNavigation)
+                    .WithMany(p => p.PromoCombosServicios)
+                    .HasForeignKey(d => d.promoCombo)
+                    .HasConstraintName("FK_PromoCombosServicios_PromoCombos");
+
+                entity.HasOne(d => d.servicioNavigation)
+                    .WithMany()
+                    .HasForeignKey(d => d.servicio)
+                    .HasConstraintName("FK_PromoCombosServicios_Servicios");
             });
 
             modelBuilder.Entity<FidelidadParametro>(entity =>
