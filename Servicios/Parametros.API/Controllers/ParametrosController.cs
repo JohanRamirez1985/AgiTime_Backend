@@ -1127,5 +1127,341 @@ namespace Parametros.API.Controllers
                 });
             }
         }
+
+        [HttpGet("promoCombos")]
+        public IActionResult ObtenerPromoCombos([FromQuery] int emp)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == emp && e.estado == Estados.Activo);
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                // Fecha actual en hora de Colombia (el servidor puede estar en UTC)
+                var zonaColombia = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? "SA Pacific Standard Time" : "America/Bogota");
+                var ahora = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaColombia);
+
+                var lista = ContextBD.PromoCombos
+                    .OrderByDescending(p => p.fechaIni)
+                    .Select(p => new
+                    {
+                        p.id,
+                        p.valor,
+                        p.fechaIni,
+                        p.fechaFin,
+                        servicios = p.PromoCombosServicios
+                            .Where(ps => ps.servicio != null)
+                            .Select(ps => new
+                            {
+                                id = ps.servicioNavigation.id,
+                                nombre = ps.servicioNavigation.nombre
+                            })
+                            .ToList()
+                    })
+                    .AsEnumerable()
+                    .Select(p => new
+                    {
+                        p.id,
+                        p.valor,
+                        p.fechaIni,
+                        p.fechaFin,
+                        // Activo si la fecha actual está dentro del rango; una fecha vacía no limita ese extremo
+                        estado = (!p.fechaIni.HasValue || p.fechaIni.Value <= ahora)
+                                 && (!p.fechaFin.HasValue || p.fechaFin.Value >= ahora)
+                                    ? Estados.Activo
+                                    : Estados.Inactivo,
+                        p.servicios
+                    })
+                    .ToList();
+
+                if (lista.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay promociones combo registradas",
+                        exito = false
+                    });
+                }
+
+                return Ok(new
+                {
+                    exito = true,
+                    datos = lista
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPost("registrarPromoCombo")]
+        public IActionResult CrearPromoCombo([FromBody] PromoComboDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                var serviciosIds = (dto.Servicios ?? new List<int>())
+                    .Where(s => s > 0)
+                    .Distinct()
+                    .ToList();
+
+                if (!serviciosIds.Any())
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Debe seleccionar al menos un servicio para el combo",
+                        exito = false
+                    });
+                }
+
+                if (dto.FechaIni.HasValue && dto.FechaFin.HasValue && dto.FechaFin < dto.FechaIni)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La fecha final no puede ser menor a la fecha inicial",
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var serviciosExistentes = ContextBD.Servicios
+                    .Where(s => serviciosIds.Contains(s.id))
+                    .Select(s => s.id)
+                    .ToList();
+
+                var serviciosNoExisten = serviciosIds.Except(serviciosExistentes).ToList();
+
+                if (serviciosNoExisten.Any())
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No existen los servicios: " + string.Join(", ", serviciosNoExisten),
+                        exito = false
+                    });
+                }
+
+                // El combo y sus servicios se guardan juntos en un solo SaveChanges (misma transacción)
+                var nuevo = new PromoCombo
+                {
+                    valor = dto.Valor,
+                    fechaIni = dto.FechaIni,
+                    fechaFin = dto.FechaFin
+                };
+
+                foreach (var servicioId in serviciosIds)
+                {
+                    nuevo.PromoCombosServicios.Add(new PromoComboServicio
+                    {
+                        servicio = servicioId
+                    });
+                }
+
+                ContextBD.PromoCombos.Add(nuevo);
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Promoción combo registrada exitosamente",
+                    exito = true,
+                    promoComboId = nuevo.id
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
+
+        [HttpPut("editarPromoCombo")]
+        public IActionResult EditarPromoCombo([FromBody] PromoComboDTO dto)
+        {
+            string nombreBase = string.Empty;
+            try
+            {
+                var empresa = ContextGene.Empresas.FirstOrDefault(e => e.id == dto.empresa && e.estado == Estados.Activo);
+
+                if (empresa == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Empresa no encontrada o inactiva",
+                        exito = false
+                    });
+                }
+
+                var resultado = ValidacionEmpresa.ValidarEmpresa(empresa);
+
+                if (!resultado.Exito)
+                {
+                    return Ok(new
+                    {
+                        mensaje = resultado.Mensaje,
+                        exito = false
+                    });
+                }
+
+                var serviciosIds = (dto.Servicios ?? new List<int>())
+                    .Where(s => s > 0)
+                    .Distinct()
+                    .ToList();
+
+                if (!serviciosIds.Any())
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Debe seleccionar al menos un servicio para el combo",
+                        exito = false
+                    });
+                }
+
+                if (dto.FechaIni.HasValue && dto.FechaFin.HasValue && dto.FechaFin < dto.FechaIni)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "La fecha final no puede ser menor a la fecha inicial",
+                        exito = false
+                    });
+                }
+
+                nombreBase = empresa.conexionBD;
+
+                var connectionTemplate = configuracion["ConnectionStrings:ConnectionFactory"];
+                var connectionString = string.Format(connectionTemplate, empresa.conexionBD);
+
+                using var ContextBD = ContextFact.Create(connectionString);
+
+                var combo = ContextBD.PromoCombos
+                    .Include(p => p.PromoCombosServicios)
+                    .FirstOrDefault(p => p.id == dto.Id);
+
+                if (combo == null)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "Promoción combo no encontrada",
+                        exito = false
+                    });
+                }
+
+                var serviciosExistentes = ContextBD.Servicios
+                    .Where(s => serviciosIds.Contains(s.id))
+                    .Select(s => s.id)
+                    .ToList();
+
+                var serviciosNoExisten = serviciosIds.Except(serviciosExistentes).ToList();
+
+                if (serviciosNoExisten.Any())
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No existen los servicios: " + string.Join(", ", serviciosNoExisten),
+                        exito = false
+                    });
+                }
+
+                // Datos del combo
+                combo.valor = dto.Valor;
+                combo.fechaIni = dto.FechaIni;
+                combo.fechaFin = dto.FechaFin;
+
+                // Quitar los servicios que ya no vienen en la lista
+                var serviciosQuitar = combo.PromoCombosServicios
+                    .Where(ps => !ps.servicio.HasValue || !serviciosIds.Contains(ps.servicio.Value))
+                    .ToList();
+
+                ContextBD.PromoCombosServicios.RemoveRange(serviciosQuitar);
+
+                // Adicionar los servicios nuevos (los que ya estaban se dejan igual)
+                var serviciosActuales = combo.PromoCombosServicios
+                    .Where(ps => ps.servicio.HasValue)
+                    .Select(ps => ps.servicio.Value)
+                    .ToList();
+
+                foreach (var servicioId in serviciosIds.Except(serviciosActuales))
+                {
+                    combo.PromoCombosServicios.Add(new PromoComboServicio
+                    {
+                        servicio = servicioId
+                    });
+                }
+
+                // Combo, servicios quitados y adicionados se guardan juntos (misma transacción)
+                ContextBD.SaveChanges();
+
+                return Ok(new
+                {
+                    mensaje = "Promoción combo actualizada exitosamente",
+                    exito = true,
+                    promoComboId = combo.id
+                });
+            }
+            catch (Exception ex)
+            {
+                LogsCatch.GuardarError(ex, configuracion, ContextFact, nombreBase);
+
+                return StatusCode(500, new
+                {
+                    mensaje = "Ocurrió un error interno",
+                    exito = false
+                });
+            }
+        }
     }
 }
