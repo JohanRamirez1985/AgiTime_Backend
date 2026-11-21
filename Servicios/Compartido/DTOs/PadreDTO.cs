@@ -19,5 +19,6 @@ namespace Compartido.DTOs
         public List<CitaDTO> Citas { get; set; } = new();
         public ClienteDTO clienteInfo { get; set; }
         public string alias { get; set; }
+        public bool promociones { get; set; } = false;
     }
 }
