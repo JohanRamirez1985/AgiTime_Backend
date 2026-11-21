@@ -9,6 +9,8 @@ namespace Compartido.DTOs
     public partial class CitaDTO
     {
         public int Id { get; set; }
+        // Puede llegar null o vacío (ej. registrarCita con seleccionoCualquiera, donde la hora la asigna el back)
+        [System.Text.Json.Serialization.JsonConverter(typeof(Compartido.Metodos.FechaOpcionalConverter))]
         public DateTime FechaIni { get; set; }
         public DateTime FechaFin { get; set; }
         public int recurso { get; set; }

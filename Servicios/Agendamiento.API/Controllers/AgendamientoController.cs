@@ -2520,6 +2520,7 @@ namespace Agendamiento.API.Controllers
                                 c.fidelidad,
                                 c.cliente,
                                 c.recurso,
+                                c.comboPromo,
 
                                 Cliente = ContextBD.Clientes
                                     .Where(cl => cl.id == c.cliente)
@@ -2550,6 +2551,20 @@ namespace Agendamiento.API.Controllers
                         lista = citas
                             .Select(c =>
                             {
+                                // Combo: un solo servicio con los nombres unidos y el valor de la cita una sola vez
+                                // (con comboPromo cada servicio trae el valor completo de la cita)
+                                var servicios = c.comboPromo == true && c.Servicios.Count > 1
+                                    ? new[]
+                                    {
+                                        new
+                                        {
+                                            Id = c.Servicios[0].Id,
+                                            Nombre = string.Join(" + ", c.Servicios.Select(s => s.Nombre)),
+                                            Valor = c.Servicios[0].Valor
+                                        }
+                                    }.ToList()
+                                    : c.Servicios;
+
                                 var fidelidadCantidad = ContextBD.Fidelidads
                                     .Where(f => f.cliente == c.cliente)
                                     .Select(f => (int?)f.cantidad)
@@ -2568,7 +2583,7 @@ namespace Agendamiento.API.Controllers
 
                                     if (fidelidadParametro != null)
                                     {
-                                        var valorServicios = c.Servicios.Sum(s => s.Valor);
+                                        var valorServicios = servicios.Sum(s => s.Valor);
 
                                         // Fecha de la cita
                                         var fechaCita = c.fechaInicio.Date;
@@ -2613,7 +2628,7 @@ namespace Agendamiento.API.Controllers
                                     nombreRecurso = nombresRecursos.GetValueOrDefault(c.recurso),
                                     nombreCliente = c.Cliente?.NombreCliente,
                                     telefonoCliente = c.Cliente?.TelefonoCliente,
-                                    servicios = c.Servicios,
+                                    servicios = servicios,
                                     fidelidad = fidelidadMensaje
                                 };
                             })
