@@ -152,11 +152,13 @@ namespace Agendamiento.API.Controllers
                         // 1.2. Consultar los recursos activos de la sede.
                         // -------------------------------------------------
 
+                        // Los recursos 3 y 4 solo se excluyen de la rotación en la empresa 2
+                        bool excluirRecursos3y4 = empresa.id == 2;
+
                         var recursos = ContextBD.Usuarios
                             .Where(u =>
                                 u.recurso == true &&
-                                u.id != 3 &&
-                                u.id != 4 &&
+                                (!excluirRecursos3y4 || (u.id != 3 && u.id != 4)) &&
                                 u.estado == Estados.Activo &&
                                 u.sede == dto.sede)
                             .Select(u => u.id)
