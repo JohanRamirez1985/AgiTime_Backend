@@ -952,7 +952,8 @@ namespace Agendamiento.API.Controllers
                                 liquidado = false,
                                 fechaCreacion = dto.FechaCreacion,
                                 usuarioCreacion = dto.UsuarioCreacion,
-                                alias = dto.alias
+                                alias = dto.alias,
+                                comboPromo = dto.promociones
                             };
 
                             ContextBD.Citas.Add(nuevaCita);
@@ -2388,6 +2389,7 @@ namespace Agendamiento.API.Controllers
                                                 cp.citaNavigation.bono == true
                                                 || cp.citaNavigation.fidelidad == true
                                                 || cp.citaNavigation.descuento == true
+                                                || cp.citaNavigation.comboPromo == true
                                                 || cs.servicioNavigation.valor == 0
                                             ? (cp.citaNavigation.valor ?? 0)
                                             : (cs.servicioNavigation.valor ?? 0)
@@ -2535,6 +2537,7 @@ namespace Agendamiento.API.Controllers
                                     Valor = c.bono == true
                                             || c.fidelidad == true
                                             || c.descuento == true
+                                            || c.comboPromo == true
                                             || cs.servicioNavigation.valor == 0
                                             ? (c.valor ?? 0)
                                             : (cs.servicioNavigation.valor ?? 0)
@@ -2650,6 +2653,7 @@ namespace Agendamiento.API.Controllers
                                     Valor = c.bono == true
                                             || c.fidelidad == true
                                             || c.descuento == true
+                                            || c.comboPromo == true
                                             || cs.servicioNavigation.valor == 0
                                             ? (c.valor ?? 0)
                                             : (cs.servicioNavigation.valor ?? 0)
@@ -2914,7 +2918,7 @@ namespace Agendamiento.API.Controllers
                             where cs.cita == cita.id
                             select new
                             {
-                                ServicioValor = cita.bono == true || cita.fidelidad == true || cita.descuento == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
+                                ServicioValor = cita.bono == true || cita.fidelidad == true || cita.descuento == true || cita.comboPromo == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
                                 Porcentaje = (sp.porcentaje ?? 0),
                                 Sede = se.Nombre
                             }
@@ -3014,7 +3018,7 @@ namespace Agendamiento.API.Controllers
                                                      where cs.cita == citaId.id
                                                      select new
                                                      {
-                                                         ServicioValor = citaId.bono == true || citaId.fidelidad == true || citaId.descuento == true || (s.valor ?? 0) == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                                         ServicioValor = citaId.bono == true || citaId.fidelidad == true || citaId.descuento == true || citaId.comboPromo == true || (s.valor ?? 0) == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
                                                          Porcentaje = (u.porcentaje ?? 0),
                                                          Sede = se.Nombre
                                                      }
@@ -4279,6 +4283,7 @@ namespace Agendamiento.API.Controllers
                             c.bono == true
                             || c.fidelidad == true
                             || c.descuento == true
+                            || c.comboPromo == true
                             || cs.servicioNavigation.valor == 0
                             ? (c.valor ?? 0)
                             : (cs.servicioNavigation.valor ?? 0))

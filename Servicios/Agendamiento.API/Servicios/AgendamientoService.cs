@@ -271,6 +271,7 @@ namespace Agendamiento.API.Servicios
                             c.bono == true
                             || c.fidelidad == true
                             || c.descuento == true
+                            || c.comboPromo == true
                             || cs.servicioNavigation.valor == 0
                             ? (c.valor ?? 0)
                             : (cs.servicioNavigation.valor ?? 0))
