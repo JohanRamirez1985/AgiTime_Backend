@@ -40,5 +40,7 @@ namespace Compartido.DTOs
         public bool seleccionoCualquiera { get; set; } = false;
         public int sede { get; set; }
         public string alias { get; set; }
+        // consultarMiAgenda: si llega true solo se consultan las citas en estado Asistio
+        public bool agendaAsistio { get; set; } = false;
     }
 }

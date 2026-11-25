@@ -15,5 +15,6 @@ namespace Compartido.DTOs
         public bool pagoServicio { get; set; }
         public decimal valor { get; set; }
         public bool bono { get; set; }
+        public int? sedeCita { get; set; }
     }
 }

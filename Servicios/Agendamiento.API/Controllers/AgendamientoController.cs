@@ -715,7 +715,9 @@ namespace Agendamiento.API.Controllers
                                 usuarioCreacion = dto.UsuarioCreacion,
                                 alias = dto.alias,
                                 descuento = descuento,
-                                tipoDescuento = tipoDescuento
+                                tipoDescuento = tipoDescuento,
+                                // Sede donde se realiza el servicio (barbero prestado en otra sede). Solo empresa 2
+                                sede = empresa.id == 2 && dto.sede > 0 ? dto.sede : null
                             };
 
                             ContextBD.Citas.Add(nuevo);
@@ -2076,7 +2078,9 @@ namespace Agendamiento.API.Controllers
                     .Where(e => e.fechaInicio >= dto.FechaIni
                              && e.fechaFin <= dto.FechaFin
                              && recursos.Contains(e.recurso)
-                             && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                             && (dto.agendaAsistio
+                                    ? e.estado == Estados.Asistio
+                                    : (e.estado == Estados.Activo || e.estado == Estados.Asistio)))
                     .ToList();
 
                 foreach (var item in listaCitas)

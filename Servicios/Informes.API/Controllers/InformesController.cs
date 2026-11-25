@@ -609,6 +609,7 @@ namespace Informes.API.Controllers
 
                 bono = informeService.GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Valor_Bono"));
                 descuentoBono = informeService.GetDecimal(parametros.FirstOrDefault(p => p.tipo == "Descuento_Bono"));
+                var sedesPorId = ContextBD.Sedes.ToDictionary(s => s.id);
 
                 foreach (Usuario u in usuarios)
                 {
@@ -627,7 +628,8 @@ namespace Informes.API.Controllers
                                     pagoCita = c.pago ?? false,
                                     pagoServicio = s.esPago ?? false,
                                     valor = s.nombre == "Otro" || c.bono == true || c.fidelidad == true || c.descuento == true || c.comboPromo == true ? (c.valor ?? 0) : (s.valor ?? 0) - (c.bono.GetValueOrDefault() ? bono : 0),
-                                    bono = c.bono ?? false
+                                    bono = c.bono ?? false,
+                                    sedeCita = c.sede
                                 })
                                .ToList();
 
@@ -647,6 +649,7 @@ namespace Informes.API.Controllers
                         cita.liquidado = true;
                     }
 
+                    // Valor del barbero (porcentaje o incumplimiento): aplica a los cortes hechos en su propia sede
                     valorDescuentoPorCorte = informeService.GetValorDescuento(info, parametros, listaBarberos, u);
 
                     foreach (var item in info)
@@ -655,10 +658,20 @@ namespace Informes.API.Controllers
                         decimal valorBarberia;
                         decimal valorBarbero;
 
+                        // Si el corte se hizo en otra sede (barbero prestado) se usa el valor de esa sede,
+                        // tanto para porcentaje como para incumplimiento. Si la sede no tiene valor, se usa el del barbero.
+                        // Solo aplica para la empresa 2.
+                        bool otraSede = empresa.id == 2
+                            && item.sedeCita.HasValue && item.sedeCita.Value != u.sede && sedesPorId.ContainsKey(item.sedeCita.Value);
+                        var sedeCorte = otraSede ? sedesPorId[item.sedeCita.Value] : null;
+
+                        decimal valorDescuentoCita = sedeCorte?.valorCorte ?? valorDescuentoPorCorte ?? 0;
+                        string nombreSedeCita = sedeCorte?.Nombre ?? u.sedeNavigation.Nombre;
+
                         if (item.pagoCita == true && item.pagoServicio == true)
                         {
                             tipo = "Normal";
-                            valorBarberia = (valorDescuentoPorCorte ?? 0) - (item.bono ? descuentoBono : 0);
+                            valorBarberia = valorDescuentoCita - (item.bono ? descuentoBono : 0);
                             valorBarbero = item.valor - valorBarberia;
                         }
                         else
@@ -678,7 +691,7 @@ namespace Informes.API.Controllers
                             bono = item.bono,
                             fechaCita = item.fechaIni,
                             numero = item.servicio.Equals("Corte VIP") ? 2 : 1,
-                            sede = u.sedeNavigation.Nombre,
+                            sede = nombreSedeCita,
                             fechaCreacion = dto.fechaCreacion,
                             usuarioCreacion = dto.usuarioCreacion
                         };
