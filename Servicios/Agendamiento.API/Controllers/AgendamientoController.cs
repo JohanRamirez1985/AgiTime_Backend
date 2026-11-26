@@ -2372,21 +2372,42 @@ namespace Agendamiento.API.Controllers
                                         .Select(f => (int?)f.cantidad)
                                         .FirstOrDefault(),
 
-                                    Servicios = cp.citaNavigation.CitaServicios
-                                        .Select(cs => new
+                                    // La cita usa su propio valor (se reparte una sola vez entre sus servicios)
+                                    UsaValorCita = cp.citaNavigation.bono == true
+                                        || cp.citaNavigation.fidelidad == true
+                                        || cp.citaNavigation.descuento == true
+                                        || cp.citaNavigation.comboPromo == true
+                                        || cp.citaNavigation.CitaServicios.Any(cs => cs.servicioNavigation.valor == 0),
+                                    ValorCita = cp.citaNavigation.valor ?? 0,
+
+                                    ServiciosBase = cp.citaNavigation.CitaServicios
+                                        .OrderBy(cs => cs.id)
+                                        .Select(cs => new ServicioValorCitaDTO
                                         {
                                             Id = cs.servicioNavigation.id,
                                             Nombre = cs.servicioNavigation.nombre,
-                                            Valor =
-                                                cp.citaNavigation.bono == true
-                                                || cp.citaNavigation.fidelidad == true
-                                                || cp.citaNavigation.descuento == true
-                                                || cp.citaNavigation.comboPromo == true
-                                                || cs.servicioNavigation.valor == 0
-                                            ? (cp.citaNavigation.valor ?? 0)
-                                            : (cs.servicioNavigation.valor ?? 0)
+                                            Valor = cs.servicioNavigation.valor ?? 0
                                         })
                                         .ToList()
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                        .Select(p => new
+                        {
+                            p.Padre,
+                            Citas = p.Citas
+                                .Select(c => new
+                                {
+                                    c.id,
+                                    c.fechaInicio,
+                                    c.estado,
+                                    c.recurso,
+                                    c.cliente,
+                                    c.NombreRecurso,
+                                    c.Cliente,
+                                    c.FidelidadCantidad,
+                                    Servicios = ServicioValorCitaDTO.Repartir(c.ServiciosBase, c.UsaValorCita, c.ValorCita)
                                 })
                                 .ToList()
                         })
@@ -2523,18 +2544,22 @@ namespace Agendamiento.API.Controllers
                                     })
                                     .FirstOrDefault(),
 
-                                Servicios = c.CitaServicios.Select(cs => new
-                                {
-                                    Id = cs.servicioNavigation.id,
-                                    Nombre = cs.servicioNavigation.nombre,
-                                    Valor = c.bono == true
-                                            || c.fidelidad == true
-                                            || c.descuento == true
-                                            || c.comboPromo == true
-                                            || cs.servicioNavigation.valor == 0
-                                            ? (c.valor ?? 0)
-                                            : (cs.servicioNavigation.valor ?? 0)
-                                }).ToList()
+                                // La cita usa su propio valor (se reparte una sola vez entre sus servicios)
+                                UsaValorCita = c.bono == true
+                                        || c.fidelidad == true
+                                        || c.descuento == true
+                                        || c.comboPromo == true
+                                        || c.CitaServicios.Any(cs => cs.servicioNavigation.valor == 0),
+                                ValorCita = c.valor ?? 0,
+
+                                ServiciosBase = c.CitaServicios
+                                    .OrderBy(cs => cs.id)
+                                    .Select(cs => new ServicioValorCitaDTO
+                                    {
+                                        Id = cs.servicioNavigation.id,
+                                        Nombre = cs.servicioNavigation.nombre,
+                                        Valor = cs.servicioNavigation.valor ?? 0
+                                    }).ToList()
                             })
                             .ToList();
 
@@ -2543,19 +2568,19 @@ namespace Agendamiento.API.Controllers
                         lista = citas
                             .Select(c =>
                             {
-                                // Combo: un solo servicio con los nombres unidos y el valor de la cita una sola vez
-                                // (con comboPromo cada servicio trae el valor completo de la cita)
-                                var servicios = c.comboPromo == true && c.Servicios.Count > 1
-                                    ? new[]
+                                // Combo: un solo servicio con los nombres unidos y el valor de la cita una sola vez.
+                                // Resto: si la cita usa su propio valor, va en el primer servicio y los demás en 0.
+                                var servicios = c.comboPromo == true && c.ServiciosBase.Count > 1
+                                    ? new List<ServicioValorCitaDTO>
                                     {
-                                        new
+                                        new ServicioValorCitaDTO
                                         {
-                                            Id = c.Servicios[0].Id,
-                                            Nombre = string.Join(" + ", c.Servicios.Select(s => s.Nombre)),
-                                            Valor = c.Servicios[0].Valor
+                                            Id = c.ServiciosBase[0].Id,
+                                            Nombre = string.Join(" + ", c.ServiciosBase.Select(s => s.Nombre)),
+                                            Valor = c.ValorCita
                                         }
-                                    }.ToList()
-                                    : c.Servicios;
+                                    }
+                                    : ServicioValorCitaDTO.Repartir(c.ServiciosBase, c.UsaValorCita, c.ValorCita);
 
                                 var fidelidadCantidad = ContextBD.Fidelidads
                                     .Where(f => f.cliente == c.cliente)
@@ -2653,18 +2678,36 @@ namespace Agendamiento.API.Controllers
                                     })
                                     .FirstOrDefault(),
 
-                                Servicios = c.CitaServicios.Select(cs => new
-                                {
-                                    Id = cs.servicioNavigation.id,
-                                    Nombre = cs.servicioNavigation.nombre,
-                                    Valor = c.bono == true
-                                            || c.fidelidad == true
-                                            || c.descuento == true
-                                            || c.comboPromo == true
-                                            || cs.servicioNavigation.valor == 0
-                                            ? (c.valor ?? 0)
-                                            : (cs.servicioNavigation.valor ?? 0)
-                                }).ToList()
+                                // La cita usa su propio valor (se reparte una sola vez entre sus servicios)
+                                UsaValorCita = c.bono == true
+                                        || c.fidelidad == true
+                                        || c.descuento == true
+                                        || c.comboPromo == true
+                                        || c.CitaServicios.Any(cs => cs.servicioNavigation.valor == 0),
+                                ValorCita = c.valor ?? 0,
+
+                                ServiciosBase = c.CitaServicios
+                                    .OrderBy(cs => cs.id)
+                                    .Select(cs => new ServicioValorCitaDTO
+                                    {
+                                        Id = cs.servicioNavigation.id,
+                                        Nombre = cs.servicioNavigation.nombre,
+                                        Valor = cs.servicioNavigation.valor ?? 0
+                                    }).ToList()
+                            })
+                            .ToList()
+                            .Select(c => new
+                            {
+                                c.id,
+                                c.fechaInicio,
+                                c.estado,
+                                c.fidelidad,
+                                c.cliente,
+                                c.recurso,
+                                c.descuento,
+                                c.tipoDescuento,
+                                c.Cliente,
+                                Servicios = ServicioValorCitaDTO.Repartir(c.ServiciosBase, c.UsaValorCita, c.ValorCita)
                             })
                             .ToList();
 
@@ -2915,7 +2958,7 @@ namespace Agendamiento.API.Controllers
                     {
                         if (dto.Asistencia)
                         {
-                            var servicios = (
+                            var serviciosBase = (
                             from cs in ContextBD.CitaServicios
                             join s in ContextBD.Servicios on cs.servicio equals s.id
                             join sr in ContextBD.ServiciosRecursos on s.id equals sr.servicio
@@ -2923,13 +2966,27 @@ namespace Agendamiento.API.Controllers
                             join u in ContextBD.Usuarios on sr.recurso equals u.id
                             join se in ContextBD.Sedes on u.sede equals se.id
                             where cs.cita == cita.id
+                            orderby cs.id
                             select new
                             {
-                                ServicioValor = cita.bono == true || cita.fidelidad == true || cita.descuento == true || cita.comboPromo == true || s.valor == 0 ? (cita.valor ?? 0) : (s.valor ?? 0),
+                                ValorServicio = s.valor,
                                 Porcentaje = (sp.porcentaje ?? 0),
                                 Sede = se.Nombre
                             }
                             ).ToList();
+
+                            // Si la cita usa su propio valor, se liquida una sola vez (primer registro) y los demás en 0
+                            bool usaValorCitaServ = cita.bono == true || cita.fidelidad == true || cita.descuento == true || cita.comboPromo == true
+                                || serviciosBase.Any(x => x.ValorServicio == 0);
+
+                            var servicios = serviciosBase
+                                .Select((x, i) => new
+                                {
+                                    ServicioValor = usaValorCitaServ ? (i == 0 ? (cita.valor ?? 0) : 0) : (x.ValorServicio ?? 0),
+                                    x.Porcentaje,
+                                    x.Sede
+                                })
+                                .ToList();
 
                             foreach (var servicio in servicios)
                             {
@@ -3018,18 +3075,32 @@ namespace Agendamiento.API.Controllers
 
                                 if (!yaTieneSesionAsistida)
                                 {
-                                    var servicios = (from cs in ContextBD.CitaServicios
+                                    var serviciosBase = (from cs in ContextBD.CitaServicios
                                                      join s in ContextBD.Servicios on cs.servicio equals s.id
                                                      join u in ContextBD.Usuarios on citaId.recurso equals u.id
                                                      join se in ContextBD.Sedes on u.sede equals se.id
                                                      where cs.cita == citaId.id
+                                                     orderby cs.id
                                                      select new
                                                      {
-                                                         ServicioValor = citaId.bono == true || citaId.fidelidad == true || citaId.descuento == true || citaId.comboPromo == true || (s.valor ?? 0) == 0 ? (citaId.valor ?? 0) : (s.valor ?? 0),
+                                                         ValorServicio = s.valor ?? 0,
                                                          Porcentaje = (u.porcentaje ?? 0),
                                                          Sede = se.Nombre
                                                      }
                                         ).ToList();
+
+                                    // Si la cita usa su propio valor, se liquida una sola vez (primer servicio) y los demás en 0
+                                    bool usaValorCitaOrden = citaId.bono == true || citaId.fidelidad == true || citaId.descuento == true || citaId.comboPromo == true
+                                        || serviciosBase.Any(x => x.ValorServicio == 0);
+
+                                    var servicios = serviciosBase
+                                        .Select((x, i) => new
+                                        {
+                                            ServicioValor = usaValorCitaOrden ? (i == 0 ? (citaId.valor ?? 0) : 0) : x.ValorServicio,
+                                            x.Porcentaje,
+                                            x.Sede
+                                        })
+                                        .ToList();
 
                                     foreach (var servicio in servicios)
                                     {
