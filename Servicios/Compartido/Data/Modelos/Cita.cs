@@ -34,6 +34,7 @@ namespace Compartido.Data.Modelos
         public string alias { get; set; }
         public string tipoDescuento { get; set; }
         public bool? comboPromo { get; set; }
+        public int? sede { get; set; }
 
         public virtual ICollection<CitaPadre> CitaPadres { get; set; }
         public virtual ICollection<CitaServicio> CitaServicios { get; set; }

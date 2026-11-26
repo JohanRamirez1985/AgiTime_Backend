@@ -715,7 +715,9 @@ namespace Agendamiento.API.Controllers
                                 usuarioCreacion = dto.UsuarioCreacion,
                                 alias = dto.alias,
                                 descuento = descuento,
-                                tipoDescuento = tipoDescuento
+                                tipoDescuento = tipoDescuento,
+                                // Sede donde se realiza el servicio (barbero prestado en otra sede). Solo empresa 2
+                                sede = empresa.id == 2 && dto.sede > 0 ? dto.sede : null
                             };
 
                             ContextBD.Citas.Add(nuevo);
@@ -1760,38 +1762,24 @@ namespace Agendamiento.API.Controllers
                 using var ContextBD = ContextFact.Create(connectionString);
 
                 var par = ContextBD.Parametros.Where(p => p.tipo == "Activarme" && p.estado == true).FirstOrDefault();
+                string motivoActivarme = par?.valor;
 
-                var diaSemana = (int)dto.FechaInicio.Value.DayOfWeek;
-                if (diaSemana == 0) diaSemana = 7;
+                // Fecha de referencia: la que envía el front (si no llega, la fecha actual de Colombia)
+                var zonaColombia = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? "SA Pacific Standard Time" : "America/Bogota");
+                var hoy = dto.FechaInicio?.Date ?? TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaColombia).Date;
 
-                var fechaSolo = dto.FechaInicio.Value.Date;
-
+                // Se muestran todos los bloqueos del usuario, excepto los vencidos respecto a la fecha enviada:
+                // - Solo fechaInicio: se oculta si esa fecha ya pasó.
+                // - fechaInicio y fechaFin: se oculta si ya pasaron las dos.
+                // - Sin fechas: siempre se muestra.
                 var bloqueos = ContextBD.BloqueosHorarios
-                    .AsEnumerable()
-                    .Where(b => b.usuario == dto.Usuario &&
-                        (
-                            (b.tipoBloqueo == 1)
-
-                            ||
-
-                            (b.tipoBloqueo == 2 &&
-                             b.motivo != par.valor &&
-                             b.fechaInicio.HasValue &&
-                             fechaSolo == b.fechaInicio.Value.Date)
-
-                             ||
-
-                            (b.tipoBloqueo == 3)
-
-                             ||
-
-                            (b.tipoBloqueo == 4 &&
-                             b.fechaInicio.HasValue &&
-                             b.fechaFin.HasValue &&
-                             fechaSolo >= b.fechaInicio.Value.Date &&
-                             fechaSolo <= b.fechaFin.Value.Date)
-                        )
-                    )
+                    .Where(b => b.usuario == dto.Usuario
+                        && !(b.tipoBloqueo == 2 && motivoActivarme != null && b.motivo == motivoActivarme)
+                        && (
+                            (!b.fechaInicio.HasValue && !b.fechaFin.HasValue)
+                            || (b.fechaInicio.HasValue && !b.fechaFin.HasValue && b.fechaInicio.Value >= hoy)
+                            || (b.fechaFin.HasValue && b.fechaFin.Value >= hoy)
+                        ))
                     .ToList();
 
                 return Ok(new
@@ -2076,7 +2064,9 @@ namespace Agendamiento.API.Controllers
                     .Where(e => e.fechaInicio >= dto.FechaIni
                              && e.fechaFin <= dto.FechaFin
                              && recursos.Contains(e.recurso)
-                             && (e.estado == Estados.Activo || e.estado == Estados.Asistio))
+                             && (dto.agendaAsistio
+                                    ? e.estado == Estados.Asistio
+                                    : (e.estado == Estados.Activo || e.estado == Estados.Asistio)))
                     .ToList();
 
                 foreach (var item in listaCitas)

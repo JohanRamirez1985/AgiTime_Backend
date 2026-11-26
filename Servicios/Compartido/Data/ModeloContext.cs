@@ -560,6 +560,8 @@ namespace Compartido.Data
             {
                 entity.ToTable("Sede");
 
+                entity.Property(e => e.valorCorte).HasColumnType("decimal(18, 0)");
+
                 entity.Property(e => e.Nombre)
                     .IsRequired()
                     .HasMaxLength(100)
